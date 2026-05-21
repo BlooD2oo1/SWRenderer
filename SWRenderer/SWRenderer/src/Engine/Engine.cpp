@@ -1,4 +1,3 @@
-#include "Common/Globals.h"
 #include "Engine.h"
 
 CEngine* CEngine::m_pThis = nullptr;
