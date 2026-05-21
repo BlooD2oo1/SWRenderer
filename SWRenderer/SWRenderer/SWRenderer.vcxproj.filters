@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\Engine">
+      <UniqueIdentifier>{a2218bd9-3e4d-4703-b07d-996e7283d9f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Engine\Common">
+      <UniqueIdentifier>{390ea92c-1ea3-431f-90aa-620be480cdfb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Engine\Engine.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Engine\Engine.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Common\Globals.h">
+      <Filter>src\Engine\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Common\Perf.h">
+      <Filter>src\Engine\Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
