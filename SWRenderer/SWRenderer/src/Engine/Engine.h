@@ -1,17 +1,7 @@
 #pragma once
 
 #include "Common/Globals.h"
-
-struct SFrameBuffer
-{
-	SFrameBuffer( uint32_t* pData, int iWidth, int iHeight )
-		: pData( pData ), iWidth( iWidth ), iHeight( iHeight )
-	{
-	}
-	uint32_t*	pData = nullptr;
-	int			iWidth = 0;
-	int			iHeight = 0;
-};
+#include "Graphics.h"
 
 struct SMouseState
 {
@@ -47,6 +37,7 @@ public:
 	void Create( SFrameBuffer& sFrameBuffer );
 	void Clear();
 	void Update();
+	void Render();
 
 	bool On_KeyDown( uint32_t key );
 	bool On_KeyUp( uint32_t key );
