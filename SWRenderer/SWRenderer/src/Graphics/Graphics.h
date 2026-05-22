@@ -1,8 +1,15 @@
 #pragma once
 
 #include "Common/Globals.h"
+#include "Vector.h"
 
-//struct for uint32_t as RGBA color:
+#define PI05		1.5707963267948966192313216916398f
+#define PI			3.1415926535897932384626433832795f
+#define PI2			6.283185307179586476925286766559f
+#define PIRECIP		0.31830988618379067153776752674503f
+#define SQRT2		1.4142135623730950488016887242097f
+#define E_NUMBER	2.7182818284590452353602874713527f
+
 struct RGBA8
 {
 	union
@@ -62,15 +69,15 @@ static void DrawPixel( SFrameBuffer& sFrameBuffer, int x, int y, RGBA8 sColor )
 	}
 }
 
-static void DrawPixelAA( SFrameBuffer& sFrameBuffer, float fx, float fy, RGBA8 sColor )
+static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, RGBA8 sColor )
 {
-	int ix = (int)fx;
-	int iy = (int)fy;
+	int ix = (int)v.x;
+	int iy = (int)v.y;
 	if ( ix >= 0 && ix < sFrameBuffer.iWidth - 1 &&
 		iy >= 0 && iy < sFrameBuffer.iHeight - 1 )
 	{
-		float fxmod = fx - (float)ix;
-		float fymod = fy - (float)iy;
+		float fxmod = v.x - (float)ix;
+		float fymod = v.y - (float)iy;
 		float fxmodinv = 1.0f - fxmod;
 		float fymodinv = 1.0f - fymod;
 		uint8_t i00 = (uint8_t)( sqrtf( fxmodinv*fymodinv ) * 255.0f );
@@ -82,5 +89,24 @@ static void DrawPixelAA( SFrameBuffer& sFrameBuffer, float fx, float fy, RGBA8 s
 		sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix + 1] = BlendAdditive( sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix + 1], RGBA8{ i10, i10, i10, 0 } );
 		sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix] = BlendAdditive( sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix], RGBA8{ i01, i01, i01, 0 } );
 		sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix + 1] = BlendAdditive( sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix + 1], RGBA8{ i11, i11, i11, 0 } );
+	}
+}
+
+static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0, const SVector2& v1, RGBA8 sColor )
+{
+	SVector2 v( v1 - v0 );
+
+	if ( v.x > 0.0f && v.y > 0.0f && v.x >= v.y )
+	{
+		int iXCount = (int)v.x;
+		int iY = 0;
+		for ( int iX = 0; iX < iXCount; iX++ )
+		{
+			if ( iX%5 == 0 )
+			{
+				iY++;
+			}
+			DrawPixel( sFrameBuffer, iX+(int)v0.x, iY+(int)v0.y, sColor );
+		}
 	}
 }

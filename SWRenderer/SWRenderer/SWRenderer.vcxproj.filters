@@ -8,8 +8,11 @@
     <Filter Include="src\Engine">
       <UniqueIdentifier>{a2218bd9-3e4d-4703-b07d-996e7283d9f8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Engine\Common">
-      <UniqueIdentifier>{390ea92c-1ea3-431f-90aa-620be480cdfb}</UniqueIdentifier>
+    <Filter Include="src\Common">
+      <UniqueIdentifier>{66b6af13-0e3f-4298-b879-19c427b64d93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Graphics">
+      <UniqueIdentifier>{cd83af69-fe7c-4498-9936-9741005e68d1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -19,22 +22,28 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\Graphics.cpp">
-      <Filter>src\Engine</Filter>
+    <ClCompile Include="src\Graphics\Graphics.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Vector.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.h">
       <Filter>src\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\Common\Globals.h">
-      <Filter>src\Engine\Common</Filter>
+    <ClInclude Include="src\Common\Globals.h">
+      <Filter>src\Common</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\Common\Perf.h">
-      <Filter>src\Engine\Common</Filter>
+    <ClInclude Include="src\Common\Perf.h">
+      <Filter>src\Common</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\Graphics.h">
-      <Filter>src\Engine</Filter>
+    <ClInclude Include="src\Graphics\Graphics.h">
+      <Filter>src\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Vector.h">
+      <Filter>src\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

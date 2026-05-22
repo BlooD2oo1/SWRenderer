@@ -6,7 +6,7 @@ CEngine::CEngine()
 	: m_sFrameBuffer( nullptr, 0, 0 )
 {
 	m_pParticles = nullptr;
-	m_iParticleCount = 0;
+	Clear();
 }
 
 CEngine::~CEngine()
@@ -17,6 +17,7 @@ CEngine::~CEngine()
 
 void CEngine::Clear()
 {
+	m_iFrameCount = 0;
 	SAFE_DELETE_ARRAY( m_pParticles );
 	m_iParticleCount = 0;
 }
@@ -26,56 +27,42 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	Clear();
 	m_sFrameBuffer = sFrameBuffer;
 	
-	m_iParticleCount = 10000;
+	m_iParticleCount = 0;
 	m_pParticles = new SParticle[m_iParticleCount];
 	for ( int i = 0; i < m_iParticleCount; i++ )
 	{
-		m_pParticles[i].x = (float)( rand()%m_sFrameBuffer.iWidth );
-		m_pParticles[i].y = (float)( rand()%m_sFrameBuffer.iWidth );
-		m_pParticles[i].xm = ((float)( rand()%1000 )/1000.0f)-0.5f;
-		m_pParticles[i].ym = ((float)( rand()%1000 )/1000.0f)-0.5f;
+		m_pParticles[i].vPos.x = (float)( rand()%m_sFrameBuffer.iWidth );
+		m_pParticles[i].vPos.y = (float)( rand()%m_sFrameBuffer.iHeight );
+		m_pParticles[i].vMov.x = (((float)( rand()%1000 )/1000.0f)-0.5f)*0.2f;
+		m_pParticles[i].vMov.y = (((float)( rand()%1000 )/1000.0f)-0.5f)*0.2f;
 		m_pParticles[i].a = (float)( rand()%1024 ) / 1024.0f;
 	}
 }
 
-/*uint32_t BlendAdditive( uint32_t dest, RGBA8 src )
-{
-	uint8_t rDest = (dest >> 16) & 0xFF;
-	uint8_t gDest = (dest >> 8) & 0xFF;
-	uint8_t bDest = dest & 0xFF;
-	uint8_t rSrc = src.r;
-	uint8_t gSrc = src.g;
-	uint8_t bSrc = src.b;
-	uint8_t rOut = std::min( rDest + rSrc, 255 );
-	uint8_t gOut = std::min( gDest + gSrc, 255 );
-	uint8_t bOut = std::min( bDest + bSrc, 255 );
-	return (bOut) | (gOut << 8) | (rOut << 16);
-}*/
-
 void CEngine::Update()
 {
-	float force = 0.001f;
-	float drag = 0.9999f;
+	float force = 0.0001f;
+	float drag = 0.999f;
 	if ( m_sMouseState.bLeftButton )
 	{
 		force = 0.001f;
-		drag = 0.7f;
+		drag = 0.8f;
 	}
 	for ( int i = 0; i < m_iParticleCount; i++ )
 	{
-		float dx = m_pParticles[i].x - (float)m_sMouseState.x;
-		float dy = m_pParticles[i].y - (float)m_sMouseState.y;
+		float dx = m_pParticles[i].vPos.x - (float)m_sMouseState.x;
+		float dy = m_pParticles[i].vPos.y - (float)m_sMouseState.y;
 		float dist = sqrtf( dx * dx + dy * dy );
-		dist += 0.001f;
+		dist += 0.000001f;
 		
-		m_pParticles[i].xm -= (dx / dist) * force;
-		m_pParticles[i].ym -= (dy / dist) * force;
+		m_pParticles[i].vMov.x -= (dx / dist) * force;
+		m_pParticles[i].vMov.y -= (dy / dist) * force;
 
-		m_pParticles[i].xm *= drag;
-		m_pParticles[i].ym *= drag;
+		m_pParticles[i].vMov.x *= drag;
+		m_pParticles[i].vMov.y *= drag;
 
-		m_pParticles[i].x += m_pParticles[i].xm;
-		m_pParticles[i].y += m_pParticles[i].ym;		
+		m_pParticles[i].vPos.x += m_pParticles[i].vMov.x;
+		m_pParticles[i].vPos.y += m_pParticles[i].vMov.y;		
 	}
 }
 
@@ -87,11 +74,31 @@ void CEngine::Render()
 	// draw particles
 	for ( int i = 0; i < m_iParticleCount; i++ )
 	{
-		int x = (int)m_pParticles[i].x;
-		int y = (int)m_pParticles[i].y;
 		uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
+		//int x = (int)m_pParticles[i].x;
+		//int y = (int)m_pParticles[i].y;		
 		//DrawPixel( m_sFrameBuffer, x, y, RGBA8{ alpha, alpha, alpha, 255 } );
-		DrawPixelAA( m_sFrameBuffer, m_pParticles[i].x, m_pParticles[i].y, RGBA8{ alpha, alpha, alpha, 255 } );
+		DrawPixelAA( m_sFrameBuffer, m_pParticles[i].vPos, RGBA8{ alpha, alpha, alpha, 255 } );
+	}
+
+	const uint16_t iLineCount = 8;
+	for ( int i = 0; i < iLineCount; i++ )
+	{
+		float fW = (float)i/(float)iLineCount;
+		SVector2 v0( (float)(m_sFrameBuffer.iWidth>>1), (float)(m_sFrameBuffer.iHeight>>1) );
+		SVector2 v1( v0 );
+
+		float x = cosf( (float)m_iFrameCount*0.001f + (float)fW*PI2 );
+		float y = sinf( (float)m_iFrameCount*0.001f + (float)fW*PI2 );
+		v0.x += x * 8.0f;
+		v0.y += y * 8.0f;
+		v1.x += x * 90.0f;
+		v1.y += y * 90.0f;
+
+		DrawPixelAA( m_sFrameBuffer, v0, RGBA8{ 200, 10, 127, 255 } );
+		DrawPixelAA( m_sFrameBuffer, v1, RGBA8{ 200, 100, 127, 255 } );
+
+		DrawLine( m_sFrameBuffer, v0, v1, RGBA8{ 200, 100, 127, 255 } );
 	}
 
 	// draw mouse cursor
@@ -100,6 +107,8 @@ void CEngine::Render()
 	{
 		m_sFrameBuffer.pData[m_sMouseState.y * m_sFrameBuffer.iWidth + m_sMouseState.x] = 0xFFFF0000;
 	}
+
+	m_iFrameCount++;
 }
 
 bool CEngine::On_KeyDown( uint32_t key )

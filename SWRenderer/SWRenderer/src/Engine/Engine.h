@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common/Globals.h"
-#include "Graphics.h"
+#include "Graphics/Graphics.h"
 
 struct SMouseState
 {
@@ -14,10 +14,8 @@ struct SMouseState
 
 struct SParticle
 {
-	float x;
-	float y;
-	float xm;
-	float ym;
+	SVector2 vPos;
+	SVector2 vMov;
 	float a;
 };
 
@@ -45,11 +43,15 @@ public:
 	bool On_MouseButtonDown( uint32_t button );
 	bool On_MouseButtonUp( uint32_t button );
 
+	uint32_t		GetFrameCount() const { return m_iFrameCount; }
+
 private:
-	SFrameBuffer m_sFrameBuffer;
+	SFrameBuffer	m_sFrameBuffer;
 
-	SMouseState m_sMouseState;
+	SMouseState		m_sMouseState;
 
-	SParticle* m_pParticles;
-	int			m_iParticleCount;
+	SParticle*		m_pParticles;
+	int				m_iParticleCount;
+
+	uint32_t		m_iFrameCount;
 };
