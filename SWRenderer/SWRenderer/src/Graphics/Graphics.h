@@ -100,12 +100,16 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0, const SVec
 	{
 		int iXCount = (int)v.x;
 		int iY = 0;
-		for ( int iX = 0; iX < iXCount; iX++ )
+		float m = v.y/v.x;
+		int step = 0;
+		for ( int iX = 0; iX <= iXCount; iX++ )
 		{
-			if ( iX%5 == 0 )
+			int step0 = (int)((float)(iX+1)*m);
+			if ( step != step0 )
 			{
 				iY++;
 			}
+			step = step0;
 			DrawPixel( sFrameBuffer, iX+(int)v0.x, iY+(int)v0.y, sColor );
 		}
 	}

@@ -75,8 +75,8 @@ void CEngine::Render()
 	for ( int i = 0; i < m_iParticleCount; i++ )
 	{
 		uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
-		//int x = (int)m_pParticles[i].x;
-		//int y = (int)m_pParticles[i].y;		
+		//int x = (int)m_pParticles[i].vPos.x;
+		//int y = (int)m_pParticles[i].vPos.y;		
 		//DrawPixel( m_sFrameBuffer, x, y, RGBA8{ alpha, alpha, alpha, 255 } );
 		DrawPixelAA( m_sFrameBuffer, m_pParticles[i].vPos, RGBA8{ alpha, alpha, alpha, 255 } );
 	}
@@ -88,17 +88,19 @@ void CEngine::Render()
 		SVector2 v0( (float)(m_sFrameBuffer.iWidth>>1), (float)(m_sFrameBuffer.iHeight>>1) );
 		SVector2 v1( v0 );
 
-		float x = cosf( (float)m_iFrameCount*0.001f + (float)fW*PI2 );
-		float y = sinf( (float)m_iFrameCount*0.001f + (float)fW*PI2 );
+		float x = cosf( (float)m_iFrameCount*0.0001f + (float)fW*PI2 );
+		float y = sinf( (float)m_iFrameCount*0.0001f + (float)fW*PI2 );
 		v0.x += x * 8.0f;
 		v0.y += y * 8.0f;
 		v1.x += x * 90.0f;
 		v1.y += y * 90.0f;
 
-		DrawPixelAA( m_sFrameBuffer, v0, RGBA8{ 200, 10, 127, 255 } );
-		DrawPixelAA( m_sFrameBuffer, v1, RGBA8{ 200, 100, 127, 255 } );
+		DrawPixel( m_sFrameBuffer, (int)v0.x, (int)v0.y, RGBA8{ 200, 10, 227, 255 } );
+		DrawPixel( m_sFrameBuffer, (int)v1.x, (int)v1.y, RGBA8{ 200, 200, 227, 255 } );
+		//DrawPixelAA( m_sFrameBuffer, v0, RGBA8{ 200, 10, 127, 255 } );
+		//DrawPixelAA( m_sFrameBuffer, v1, RGBA8{ 200, 100, 127, 255 } );
 
-		DrawLine( m_sFrameBuffer, v0, v1, RGBA8{ 200, 100, 127, 255 } );
+		DrawLine( m_sFrameBuffer, v0, v1, RGBA8{ 200, 0, 127, 255 } );
 	}
 
 	// draw mouse cursor
