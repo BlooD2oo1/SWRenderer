@@ -88,12 +88,14 @@ void CEngine::Render()
 		SVector2 v0( (float)(m_sFrameBuffer.iWidth>>1), (float)(m_sFrameBuffer.iHeight>>1) );
 		SVector2 v1( v0 );
 
-		float x = cosf( (float)m_iFrameCount*0.0001f + (float)fW*PI2 );
-		float y = sinf( (float)m_iFrameCount*0.0001f + (float)fW*PI2 );
-		v0.x += x * 8.0f;
-		v0.y += y * 8.0f;
-		v1.x += x * 90.0f;
-		v1.y += y * 90.0f;
+		float a = (float)m_iFrameCount*0.0001f;
+		a = m_sMouseState.x*0.002f;
+		float x = cosf( a + (float)fW*PI2 );
+		float y = sinf( a + (float)fW*PI2 );
+		v0.x += x * -18.0f;
+		v0.y += y * -18.0f;
+		v1.x += x * 120.0f;
+		v1.y += y * 120.0f;
 
 		DrawPixel( m_sFrameBuffer, (int)v0.x, (int)v0.y, RGBA8{ 200, 10, 227, 255 } );
 		DrawPixel( m_sFrameBuffer, (int)v1.x, (int)v1.y, RGBA8{ 200, 200, 227, 255 } );
