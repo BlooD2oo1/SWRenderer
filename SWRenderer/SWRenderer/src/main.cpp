@@ -6,8 +6,8 @@
 #include <windows.h>
 #include <windowsx.h>
 
-#include "Engine/Common/Globals.h"
-#include "Engine/Common/Perf.h"
+#include "Common/Globals.h"
+#include "Common/Perf.h"
 #include "Engine/Engine.h"
 
 // ============================================================
