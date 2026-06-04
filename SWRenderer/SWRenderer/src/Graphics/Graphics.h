@@ -96,21 +96,13 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0, const SVec
 {
 	SVector2 v( v1 - v0 );
 
-	if ( v.x > 0.0f && v.y > 0.0f && v.x >= v.y )
+	if ( v.x > 0.0f && /*v.y > 0.0f &&*/ v.x >= abs(v.y) )
 	{
-		int iXCount = (int)v.x;
-		int iY = 0;
-		float m = v.y/v.x;
-		int step = 0;
-		for ( int iX = 0; iX <= iXCount; iX++ )
+		for ( int iX = (int)v0.x; iX < (int)v1.x; iX++ )
 		{
-			int step0 = (int)((float)(iX+1)*m);
-			if ( step != step0 )
-			{
-				iY++;
-			}
-			step = step0;
-			DrawPixel( sFrameBuffer, iX+(int)v0.x, iY+(int)v0.y, sColor );
+			float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y + 0.5f;
+
+			DrawPixel( sFrameBuffer, iX, (int)fY, sColor );
 		}
 	}
 }

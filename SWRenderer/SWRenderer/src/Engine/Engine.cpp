@@ -97,20 +97,23 @@ void CEngine::Render()
 		v1.x += x * 120.0f;
 		v1.y += y * 120.0f;
 
-		DrawPixel( m_sFrameBuffer, (int)v0.x, (int)v0.y, RGBA8{ 200, 10, 227, 255 } );
-		DrawPixel( m_sFrameBuffer, (int)v1.x, (int)v1.y, RGBA8{ 200, 200, 227, 255 } );
+		DrawPixel( m_sFrameBuffer, (int)(v0.x), (int)(v0.y), RGBA8{ 20, 100, 22, 255 } );
+		DrawPixel( m_sFrameBuffer, (int)(v1.x), (int)(v1.y), RGBA8{ 20, 100, 22, 255 } );
 		//DrawPixelAA( m_sFrameBuffer, v0, RGBA8{ 200, 10, 127, 255 } );
 		//DrawPixelAA( m_sFrameBuffer, v1, RGBA8{ 200, 100, 127, 255 } );
 
 		DrawLine( m_sFrameBuffer, v0, v1, RGBA8{ 200, 0, 127, 255 } );
 	}
 
+	DrawLine( m_sFrameBuffer, SVector2( 10.0, 10.0 ), SVector2( (float)m_sMouseState.x, (float)m_sMouseState.y ), RGBA8{ 200, 0, 127, 255 } );
+
 	// draw mouse cursor
-	if ( m_sMouseState.x >= 0 && m_sMouseState.x < m_sFrameBuffer.iWidth &&
+	/*if ( m_sMouseState.x >= 0 && m_sMouseState.x < m_sFrameBuffer.iWidth &&
 		m_sMouseState.y >= 0 && m_sMouseState.y < m_sFrameBuffer.iHeight )
 	{
 		m_sFrameBuffer.pData[m_sMouseState.y * m_sFrameBuffer.iWidth + m_sMouseState.x] = 0xFFFF0000;
-	}
+	}*/
+	DrawPixel( m_sFrameBuffer, m_sMouseState.x, m_sMouseState.y, RGBA8{ 255, 0, 0, 255 } );
 
 	m_iFrameCount++;
 }
