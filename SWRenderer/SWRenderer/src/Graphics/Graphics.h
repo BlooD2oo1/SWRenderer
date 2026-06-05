@@ -92,17 +92,61 @@ static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, RGBA8 sC
 	}
 }
 
-static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0, const SVector2& v1, RGBA8 sColor )
+
+static bool GetSwizzle( const float& x, const float& y )
 {
+	if ( abs(y) > abs(x) )
+	{
+		return true;
+	}
+	return false;
+}
+
+static void SetSwizzle( float& x, float& y, bool bSwizzle )
+{
+	if ( bSwizzle )
+	{
+		std::swap( x, y );
+	}
+}
+
+static void SetSwizzle( int& x, int& y, bool bSwizzle )
+{
+	if ( bSwizzle )
+	{
+		std::swap( x, y );
+	}
+}
+
+static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVector2& v1o, RGBA8 sColor )
+{
+	bool bSwizzle = abs(v1o.x - v0o.x) < abs(v1o.y - v0o.y);
+
+	SVector2 v0( v0o );
+	SVector2 v1( v1o );
+	if ( bSwizzle )
+	{
+		std::swap( v0.x, v0.y );
+		std::swap( v1.x, v1.y );
+	}
+	if ( v1.x < v0.x ) std::swap( v0, v1 );
 	SVector2 v( v1 - v0 );
 
-	if ( v.x > 0.0f && /*v.y > 0.0f &&*/ v.x >= abs(v.y) )
-	{
-		for ( int iX = (int)v0.x; iX < (int)v1.x; iX++ )
-		{
-			float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y + 0.5f;
+	//if ( bSwizzle ) sColor.r=sColor.r>>2;
 
-			DrawPixel( sFrameBuffer, iX, (int)fY, sColor );
+	int iXStart = (int)(v0.x+0.5f);
+	int iXEnd = (int)(v1.x-0.5f);
+	for ( int iX = iXStart; iX <= iXEnd; iX++ )
+	{
+		float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y;
+
+		int x = iX;
+		int y = (int)fY;
+		if ( bSwizzle )
+		{
+			std::swap( x, y );
 		}
+		
+		DrawPixel( sFrameBuffer, x, y, sColor );
 	}
 }
