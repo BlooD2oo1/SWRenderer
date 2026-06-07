@@ -2,6 +2,7 @@
 
 #include "Common/Globals.h"
 #include "Graphics/Graphics.h"
+#include "Engine/Scene01.h"
 
 struct SMouseState
 {
@@ -10,13 +11,6 @@ struct SMouseState
 	bool bLeftButton = false;
 	bool bRightButton = false;
 	bool bMiddleButton = false;
-};
-
-struct SParticle
-{
-	SVector2 vPos;
-	SVector2 vMov;
-	float a;
 };
 
 class CEngine
@@ -43,6 +37,8 @@ public:
 	bool On_MouseButtonDown( uint32_t button );
 	bool On_MouseButtonUp( uint32_t button );
 
+	SFrameBuffer&	GetFrameBuffer() { return m_sFrameBuffer; }
+	SMouseState&	GetMouseState() { return m_sMouseState; }
 	uint32_t		GetFrameCount() const { return m_iFrameCount; }
 
 private:
@@ -50,8 +46,7 @@ private:
 
 	SMouseState		m_sMouseState;
 
-	SParticle*		m_pParticles;
-	int				m_iParticleCount;
-
 	uint32_t		m_iFrameCount;
+
+	CScene01		m_cScene01;
 };

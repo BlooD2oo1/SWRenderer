@@ -10,7 +10,7 @@
 #define SQRT2		1.4142135623730950488016887242097f
 #define E_NUMBER	2.7182818284590452353602874713527f
 
-struct RGBA8
+struct BGRA8
 {
 	union
 	{
@@ -31,14 +31,14 @@ struct SFrameBuffer
 		: pData( pData ), iWidth( iWidth ), iHeight( iHeight )
 	{
 	}
-	uint32_t*		pData = nullptr;
+	uint32_t*	pData = nullptr;
 	int			iWidth = 0;
 	int			iHeight = 0;
 };
 
-static uint32_t BlendAdditive( uint32_t dest, RGBA8 src )
+static uint32_t BlendAdditive( uint32_t dest, BGRA8 src )
 {
-	RGBA8 sDest;
+	BGRA8 sDest;
 	sDest.rgba = dest;
 	uint16_t rOut = sDest.r + src.r;
 	uint16_t gOut = sDest.g + src.g;
@@ -46,10 +46,10 @@ static uint32_t BlendAdditive( uint32_t dest, RGBA8 src )
 	rOut = rOut > 255 ? 255 : rOut;
 	gOut = gOut > 255 ? 255 : gOut;
 	bOut = bOut > 255 ? 255 : bOut;
-	return (bOut) | (gOut << 8) | (rOut << 16);
+	return (rOut) | (gOut << 8) | (bOut << 16);
 }
 
-static void ClearFrameBuffer( SFrameBuffer& sFrameBuffer, RGBA8 sColor )
+static void ClearFrameBuffer( SFrameBuffer& sFrameBuffer, BGRA8 sColor )
 {
 	for ( int y = 0; y < sFrameBuffer.iHeight; y++ )
 	{
@@ -60,7 +60,7 @@ static void ClearFrameBuffer( SFrameBuffer& sFrameBuffer, RGBA8 sColor )
 	}	
 }
 
-static void DrawPixel( SFrameBuffer& sFrameBuffer, int x, int y, RGBA8 sColor )
+static void DrawPixel( SFrameBuffer& sFrameBuffer, int x, int y, BGRA8 sColor )
 {
 	if ( x >= 0 && x < sFrameBuffer.iWidth &&
 		y >= 0 && y < sFrameBuffer.iHeight )
@@ -69,7 +69,7 @@ static void DrawPixel( SFrameBuffer& sFrameBuffer, int x, int y, RGBA8 sColor )
 	}
 }
 
-static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, RGBA8 sColor )
+static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, BGRA8 sColor )
 {
 	int ix = (int)v.x;
 	int iy = (int)v.y;
@@ -85,40 +85,14 @@ static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, RGBA8 sC
 		uint8_t i10 = (uint8_t)( sqrtf( fxmod * fymodinv ) * 255.0f);
 		uint8_t i11 = (uint8_t)( sqrtf( fxmod * fymod ) * 255.0f);
 
-		sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix] = BlendAdditive( sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix], RGBA8{ i00, i00, i00, 0 } );
-		sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix + 1] = BlendAdditive( sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix + 1], RGBA8{ i10, i10, i10, 0 } );
-		sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix] = BlendAdditive( sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix], RGBA8{ i01, i01, i01, 0 } );
-		sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix + 1] = BlendAdditive( sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix + 1], RGBA8{ i11, i11, i11, 0 } );
+		sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix] = BlendAdditive( sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix], BGRA8{ i00, i00, i00, 0 } );
+		sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix + 1] = BlendAdditive( sFrameBuffer.pData[iy * sFrameBuffer.iWidth + ix + 1], BGRA8{ i10, i10, i10, 0 } );
+		sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix] = BlendAdditive( sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix], BGRA8{ i01, i01, i01, 0 } );
+		sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix + 1] = BlendAdditive( sFrameBuffer.pData[(iy + 1) * sFrameBuffer.iWidth + ix + 1], BGRA8{ i11, i11, i11, 0 } );
 	}
 }
 
-
-static bool GetSwizzle( const float& x, const float& y )
-{
-	if ( abs(y) > abs(x) )
-	{
-		return true;
-	}
-	return false;
-}
-
-static void SetSwizzle( float& x, float& y, bool bSwizzle )
-{
-	if ( bSwizzle )
-	{
-		std::swap( x, y );
-	}
-}
-
-static void SetSwizzle( int& x, int& y, bool bSwizzle )
-{
-	if ( bSwizzle )
-	{
-		std::swap( x, y );
-	}
-}
-
-static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVector2& v1o, RGBA8 sColor )
+static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVector2& v1o, BGRA8 sColor )
 {
 	bool bSwizzle = abs(v1o.x - v0o.x) < abs(v1o.y - v0o.y);
 
@@ -130,7 +104,8 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 		std::swap( v1.x, v1.y );
 	}
 	if ( v1.x < v0.x ) std::swap( v0, v1 );
-	SVector2 v( v1 - v0 );
+	SVector2 v;
+	SVector2::Sub( v, v1, v0 );
 
 	//if ( bSwizzle ) sColor.r=sColor.r>>2;
 

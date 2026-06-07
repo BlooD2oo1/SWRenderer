@@ -28,6 +28,9 @@
     <ClCompile Include="src\Graphics\Vector.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Engine\Scene01.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.h">
@@ -44,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\Vector.h">
       <Filter>src\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Scene01.h">
+      <Filter>src\Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
