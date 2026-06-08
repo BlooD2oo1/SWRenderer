@@ -72,7 +72,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)Bin" 2&gt;nul

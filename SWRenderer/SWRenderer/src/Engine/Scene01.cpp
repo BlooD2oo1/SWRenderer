@@ -37,134 +37,228 @@ void CScene01::Create()
 	}
 
 	{
-		SVector3 p[] =
 		{
-			// ==========================
-			// Nose / front
-			// ==========================
-			SVector3( 0.0f,  2.8f,  0.0f), // 0 nose
+			std::vector<SVector3> pts;
+			std::vector<std::pair<int,int>> edges;
 
-			SVector3(-0.25f, 1.8f, -0.18f), // 1
-			SVector3( 0.25f, 1.8f, -0.18f), // 2
-			SVector3( 0.25f, 1.8f,  0.18f), // 3
-			SVector3(-0.25f, 1.8f,  0.18f), // 4
+			auto AddPoint =
+				[&](float x, float y, float z) -> int
+				{
+					pts.emplace_back(x, y, z);
+					return (int)pts.size() - 1;
+				};
 
-			// ==========================
-			// Mid fuselage
-			// ==========================
-			SVector3(-0.45f,  0.4f, -0.25f), // 5
-			SVector3( 0.45f,  0.4f, -0.25f), // 6
-			SVector3( 0.45f,  0.4f,  0.25f), // 7
-			SVector3(-0.45f,  0.4f,  0.25f), // 8
+			auto AddEdge =
+				[&](int a, int b)
+				{
+					edges.emplace_back(a, b);
+				};
 
-			// ==========================
-			// Rear fuselage
-			// ==========================
-			SVector3(-0.35f, -1.8f, -0.2f), // 9
-			SVector3( 0.35f, -1.8f, -0.2f), // 10
-			SVector3( 0.35f, -1.8f,  0.2f), // 11
-			SVector3(-0.35f, -1.8f,  0.2f), // 12
+			// =====================================================
+			// FUSELAGE
+			// =====================================================
 
-			// ==========================
-			// Main wings
-			// ==========================
-			SVector3(-2.2f, -0.2f, 0.0f), // 13 left tip
-			SVector3( 2.2f, -0.2f, 0.0f), // 14 right tip
+			const int nose =
+				AddPoint(0.0f, 4.8f, 0.0f);
 
-			SVector3(-1.3f, -1.1f, 0.0f), // 15
-			SVector3( 1.3f, -1.1f, 0.0f), // 16
+			const int n0 = AddPoint(-0.15f, 3.6f, -0.12f);
+			const int n1 = AddPoint( 0.15f, 3.6f, -0.12f);
+			const int n2 = AddPoint( 0.15f, 3.6f,  0.12f);
+			const int n3 = AddPoint(-0.15f, 3.6f,  0.12f);
 
-			SVector3(-1.4f,  0.8f, 0.0f), // 17
-			SVector3( 1.4f,  0.8f, 0.0f), // 18
+			const int m0 = AddPoint(-0.42f, 1.4f, -0.22f);
+			const int m1 = AddPoint( 0.42f, 1.4f, -0.22f);
+			const int m2 = AddPoint( 0.42f, 1.4f,  0.22f);
+			const int m3 = AddPoint(-0.42f, 1.4f,  0.22f);
 
-			// ==========================
-			// Vertical fins (Z up!)
-			// ==========================
-			SVector3(-0.35f, -1.1f, 0.9f), // 19
-			SVector3( 0.35f, -1.1f, 0.9f), // 20
+			const int r0 = AddPoint(-0.35f, -1.3f, -0.20f);
+			const int r1 = AddPoint( 0.35f, -1.3f, -0.20f);
+			const int r2 = AddPoint( 0.35f, -1.3f,  0.20f);
+			const int r3 = AddPoint(-0.35f, -1.3f,  0.20f);
 
-			// ==========================
-			// Cockpit ridge
-			// ==========================
-			SVector3(0.0f, 1.2f, 0.38f), // 21
-			SVector3(0.0f, 0.3f, 0.48f), // 22
-		};
+			// nose connections
+			AddEdge(nose,n0);
+			AddEdge(nose,n1);
+			AddEdge(nose,n2);
+			AddEdge(nose,n3);
 
-		const int edges[][2] =
-		{
-			// =====================
-			// Fuselage
-			// =====================
-			{0,1},{0,2},{0,3},{0,4},
+			// front ring
+			AddEdge(n0,n1);
+			AddEdge(n1,n2);
+			AddEdge(n2,n3);
+			AddEdge(n3,n0);
 
-			{1,2},{2,3},{3,4},{4,1},
+			// mid
+			AddEdge(n0,m0);
+			AddEdge(n1,m1);
+			AddEdge(n2,m2);
+			AddEdge(n3,m3);
 
-			{1,5},{2,6},{3,7},{4,8},
+			AddEdge(m0,m1);
+			AddEdge(m1,m2);
+			AddEdge(m2,m3);
+			AddEdge(m3,m0);
 
-			{5,6},{6,7},{7,8},{8,5},
+			// rear
+			AddEdge(m0,r0);
+			AddEdge(m1,r1);
+			AddEdge(m2,r2);
+			AddEdge(m3,r3);
 
-			{5,9},{6,10},{7,11},{8,12},
+			AddEdge(r0,r1);
+			AddEdge(r1,r2);
+			AddEdge(r2,r3);
+			AddEdge(r3,r0);
 
-			{9,10},{10,11},{11,12},{12,9},
+			// diagonals for detail
+			AddEdge(m0,m2);
+			AddEdge(m1,m3);
+			AddEdge(r0,r2);
+			AddEdge(r1,r3);
 
-			// =====================
-			// Wings
-			// =====================
-			{5,13},
-			{8,13},
-			{13,15},
-			{15,9},
+			// =====================================================
+			// COCKPIT
+			// =====================================================
 
-			{5,17},
-			{13,17},
+			int c0 = AddPoint(0.0f, 2.6f, 0.45f);
+			int c1 = AddPoint(0.0f, 1.8f, 0.58f);
+			int c2 = AddPoint(0.0f, 1.0f, 0.42f);
 
-			{6,14},
-			{7,14},
-			{14,16},
-			{16,10},
+			AddEdge(nose,c0);
+			AddEdge(c0,c1);
+			AddEdge(c1,c2);
+			AddEdge(c2,m2);
+			AddEdge(c2,m3);
 
-			{6,18},
-			{14,18},
+			// =====================================================
+			// WINGS
+			// =====================================================
 
-			// rear wing support
-			{15,16},
+			auto BuildWing =
+				[&](float side, float zOffset)
+				{
+					float sx = side;
 
-			// =====================
-			// Vertical fins
-			// =====================
-			{9,19},
-			{12,19},
+					int rootA = AddPoint(
+						0.55f*sx, 0.8f, zOffset);
 
-			{10,20},
-			{11,20},
+					int rootB = AddPoint(
+						0.55f*sx, -0.8f, zOffset);
 
-			{19,20},
+					int tipFront = AddPoint(
+						2.8f*sx, 0.9f, zOffset);
 
-			// =====================
-			// Cockpit
-			// =====================
-			{0,21},
-			{21,22},
-			{22,7},
-			{22,8},
-		};
+					int tipRear = AddPoint(
+						2.2f*sx, -1.2f, zOffset);
 
-		const int edgeCount =
-			sizeof(edges) / sizeof(edges[0]);
+					int midOuter = AddPoint(
+						2.0f*sx, -0.2f, zOffset);
 
-		m_iLineListSpaceShipCount = edgeCount;
+					// outer frame
+					AddEdge(rootA,tipFront);
+					AddEdge(tipFront,midOuter);
+					AddEdge(midOuter,tipRear);
+					AddEdge(tipRear,rootB);
+					AddEdge(rootA,rootB);
 
-		delete[] m_pLineListSpaceShip;
-		m_pLineListSpaceShip =
-			new SVertex[edgeCount * 2];
+					// internal ribs
+					AddEdge(rootA,midOuter);
+					AddEdge(rootB,midOuter);
+					AddEdge(rootA,tipRear);
+					AddEdge(rootB,tipFront);
 
-		for (int e = 0; e < edgeCount; ++e)
-		{
-			const int i0 = edges[e][0];
-			const int i1 = edges[e][1];
+					// attach to body
+					AddEdge(m0,rootA);
+					AddEdge(r0,rootB);
 
-			m_pLineListSpaceShip[e * 2 + 0].vPos = p[i0];
-			m_pLineListSpaceShip[e * 2 + 1].vPos = p[i1];
+					AddEdge(m1,rootA);
+					AddEdge(r1,rootB);
+
+					// laser cannon
+					int gun0 = AddPoint(
+						2.8f * sx,
+						1.0f,
+						zOffset);
+
+					int gun1 = AddPoint(
+						2.8f * sx,
+						2.0f,
+						zOffset);
+
+					AddEdge(tipFront, gun0);
+					AddEdge(gun0, gun1);
+
+					// engine pod
+					const float ex = 1.35f*sx;
+					const float ey = -0.7f;
+					const float ez = zOffset;
+
+					const float radius = 0.16f;
+
+					int prev = -1;
+					int first = -1;
+
+					for(int i=0;i<8;i++)
+					{
+						float a =
+							float(i) / 8.0f *
+							6.2831853f;
+
+						// XZ kor, Y iranyba nez
+						int p = AddPoint(
+							ex + cosf(a) * radius,
+							ey,
+							ez + sinf(a) * radius);
+
+						if(i == 0)
+							first = p;
+
+						if(prev != -1)
+							AddEdge(prev, p);
+
+						prev = p;
+					}
+
+					AddEdge(prev,first);
+
+					// engine mount
+					AddEdge(rootB,first);
+					AddEdge(midOuter,first);
+				};
+
+			// top wings
+			BuildWing(-1.0f, 0.62f);
+			BuildWing( 1.0f, 0.62f);
+
+			// bottom wings
+			BuildWing(-1.0f,-0.62f);
+			BuildWing( 1.0f,-0.62f);
+
+			// =====================================================
+			// Allocate
+			// =====================================================
+
+			m_iLineListSpaceShipCount =
+				(int)edges.size();
+
+			delete[] m_pLineListSpaceShip;
+
+			m_pLineListSpaceShip =
+				new SVertex[
+					m_iLineListSpaceShipCount * 2];
+
+			for(int i=0;
+				i<m_iLineListSpaceShipCount;
+				++i)
+			{
+				m_pLineListSpaceShip[i*2+0]
+					.vPos =
+					pts[edges[i].first];
+
+				m_pLineListSpaceShip[i*2+1]
+					.vPos =
+					pts[edges[i].second];
+			}
 		}
 	}
 }
@@ -240,7 +334,7 @@ void CScene01::Render()
 
 	{
 		float fTime = (float)CEngine::GetInstance().GetFrameCount() * 0.001f;
-		SVector3 vEye( 250.0f*cosf( fTime ), 250.0f * sinf( fTime ), 100.0f );
+		SVector3 vEye( 1500.0f*cosf( fTime ), 1500.0f * sinf( fTime ), 200.0f );
 		SVector3 vLookAt( 0.0f, 0.0f, 0.0f );
 		SVector3 vUp( 0.0f, 0.0f, 1.0f );
 
