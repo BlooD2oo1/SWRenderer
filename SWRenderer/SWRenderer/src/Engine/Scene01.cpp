@@ -227,8 +227,8 @@ void CScene01::Create()
 				};
 
 			// top wings
-			BuildWing(-1.0f, 0.62f);
-			BuildWing( 1.0f, 0.62f);
+			BuildWing(-1.6f, 0.12f);
+			BuildWing( 1.6f, 0.12f);
 
 			// bottom wings
 			BuildWing(-1.0f,-0.62f);
@@ -333,12 +333,12 @@ void CScene01::Render()
 	//DrawPixel( CEngine::GetInstance().GetFrameBuffer(), m_sMouseState.x, m_sMouseState.y, RGBA8{ 255, 0, 0, 255 } );
 
 	{
-		float fTime = (float)CEngine::GetInstance().GetFrameCount() * 0.001f;
-		SVector3 vEye( 1500.0f*cosf( fTime ), 1500.0f * sinf( fTime ), 200.0f );
+		float fTime = (float)CEngine::GetInstance().GetFrameCount() * 0.002f;
+		SVector3 vEye( 200.0f*cosf( fTime ), 200.0f * sinf( fTime ), 50.0f );
 		SVector3 vLookAt( 0.0f, 0.0f, 0.0f );
 		SVector3 vUp( 0.0f, 0.0f, 1.0f );
 
-		float fFOVY = 45.0f / 180.0f * PI;
+		float fFOVY = 90.0f / 180.0f * PI;
 		float fAspect = (float)CEngine::GetInstance().GetFrameBuffer().iWidth / (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
 		float fNear = 0.01f;
 		float fFar = 1000.0f;
@@ -373,12 +373,12 @@ void CScene01::Render()
 			SVector2 vP21( vP1.x, vP1.y );
 
 			vP20.x = vP20.x*0.5f + 0.5f;
-			vP20.y = vP20.y*0.5f + 0.5f;
+			vP20.y = -vP20.y*0.5f + 0.5f;
 			vP20.x *= (float)CEngine::GetInstance().GetFrameBuffer().iWidth;
 			vP20.y *= (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
 
 			vP21.x = vP21.x*0.5f + 0.5f;
-			vP21.y = vP21.y*0.5f + 0.5f;
+			vP21.y = -vP21.y*0.5f + 0.5f;
 			vP21.x *= (float)CEngine::GetInstance().GetFrameBuffer().iWidth;			
 			vP21.y *= (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
 
