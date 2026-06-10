@@ -31,6 +31,9 @@
     <ClCompile Include="src\Engine\Scene01.cpp">
       <Filter>src\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Math.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.h">
@@ -50,6 +53,9 @@
     </ClInclude>
     <ClInclude Include="src\Engine\Scene01.h">
       <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Math.h">
+      <Filter>src\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -52,10 +52,12 @@ bool CEngine::On_KeyUp( uint32_t key )
     return false;
 }
 
-bool CEngine::On_MouseMove( int x, int y )
+bool CEngine::On_MouseMove( int deltax, int deltay )
 {
-	m_sMouseState.x = x;
-	m_sMouseState.y = y;
+	m_sMouseState.x += deltax;
+	m_sMouseState.y += deltay;
+	m_sMouseState.x = Clamp( m_sMouseState.x, 0, m_sFrameBuffer.iWidth-1 );
+	m_sMouseState.y = Clamp( m_sMouseState.y, 0, m_sFrameBuffer.iHeight-1 );
     return false;
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )

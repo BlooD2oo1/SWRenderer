@@ -26,6 +26,8 @@ constexpr int iPixelSizeY = 5;
 
 bool bRunning = true;
 
+bool bLockMouse = true;
+
 double fRenderTime = 0.0;
 
 HBITMAP hBitmapFrameBuffer = nullptr;
@@ -78,8 +80,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (LOWORD(lParam) == HTCLIENT)
 			{
-				SetCursor(nullptr);
-				return TRUE;
+				if ( bLockMouse )
+				{
+					SetCursor(nullptr);
+					return TRUE;
+				}
 			}
 		}
 
@@ -97,9 +102,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case WM_MOUSEMOVE:
 		{
-			int iMouseX = GET_X_LPARAM(lParam) / iPixelSizeX;
-			int iMouseY = GET_Y_LPARAM(lParam) / iPixelSizeY;
-			CEngine::GetInstance().On_MouseMove(iMouseX, iMouseY);
+			int iX = GET_X_LPARAM(lParam);
+			int iY = GET_Y_LPARAM(lParam);
+
+			if ( bLockMouse )
+			{
+				int centerX = (WIDTH * iPixelSizeX) / 2;
+				int centerY = (HEIGHT * iPixelSizeY) / 2;
+
+				if (iX != centerX || iY != centerY)
+				{
+					CEngine::GetInstance().On_MouseMove( iX - centerX, iY - centerY );
+
+					POINT pt = { centerX, centerY };
+					ClientToScreen(hwnd, &pt);
+					SetCursorPos(pt.x, pt.y);
+				}
+			}
+
+			
 			return 0;
 		}
 
@@ -113,6 +134,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case WM_MBUTTONDOWN:
 			CEngine::GetInstance().On_MouseButtonDown(2);
+			bLockMouse = !bLockMouse;
+			if ( !bLockMouse )
+			{
+				HCURSOR hDefault = LoadCursor(nullptr, IDC_ARROW);
+				SetCursor(hDefault);
+			}
 			return 0;
 
 		case WM_MBUTTONUP:

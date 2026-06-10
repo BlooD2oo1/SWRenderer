@@ -83,6 +83,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\Engine\Engine.cpp" />
     <ClCompile Include="src\Engine\Scene01.cpp" />
     <ClCompile Include="src\Graphics\Graphics.cpp" />
+    <ClCompile Include="src\Graphics\Math.cpp" />
     <ClCompile Include="src\Graphics\Vector.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
@@ -92,6 +93,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Engine\Engine.h" />
     <ClInclude Include="src\Engine\Scene01.h" />
     <ClInclude Include="src\Graphics\Graphics.h" />
+    <ClInclude Include="src\Graphics\Math.h" />
     <ClInclude Include="src\Graphics\Vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

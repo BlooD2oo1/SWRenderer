@@ -227,11 +227,28 @@ struct SMatrix
 
 	static SMatrix& BuildProjectionMatrix( SMatrix& out, float fovY, float aspect, float znear, float zfar )
 	{
-		float f = 1.0f / tanf( fovY * 0.5f );
-		out.m00 = f / aspect; out.m01 = 0.0f; out.m02 = 0.0f; out.m03 = 0.0f;
-		out.m10 = 0.0f; out.m11 = f; out.m12 = 0.0f; out.m13 = 0.0f;
-		out.m20 = 0.0f; out.m21 = 0.0f; out.m22 = (zfar + znear) / (znear - zfar); out.m23 = (2.0f * zfar * znear) / (znear - zfar);
-		out.m30 = 0.0f; out.m31 = 0.0f; out.m32 = -1.0f; out.m33 = 0.0f;
+		const float f = 1.0f / tanf(fovY * 0.5f);
+
+		out.m00 = f / aspect;
+		out.m01 = 0.0f;
+		out.m02 = 0.0f;
+		out.m03 = 0.0f;
+
+		out.m10 = 0.0f;
+		out.m11 = f;
+		out.m12 = 0.0f;
+		out.m13 = 0.0f;
+
+		out.m20 = 0.0f;
+		out.m21 = 0.0f;
+		out.m22 = (zfar + znear) / (znear - zfar);
+		out.m23 = -1.0f;
+
+		out.m30 = 0.0f;
+		out.m31 = 0.0f;
+		out.m32 = (2.0f * zfar * znear) / (znear - zfar);
+		out.m33 = 0.0f;
+
 		return out;
 	}	
 };

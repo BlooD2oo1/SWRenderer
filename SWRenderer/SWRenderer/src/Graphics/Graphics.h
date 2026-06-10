@@ -40,9 +40,9 @@ static uint32_t BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;
 	sDest.rgba = dest;
-	uint16_t rOut = sDest.r + src.r;
-	uint16_t gOut = sDest.g + src.g;
-	uint16_t bOut = sDest.b + src.b;
+	uint16_t rOut = sDest.r + ((src.r*src.a)>>8);
+	uint16_t gOut = sDest.g + ((src.g*src.a)>>8);
+	uint16_t bOut = sDest.b + ((src.b*src.a)>>8);
 	rOut = rOut > 255 ? 255 : rOut;
 	gOut = gOut > 255 ? 255 : gOut;
 	bOut = bOut > 255 ? 255 : bOut;
@@ -124,4 +124,20 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 		
 		DrawPixel( sFrameBuffer, x, y, sColor );
 	}
+}
+
+static void ProjectCoord( SVector2& vOut, const SVector3& vP, const SMatrix& matViewProj, const int iWidth, const int iHeight )
+{
+	SVector4 vPhSrc( vP.x, vP.y, vP.z, 1.0f );
+	SVector4 vPh;
+	SMatrix::Mul( vPh, vPhSrc, matViewProj );
+
+	float fWRec = 1.0f / vPh.w;
+	vOut.x = vPh.x * fWRec;
+	vOut.y = vPh.y * fWRec;
+
+	vOut.x = vOut.x*0.5f + 0.5f;
+	vOut.y = -vOut.y*0.5f + 0.5f;
+	vOut.x *= (float)iWidth;
+	vOut.y *= (float)iHeight;
 }

@@ -23,8 +23,7 @@ private:
 
 	struct SParticle
 	{
-		SVector2 vPos;
-		SVector2 vMov;
+		SVector3 vPos;
 		float a;
 	};
 	SParticle*		m_pParticles;
@@ -32,4 +31,5 @@ private:
 
 	SVertex*		m_pLineListSpaceShip;
 	int				m_iLineListSpaceShipCount;
+	SMatrix			m_matWorldSpaceShip;
 };
