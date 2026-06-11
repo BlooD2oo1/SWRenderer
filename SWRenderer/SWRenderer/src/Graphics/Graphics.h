@@ -111,6 +111,7 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 
 	int iXStart = (int)(v0.x+0.5f);
 	int iXEnd = (int)(v1.x-0.5f);
+	assert( iXEnd-iXStart < 1000 );
 	for ( int iX = iXStart; iX <= iXEnd; iX++ )
 	{
 		float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y;
@@ -126,13 +127,32 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 	}
 }
 
-static void ProjectCoord( SVector2& vOut, const SVector3& vP, const SMatrix& matViewProj, const int iWidth, const int iHeight )
+static uint8_t ClipCode( const SVector4& vP4 )
+{
+	uint8_t iRet = 0;
+	iRet |= ( vP4.x <= -vP4.w ) ? 1 : 0;
+	iRet |= ( vP4.x >= vP4.w ) ? 2 : 0;
+	iRet |= ( vP4.y <= -vP4.w ) ? 4 : 0;
+	iRet |= ( vP4.y >= vP4.w ) ? 8 : 0;
+	iRet |= ( vP4.z <= 0.0f ) ? 16 : 0;
+	iRet |= ( vP4.z >= vP4.w ) ? 32 : 0;
+	return iRet;
+}
+
+static bool ProjectPoint( SVector2& vOut, const SVector3& vP, const SMatrix& matViewProj, const int iWidth, const int iHeight )
 {
 	SVector4 vPhSrc( vP.x, vP.y, vP.z, 1.0f );
 	SVector4 vPh;
 	SMatrix::Mul( vPh, vPhSrc, matViewProj );
-
+	
+	uint8_t iClipCode = ClipCode( vPh );
+	if ( iClipCode != 0 )
+	{
+		return false;
+	}
+	
 	float fWRec = 1.0f / vPh.w;
+
 	vOut.x = vPh.x * fWRec;
 	vOut.y = vPh.y * fWRec;
 
@@ -140,4 +160,65 @@ static void ProjectCoord( SVector2& vOut, const SVector3& vP, const SMatrix& mat
 	vOut.y = -vOut.y*0.5f + 0.5f;
 	vOut.x *= (float)iWidth;
 	vOut.y *= (float)iHeight;
+
+	return true;
+}
+
+static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, const SVector3& vP1, const SMatrix& matViewProj, const int iWidth, const int iHeight )
+{
+	SVector4 vPh0Src( vP0.x, vP0.y, vP0.z, 1.0f );
+	SVector4 vPh0;
+	SMatrix::Mul( vPh0, vPh0Src, matViewProj );
+
+	SVector4 vPh1Src( vP1.x, vP1.y, vP1.z, 1.0f );
+	SVector4 vPh1;
+	SMatrix::Mul( vPh1, vPh1Src, matViewProj );
+
+	uint8_t iClipCode0 = ClipCode( vPh0 );
+	uint8_t iClipCode1 = ClipCode( vPh1 );
+
+	if ( iClipCode0 != 0 || iClipCode1 != 0 )
+	{
+		return false;
+	}
+
+	/*while ( 1 )
+	{
+		if ( iClipCode0 == 0 && iClipCode1 == 0 )
+		{
+			break;
+		}
+		if ( ( iClipCode0 & iClipCode1 ) != 0 )
+		{
+			return false;
+		}
+
+		uint8_t iSideCode;
+		if		( iClipCode0 & 1  != iClipCode1 & 1  )	iSideCode = 1;
+		else if	( iClipCode0 & 2  != iClipCode1 & 2  )	iSideCode = 2;
+		else if	( iClipCode0 & 4  != iClipCode1 & 4  )	iSideCode = 4;
+		else if	( iClipCode0 & 8  != iClipCode1 & 8  )	iSideCode = 8;
+		else if	( iClipCode0 & 16 != iClipCode1 & 16 )	iSideCode = 16;
+		else											iSideCode = 32;
+	}*/
+
+	float fWRec0 = 1.0f / vPh0.w;
+	vOut0.x = vPh0.x * fWRec0;
+	vOut0.y = vPh0.y * fWRec0;
+
+	float fWRec1 = 1.0f / vPh1.w;
+	vOut1.x = vPh1.x * fWRec1;
+	vOut1.y = vPh1.y * fWRec1;
+
+	vOut0.x = vOut0.x*0.5f + 0.5f;
+	vOut0.y = -vOut0.y*0.5f + 0.5f;
+	vOut0.x *= (float)iWidth;
+	vOut0.y *= (float)iHeight;
+
+	vOut1.x = vOut1.x*0.5f + 0.5f;
+	vOut1.y = -vOut1.y*0.5f + 0.5f;
+	vOut1.x *= (float)iWidth;
+	vOut1.y *= (float)iHeight;
+
+	return true;
 }
