@@ -281,14 +281,14 @@ void CScene01::Render()
 	SMatrix matViewProj;
 	{
 		float fTime = (float)CEngine::GetInstance().GetFrameCount() * 0.001f;
-		SVector3 vEye( 11.0f*cosf( fTime ), 11.0f * sinf( fTime ), 5.0f );
+		SVector3 vEye( 4.0f*cosf( fTime ), 4.0f * sinf( fTime ), 0.5f );
 		SVector3 vLookAt( 0.0f, 0.0f, 0.0f );
 		SVector3 vUp( 0.0f, 0.0f, 1.0f );
 
 		float fFOVY = 80.0f / 180.0f * PI;
 		float fAspect = (float)CEngine::GetInstance().GetFrameBuffer().iWidth / (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
-		float fNear = 0.01f;
-		float fFar = 1000.0f;
+		float fNear = 0.5f;
+		float fFar = 6.0f;
 
 		SMatrix matView;
 		SMatrix matProj;

@@ -26,7 +26,7 @@ constexpr int iPixelSizeY = 5;
 
 bool bRunning = true;
 
-bool bLockMouse = true;
+bool bLockMouse = false;
 
 double fRenderTime = 0.0;
 

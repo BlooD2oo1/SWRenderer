@@ -111,7 +111,7 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 
 	int iXStart = (int)(v0.x+0.5f);
 	int iXEnd = (int)(v1.x-0.5f);
-	assert( iXEnd-iXStart < 1000 );
+	//assert( iXEnd-iXStart < 1000 );
 	for ( int iX = iXStart; iX <= iXEnd; iX++ )
 	{
 		float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y;
@@ -134,8 +134,6 @@ static uint8_t ClipCode( const SVector4& vP4 )
 	iRet |= ( vP4.x >= vP4.w ) ? 2 : 0;
 	iRet |= ( vP4.y <= -vP4.w ) ? 4 : 0;
 	iRet |= ( vP4.y >= vP4.w ) ? 8 : 0;
-	iRet |= ( vP4.z <= 0.0f ) ? 16 : 0;
-	iRet |= ( vP4.z >= vP4.w ) ? 32 : 0;
 	return iRet;
 }
 
@@ -174,13 +172,61 @@ static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, 
 	SVector4 vPh1;
 	SMatrix::Mul( vPh1, vPh1Src, matViewProj );
 
+	//depth clip
+	while ( 1 )
+	{
+		uint8_t iClipCode0 = ( vPh0.z < 0.0f ) | ( (vPh0.z > vPh0.w ) << 1 );
+		uint8_t iClipCode1 = ( vPh1.z < 0.0f ) | ( (vPh1.z > vPh1.w ) << 1 );
+		if ( iClipCode0 == 0 && iClipCode1 == 0 )
+		{
+			break;
+		}
+		if ( ( iClipCode0 & iClipCode1 ) != 0 )
+		{
+			return false;
+		}
+
+		int bit = ( ( iClipCode0 & 1 ) != ( iClipCode1 & 1 ) ) ? 1 : 2;
+
+		SVector4 vTemp;
+		float t;
+		{
+			switch ( bit )
+			{
+			case 1:
+				t = ( 0.0f - vPh0.z ) / ( vPh1.z - vPh0.z );
+				vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
+				vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
+				vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
+				vTemp.z = 0.0f;
+				break;
+			case 2:
+				t = ( vPh0.w - vPh0.z ) / ( vPh1.z - vPh0.z - vPh1.w + vPh0.w );
+				vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
+				vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
+				vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
+				vTemp.z = vTemp.w;
+				break;
+			}
+		}
+
+		if ( iClipCode0 & bit )
+		{
+			vPh0 = vTemp;
+		}
+		else
+		{
+			vPh1 = vTemp;
+		}
+	}
+
 	uint8_t iClipCode0 = ClipCode( vPh0 );
 	uint8_t iClipCode1 = ClipCode( vPh1 );
 
-	if ( iClipCode0 != 0 || iClipCode1 != 0 )
+	/*if ( iClipCode0 != 0 || iClipCode1 != 0 )
 	{
 		return false;
-	}
+	}*/
 
 	/*while ( 1 )
 	{
@@ -197,9 +243,8 @@ static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, 
 		if		( iClipCode0 & 1  != iClipCode1 & 1  )	iSideCode = 1;
 		else if	( iClipCode0 & 2  != iClipCode1 & 2  )	iSideCode = 2;
 		else if	( iClipCode0 & 4  != iClipCode1 & 4  )	iSideCode = 4;
-		else if	( iClipCode0 & 8  != iClipCode1 & 8  )	iSideCode = 8;
-		else if	( iClipCode0 & 16 != iClipCode1 & 16 )	iSideCode = 16;
-		else											iSideCode = 32;
+		else											iSideCode = 8;
+
 	}*/
 
 	float fWRec0 = 1.0f / vPh0.w;
