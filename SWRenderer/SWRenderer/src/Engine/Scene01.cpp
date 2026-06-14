@@ -26,7 +26,7 @@ void CScene01::Clear()
 void CScene01::Create()
 {
 	Clear();
-	m_iParticleCount = 3000;
+	m_iParticleCount = 10000;
 	m_pParticles = new SParticle[m_iParticleCount];
 	for ( int i = 0; i < m_iParticleCount; i++ )
 	{
@@ -37,8 +37,7 @@ void CScene01::Create()
 		m_pParticles[i].vPos.y = sinf(fU)*fR;
 		m_pParticles[i].vPos.z = fV;
 		SVector3::Mul( m_pParticles[i].vPos, m_pParticles[i].vPos, 300.0f );
-		m_pParticles[i].a = ((float)rand()/(float)RAND_MAX);
-		m_pParticles[i].a *= m_pParticles[i].a;
+		m_pParticles[i].a = ((float)rand()/(float)RAND_MAX) * 0.55f + 0.45f;
 		m_pParticles[i].a *= m_pParticles[i].a;
 		m_pParticles[i].a *= m_pParticles[i].a;
 		m_pParticles[i].a *= 0.3f;
@@ -280,15 +279,16 @@ void CScene01::Render()
 {
 	SMatrix matViewProj;
 	{
-		float fTime = (float)CEngine::GetInstance().GetFrameCount() * 0.001f;
-		SVector3 vEye( 4.0f*cosf( fTime ), 4.0f * sinf( fTime ), 0.5f );
+		static float fTime = 0.f;
+		fTime += 0.01f * ( (float)CEngine::GetInstance().GetMouseState().x / (float)CEngine::GetInstance().GetFrameBuffer().iWidth );
+		SVector3 vEye( 10.0f*cosf( fTime ), 10.0f * sinf( fTime ), 5.0f * sinf( fTime * 0.2f ) );
 		SVector3 vLookAt( 0.0f, 0.0f, 0.0f );
 		SVector3 vUp( 0.0f, 0.0f, 1.0f );
 
-		float fFOVY = 80.0f / 180.0f * PI;
+		float fFOVY = 60.0f / 180.0f * PI;
 		float fAspect = (float)CEngine::GetInstance().GetFrameBuffer().iWidth / (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
 		float fNear = 0.5f;
-		float fFar = 6.0f;
+		float fFar = 5000.0f;
 
 		SMatrix matView;
 		SMatrix matProj;
@@ -305,43 +305,84 @@ void CScene01::Render()
 	{
 		uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
 
-		SVector2 vPScreen;
+		/*SVector2 vPScreen;
 		if ( ProjectPoint( vPScreen, m_pParticles[i].vPos, matViewProj, CEngine::GetInstance().GetFrameBuffer().iWidth, CEngine::GetInstance().GetFrameBuffer().iHeight ) )
 		{
 			DrawPixel( CEngine::GetInstance().GetFrameBuffer(), (int)vPScreen.x, (int)vPScreen.y, BGRA8{ 255, 255, 255, alpha } );
-		}
-		
-		//SVector2 vPScreenPrev;
-		//ProjectCoord( vPScreenPrev, m_pParticles[i].vPos, matViewProjPrev, CEngine::GetInstance().GetFrameBuffer().iWidth, CEngine::GetInstance().GetFrameBuffer().iHeight );
-		//DrawLine( CEngine::GetInstance().GetFrameBuffer(), vPScreen, vPScreenPrev, BGRA8{ 255, 255, 255, alpha } );
-	}
+		}*/
 
-	{
-		//DrawLine( CEngine::GetInstance().GetFrameBuffer(), SVector2( 100.0, 100.0 ), SVector2( (float)m_sMouseState.x, (float)m_sMouseState.y ), RGBA8{ 200, 0, 0, 255 } );
-		//DrawPixelAA( CEngine::GetInstance().GetFrameBuffer(), SVector2( CEngine::GetInstance().GetMouseState().x, CEngine::GetInstance().GetMouseState().y ), BGRA8{ 255, 255, 255, 255 } );		
-	}
-
-	{
-		SMatrix matWorldViewProj;		
-		SMatrix::Mul( matWorldViewProj, m_matWorldSpaceShip, matViewProj );
-
-		for ( int i = 0; i < m_iLineListSpaceShipCount; i++ )
+		SVector4 vPh0;
+		SVector4 vPh1;
 		{
-			/*SVector2 vPScreen01;
-			if ( ProjectPoint( vPScreen01, m_pLineListSpaceShip[i*2+0].vPos, matWorldViewProj, CEngine::GetInstance().GetFrameBuffer().iWidth, CEngine::GetInstance().GetFrameBuffer().iHeight ) )
-			{
-				SVector2 vPScreen02;
-				if ( ProjectPoint( vPScreen02, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, CEngine::GetInstance().GetFrameBuffer().iWidth, CEngine::GetInstance().GetFrameBuffer().iHeight ) )
-				{
-					DrawLine( CEngine::GetInstance().GetFrameBuffer(), vPScreen01, vPScreen02, BGRA8{ 100, 50, 30, 255 } );
-				}
-			}*/
+			SVector4 vPhSrc( m_pParticles[i].vPos, 1.0f );
+			SMatrix::Mul( vPh0, vPhSrc, matViewProj );			
+			SMatrix::Mul( vPh1, vPhSrc, matViewProjPrev );
+		}
 
-			SVector2 vPScreen0;
-			SVector2 vPScreen1;
-			if ( ProjectLine( vPScreen0, vPScreen1, m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, CEngine::GetInstance().GetFrameBuffer().iWidth, CEngine::GetInstance().GetFrameBuffer().iHeight ) )
+		//DrawLine3D( CEngine::GetInstance().GetFrameBuffer(), vPh0, vPh1, BGRA8{ 255, 255, 255, alpha } );
+
+		if ( ClipLineDepth( vPh0, vPh1 ) )
+		{
 			{
-				DrawLine( CEngine::GetInstance().GetFrameBuffer(), vPScreen0, vPScreen1, BGRA8{ 100, 50, 30, 255 } );
+				float fWRec0 = 1.0f / vPh0.w;
+				vPh0.x = vPh0.x * fWRec0;
+				vPh0.y = vPh0.y * fWRec0;
+				//vPh0.z = vPh0.z * fWRec0;
+				vPh0.w = 1.0f;
+
+				float fWRec1 = 1.0f / vPh1.w;
+				vPh1.x = vPh1.x * fWRec1;
+				vPh1.y = vPh1.y * fWRec1;
+				//vPh1.z = vPh1.z * fWRec1;
+				vPh1.w = 1.0f;
+			}
+
+			if ( ClipLineXY( vPh0, vPh1 ) )
+			{
+				SVector2 v1MinusHalfPixelRecip( 1.0f - 1.0f / (float)CEngine::GetInstance().GetFrameBuffer().iWidth, 1.0f - 1.0f / (float)CEngine::GetInstance().GetFrameBuffer().iHeight );
+
+				SVector2 vP0( (vPh0.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh0.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );			
+				vP0.x *= (float)CEngine::GetInstance().GetFrameBuffer().iWidth;
+				vP0.y *= (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
+
+				SVector2 vP1( (vPh1.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh1.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );
+				vP1.x *= (float)CEngine::GetInstance().GetFrameBuffer().iWidth;
+				vP1.y *= (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
+				SVector2 v;
+				SVector2::Sub( v, vP1, vP0 );
+				if ( SVector2::LengthSq( v ) > 1.0f )
+				{
+					DrawLine( CEngine::GetInstance().GetFrameBuffer(), vP0, vP1, BGRA8{ 255, 255, 255, alpha } );
+				}
+				else
+				{
+					DrawPixel( CEngine::GetInstance().GetFrameBuffer(), (int)vP0.x, (int)vP0.y, BGRA8{ 255, 255, 255, alpha } );
+				}
+			}
+		}
+
+	}
+
+	{
+		int iInstCount = 10;
+		for ( int iInstIndX = 0; iInstIndX < iInstCount; iInstIndX++ )
+		for ( int iInstIndY = 0; iInstIndY < iInstCount; iInstIndY++ )
+		for ( int iInstIndZ = 0; iInstIndZ < iInstCount; iInstIndZ++ )
+		{
+			SVector3 vPos( (float)(iInstIndX-(float)(iInstCount-1)/2.0f)*10.0f, (float)(iInstIndY-(float)(iInstCount-1)/2.0f)*8.0f, (float)(iInstIndZ-(float)(iInstCount-1)/2.0f)*5.0f );
+			SMatrix matWorld;
+			SMatrix::Identity( matWorld );
+			matWorld.m30 = vPos.x;
+			matWorld.m31 = vPos.y;
+			matWorld.m32 = vPos.z;
+			SMatrix matWorldViewProj;		
+			SMatrix::Mul( matWorldViewProj, matWorld, matViewProj );
+			float fAlpha = 10.0f / SVector3::Length( vPos );
+			fAlpha = Clamp( fAlpha, 0.0f, 1.0f );
+			uint8_t iAlpha = (uint8_t)(fAlpha*255.0f);
+			for ( int i = 0; i < m_iLineListSpaceShipCount; i++ )
+			{				
+				DrawLine3D( CEngine::GetInstance().GetFrameBuffer(), m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, BGRA8{ 100, 50, 30, iAlpha } );
 			}
 		}
 	}

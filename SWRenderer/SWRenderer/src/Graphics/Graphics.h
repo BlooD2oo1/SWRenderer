@@ -62,12 +62,17 @@ static void ClearFrameBuffer( SFrameBuffer& sFrameBuffer, BGRA8 sColor )
 
 static void DrawPixel( SFrameBuffer& sFrameBuffer, int x, int y, BGRA8 sColor )
 {
-	if ( x >= 0 && x < sFrameBuffer.iWidth &&
-		y >= 0 && y < sFrameBuffer.iHeight )
+	assert( x >= 0 && x < sFrameBuffer.iWidth && y >= 0 && y < sFrameBuffer.iHeight );
+	sFrameBuffer.pData[y * sFrameBuffer.iWidth + x] = BlendAdditive( sFrameBuffer.pData[y * sFrameBuffer.iWidth + x], sColor );
+}
+
+/*static void DrawPixelSafe( SFrameBuffer& sFrameBuffer, int x, int y, BGRA8 sColor )
+{
+	if ( x >= 0 && x < sFrameBuffer.iWidth && y >= 0 && y < sFrameBuffer.iHeight )
 	{
 		sFrameBuffer.pData[y * sFrameBuffer.iWidth + x] = BlendAdditive( sFrameBuffer.pData[y * sFrameBuffer.iWidth + x], sColor );
 	}
-}
+}*/
 
 static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, BGRA8 sColor )
 {
@@ -94,7 +99,14 @@ static void DrawPixelAA( SFrameBuffer& sFrameBuffer, const SVector2& v, BGRA8 sC
 
 static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVector2& v1o, BGRA8 sColor )
 {
-	bool bSwizzle = abs(v1o.x - v0o.x) < abs(v1o.y - v0o.y);
+	SVector2 v;
+	SVector2::Sub( v, v1o, v0o );
+	if ( v.x == 0.0f && v.y == 0.0f )
+	{
+		return;
+	}
+
+	bool bSwizzle = fabsf(v.x) < fabsf(v.y);
 
 	SVector2 v0( v0o );
 	SVector2 v1( v1o );
@@ -104,7 +116,6 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 		std::swap( v1.x, v1.y );
 	}
 	if ( v1.x < v0.x ) std::swap( v0, v1 );
-	SVector2 v;
 	SVector2::Sub( v, v1, v0 );
 
 	//if ( bSwizzle ) sColor.r=sColor.r>>2;
@@ -118,6 +129,7 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 
 		int x = iX;
 		int y = (int)fY;
+		//int y = (int)std::round( fY );
 		if ( bSwizzle )
 		{
 			std::swap( x, y );
@@ -130,10 +142,10 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 static uint8_t ClipCode( const SVector4& vP4 )
 {
 	uint8_t iRet = 0;
-	iRet |= ( vP4.x <= -vP4.w ) ? 1 : 0;
-	iRet |= ( vP4.x >= vP4.w ) ? 2 : 0;
-	iRet |= ( vP4.y <= -vP4.w ) ? 4 : 0;
-	iRet |= ( vP4.y >= vP4.w ) ? 8 : 0;
+	iRet |= ( vP4.x < -vP4.w ) ? 1 : 0;
+	iRet |= ( vP4.x > vP4.w ) ? 2 : 0;
+	iRet |= ( vP4.y < -vP4.w ) ? 4 : 0;
+	iRet |= ( vP4.y > vP4.w ) ? 8 : 0;
 	return iRet;
 }
 
@@ -162,17 +174,8 @@ static bool ProjectPoint( SVector2& vOut, const SVector3& vP, const SMatrix& mat
 	return true;
 }
 
-static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, const SVector3& vP1, const SMatrix& matViewProj, const int iWidth, const int iHeight )
+static bool ClipLineDepth( SVector4& vPh0, SVector4& vPh1 )
 {
-	SVector4 vPh0Src( vP0.x, vP0.y, vP0.z, 1.0f );
-	SVector4 vPh0;
-	SMatrix::Mul( vPh0, vPh0Src, matViewProj );
-
-	SVector4 vPh1Src( vP1.x, vP1.y, vP1.z, 1.0f );
-	SVector4 vPh1;
-	SMatrix::Mul( vPh1, vPh1Src, matViewProj );
-
-	//depth clip
 	while ( 1 )
 	{
 		uint8_t iClipCode0 = ( vPh0.z < 0.0f ) | ( (vPh0.z > vPh0.w ) << 1 );
@@ -189,24 +192,27 @@ static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, 
 		int bit = ( ( iClipCode0 & 1 ) != ( iClipCode1 & 1 ) ) ? 1 : 2;
 
 		SVector4 vTemp;
-		float t;
 		{
 			switch ( bit )
 			{
 			case 1:
-				t = ( 0.0f - vPh0.z ) / ( vPh1.z - vPh0.z );
+			{
+				float t = ( 0.0f - vPh0.z ) / ( vPh1.z - vPh0.z );
 				vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
 				vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
 				vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
 				vTemp.z = 0.0f;
-				break;
+			}
+			break;
 			case 2:
-				t = ( vPh0.w - vPh0.z ) / ( vPh1.z - vPh0.z - vPh1.w + vPh0.w );
+			{
+				float t = ( vPh0.w - vPh0.z ) / ( vPh1.z - vPh0.z - vPh1.w + vPh0.w );
 				vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
 				vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
 				vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
 				vTemp.z = vTemp.w;
-				break;
+			}
+			break;
 			}
 		}
 
@@ -220,16 +226,21 @@ static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, 
 		}
 	}
 
-	uint8_t iClipCode0 = ClipCode( vPh0 );
-	uint8_t iClipCode1 = ClipCode( vPh1 );
+	return true;
+}
 
+static bool ClipLineXY( SVector4& vPh0, SVector4& vPh1 )
+{
 	/*if ( iClipCode0 != 0 || iClipCode1 != 0 )
 	{
-		return false;
+	return false;
 	}*/
 
-	/*while ( 1 )
+	while ( 1 )
 	{
+		uint8_t iClipCode0 = ClipCode( vPh0 );
+		uint8_t iClipCode1 = ClipCode( vPh1 );
+
 		if ( iClipCode0 == 0 && iClipCode1 == 0 )
 		{
 			break;
@@ -239,31 +250,93 @@ static bool ProjectLine( SVector2& vOut0, SVector2& vOut1, const SVector3& vP0, 
 			return false;
 		}
 
-		uint8_t iSideCode;
-		if		( iClipCode0 & 1  != iClipCode1 & 1  )	iSideCode = 1;
-		else if	( iClipCode0 & 2  != iClipCode1 & 2  )	iSideCode = 2;
-		else if	( iClipCode0 & 4  != iClipCode1 & 4  )	iSideCode = 4;
-		else											iSideCode = 8;
+		uint8_t bit;
+		if		( ( iClipCode0 & 1 ) != ( iClipCode1 & 1 ) )	bit = 1;
+		else if	( ( iClipCode0 & 2 ) != ( iClipCode1 & 2 ) )	bit = 2;
+		else if	( ( iClipCode0 & 4 ) != ( iClipCode1 & 4 ) )	bit = 4;
+		else													bit = 8;
 
-	}*/
+		SVector2 vTemp;
+		switch( bit )
+		{
+		case 1:
+		vTemp.x = -1.0f;//vPh0.x + ( vPh1.x - vPh0.x ) * ( -1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+		vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( -1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+		break;
+		case 2:
+		vTemp.x = 1.0f;//vPh0.x + ( vPh1.x - vPh0.x ) * ( 1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+		vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( 1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+		break;
+		case 4:
+		vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( -1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
+		vTemp.y = -1.0f;//vPh0.y + ( vPh1.y - vPh0.y ) * ( -1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
+		break;
+		case 8:
+		vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( 1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
+		vTemp.y = 1.0f;//vPh0.y + ( vPh1.y - vPh0.y ) * ( 1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
+		break;
+		}
 
-	float fWRec0 = 1.0f / vPh0.w;
-	vOut0.x = vPh0.x * fWRec0;
-	vOut0.y = vPh0.y * fWRec0;
-
-	float fWRec1 = 1.0f / vPh1.w;
-	vOut1.x = vPh1.x * fWRec1;
-	vOut1.y = vPh1.y * fWRec1;
-
-	vOut0.x = vOut0.x*0.5f + 0.5f;
-	vOut0.y = -vOut0.y*0.5f + 0.5f;
-	vOut0.x *= (float)iWidth;
-	vOut0.y *= (float)iHeight;
-
-	vOut1.x = vOut1.x*0.5f + 0.5f;
-	vOut1.y = -vOut1.y*0.5f + 0.5f;
-	vOut1.x *= (float)iWidth;
-	vOut1.y *= (float)iHeight;
+		if ( iClipCode0 & bit )
+		{
+			vPh0.x = vTemp.x;
+			vPh0.y = vTemp.y;
+		}
+		else
+		{
+			vPh1.x = vTemp.x;
+			vPh1.y = vTemp.y;
+		}
+	}
 
 	return true;
+}
+
+static void DrawLine3D( SFrameBuffer& sFrameBuffer, SVector4& vPh0, SVector4 vPh1, BGRA8 sColor )
+{
+	if ( ClipLineDepth( vPh0, vPh1 ) )
+	{
+		{
+			float fWRec0 = 1.0f / vPh0.w;
+			vPh0.x = vPh0.x * fWRec0;
+			vPh0.y = vPh0.y * fWRec0;
+			//vPh0.z = vPh0.z * fWRec0;
+			vPh0.w = 1.0f;
+
+			float fWRec1 = 1.0f / vPh1.w;
+			vPh1.x = vPh1.x * fWRec1;
+			vPh1.y = vPh1.y * fWRec1;
+			//vPh1.z = vPh1.z * fWRec1;
+			vPh1.w = 1.0f;
+		}
+
+		if ( ClipLineXY( vPh0, vPh1 ) )
+		{
+			SVector2 v1MinusHalfPixelRecip( 1.0f - 1.0f / (float)sFrameBuffer.iWidth, 1.0f - 1.0f / (float)sFrameBuffer.iHeight );
+
+			SVector2 vP0( (vPh0.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh0.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );			
+			vP0.x *= (float)sFrameBuffer.iWidth;
+			vP0.y *= (float)sFrameBuffer.iHeight;
+
+			SVector2 vP1( (vPh1.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh1.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );
+			vP1.x *= (float)sFrameBuffer.iWidth;
+			vP1.y *= (float)sFrameBuffer.iHeight;
+
+			DrawLine( sFrameBuffer, vP0, vP1, sColor );
+		}
+	}
+}
+
+static void DrawLine3D( SFrameBuffer& sFrameBuffer, const SVector3& vP0, const SVector3 vP1, const SMatrix& matViewProj, BGRA8 sColor )
+{
+	SVector4 vPh0;
+	SVector4 vPh1;
+	{
+		SVector4 vPh0Src( vP0, 1.0f );
+		SMatrix::Mul( vPh0, vPh0Src, matViewProj );			
+		SVector4 vPh1Src( vP1, 1.0f );
+		SMatrix::Mul( vPh1, vPh1Src, matViewProj );				
+	}
+
+	DrawLine3D( sFrameBuffer, vPh0, vPh1, sColor );
 }

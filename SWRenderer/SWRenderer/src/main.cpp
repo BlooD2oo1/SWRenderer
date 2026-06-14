@@ -14,8 +14,8 @@
 // CONFIG
 // ============================================================
 
-constexpr int WIDTH = 320;
-constexpr int HEIGHT = 200;
+constexpr int WIDTH = 640;
+constexpr int HEIGHT = 400;
 
 constexpr int iPixelSizeX = 5;
 constexpr int iPixelSizeY = 5;
@@ -26,7 +26,7 @@ constexpr int iPixelSizeY = 5;
 
 bool bRunning = true;
 
-bool bLockMouse = false;
+bool bLockMouse = true;
 
 double fRenderTime = 0.0;
 

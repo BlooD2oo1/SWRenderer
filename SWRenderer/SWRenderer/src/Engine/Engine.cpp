@@ -65,7 +65,10 @@ void CEngine::Render()
 		DrawLine( GetFrameBuffer(), v1, SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
 	}*/
 
-	DrawPixel( GetFrameBuffer(), GetMouseState().x, GetMouseState().y, BGRA8{ 255, 255, 255, 255 } );
+
+	DrawLine( GetFrameBuffer(), SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
+	DrawPixel( GetFrameBuffer(), 100, 100, BGRA8{ 255, 0, 255, 255 } );
+	DrawPixel( GetFrameBuffer(), GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
 
 	m_iFrameCount++;
 }

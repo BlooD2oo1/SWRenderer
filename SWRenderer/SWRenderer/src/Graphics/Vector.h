@@ -30,6 +30,25 @@ struct SVector2
 		out.y = a.y - b.y;
 		return out;
 	}
+
+	constexpr static SVector2& Mul( SVector2& out, const SVector2& a, const float b )
+	{
+		out.x = a.x * b;
+		out.y = a.y * b;
+		return out;
+	}
+
+	constexpr static SVector2& Mul( SVector2& out, const SVector2& a, const SVector2& b )
+	{
+		out.x = a.x * b.x;
+		out.y = a.y * b.y;
+		return out;
+	}
+
+	constexpr static float LengthSq( const SVector2& v )
+	{
+		return v.x * v.x + v.y * v.y;
+	}
 };
 
 struct SVector3
@@ -126,6 +145,10 @@ struct SVector4
 
 	SVector4(float _x, float _y, float _z, float _w)
 		: x(_x), y(_y), z(_z), w(_w)
+	{}
+
+	SVector4( const SVector3& v, float _w)
+		: x(v.x), y(v.y), z(v.z), w(_w)
 	{}
 
 	constexpr static float Dot( const SVector4& a, const SVector4& b )
