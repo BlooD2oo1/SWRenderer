@@ -10,12 +10,18 @@
 #include "Common/Perf.h"
 #include "Engine/Engine.h"
 
+#define VSYNC
+#ifdef VSYNC
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
+#endif
+
 // ============================================================
 // CONFIG
 // ============================================================
 
-constexpr int WIDTH = 640;
-constexpr int HEIGHT = 400;
+constexpr int WIDTH = 320;
+constexpr int HEIGHT = 200;
 
 constexpr int iPixelSizeX = 5;
 constexpr int iPixelSizeY = 5;
@@ -257,8 +263,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	while (bRunning)
 	{
 		CPerf cPerfFrame;
-
 		cPerfFrame.BeginPerf();
+
+#ifdef VSYNC
+		DwmFlush();
+#endif
 
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{

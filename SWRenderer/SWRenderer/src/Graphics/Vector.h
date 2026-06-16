@@ -49,6 +49,11 @@ struct SVector2
 	{
 		return v.x * v.x + v.y * v.y;
 	}
+
+	static float Length( const SVector2& v )
+	{
+		return sqrtf( v.x * v.x + v.y * v.y );
+	}
 };
 
 struct SVector3

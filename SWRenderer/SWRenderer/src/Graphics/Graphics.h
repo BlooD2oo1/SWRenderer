@@ -121,15 +121,14 @@ static void DrawLine( SFrameBuffer& sFrameBuffer, const SVector2& v0o, const SVe
 	//if ( bSwizzle ) sColor.r=sColor.r>>2;
 
 	int iXStart = (int)(v0.x+0.5f);
-	int iXEnd = (int)(v1.x-0.5f);
+	int iXEnd = (int)(v1.x+0.5f);
 	//assert( iXEnd-iXStart < 1000 );
-	for ( int iX = iXStart; iX <= iXEnd; iX++ )
+	for ( int iX = iXStart; iX < iXEnd; iX++ )
 	{
 		float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y;
 
 		int x = iX;
 		int y = (int)fY;
-		//int y = (int)std::round( fY );
 		if ( bSwizzle )
 		{
 			std::swap( x, y );
@@ -312,15 +311,18 @@ static void DrawLine3D( SFrameBuffer& sFrameBuffer, SVector4& vPh0, SVector4 vPh
 
 		if ( ClipLineXY( vPh0, vPh1 ) )
 		{
-			SVector2 v1MinusHalfPixelRecip( 1.0f - 1.0f / (float)sFrameBuffer.iWidth, 1.0f - 1.0f / (float)sFrameBuffer.iHeight );
+			SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
+			// igy kicsit valtozik a FOV raadasul felbontas fuggoen, de elengedem, mert cserebe nem kell a clippingnel fel pixellel beljebb venni a viewportot.
+			vP0.x *= (float)(sFrameBuffer.iWidth-1);
+			vP0.y *= (float)(sFrameBuffer.iHeight-1);
+			vP0.x += 0.5f;
+			vP0.y += 0.5f;
 
-			SVector2 vP0( (vPh0.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh0.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );			
-			vP0.x *= (float)sFrameBuffer.iWidth;
-			vP0.y *= (float)sFrameBuffer.iHeight;
-
-			SVector2 vP1( (vPh1.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh1.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );
-			vP1.x *= (float)sFrameBuffer.iWidth;
-			vP1.y *= (float)sFrameBuffer.iHeight;
+			SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
+			vP1.x *= (float)(sFrameBuffer.iWidth-1);
+			vP1.y *= (float)(sFrameBuffer.iHeight-1);
+			vP1.x += 0.5f;
+			vP1.y += 0.5f;
 
 			DrawLine( sFrameBuffer, vP0, vP1, sColor );
 		}

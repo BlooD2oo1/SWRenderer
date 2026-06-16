@@ -279,8 +279,8 @@ void CScene01::Render()
 {
 	SMatrix matViewProj;
 	{
-		static float fTime = 0.f;
-		fTime += 0.01f * ( (float)CEngine::GetInstance().GetMouseState().x / (float)CEngine::GetInstance().GetFrameBuffer().iWidth );
+		static float fTime = 0.0f;
+		fTime += 0.1f * ( (float)CEngine::GetInstance().GetMouseState().x / (float)CEngine::GetInstance().GetFrameBuffer().iWidth );
 		SVector3 vEye( 10.0f*cosf( fTime ), 10.0f * sinf( fTime ), 5.0f * sinf( fTime * 0.2f ) );
 		SVector3 vLookAt( 0.0f, 0.0f, 0.0f );
 		SVector3 vUp( 0.0f, 0.0f, 1.0f );
@@ -303,8 +303,6 @@ void CScene01::Render()
 	// draw particles
 	for ( int i = 0; i < m_iParticleCount; i++ )
 	{
-		uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
-
 		/*SVector2 vPScreen;
 		if ( ProjectPoint( vPScreen, m_pParticles[i].vPos, matViewProj, CEngine::GetInstance().GetFrameBuffer().iWidth, CEngine::GetInstance().GetFrameBuffer().iHeight ) )
 		{
@@ -339,23 +337,30 @@ void CScene01::Render()
 
 			if ( ClipLineXY( vPh0, vPh1 ) )
 			{
-				SVector2 v1MinusHalfPixelRecip( 1.0f - 1.0f / (float)CEngine::GetInstance().GetFrameBuffer().iWidth, 1.0f - 1.0f / (float)CEngine::GetInstance().GetFrameBuffer().iHeight );
+				SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
+				vP0.x *= (float)(CEngine::GetInstance().GetFrameBuffer().iWidth-1);
+				vP0.y *= (float)(CEngine::GetInstance().GetFrameBuffer().iHeight-1);
+				vP0.x += 0.5f;
+				vP0.y += 0.5f;
+				
+				SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
+				vP1.x *= (float)(CEngine::GetInstance().GetFrameBuffer().iWidth-1);
+				vP1.y *= (float)(CEngine::GetInstance().GetFrameBuffer().iHeight-1);
+				vP1.x += 0.5f;
+				vP1.y += 0.5f;
 
-				SVector2 vP0( (vPh0.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh0.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );			
-				vP0.x *= (float)CEngine::GetInstance().GetFrameBuffer().iWidth;
-				vP0.y *= (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
-
-				SVector2 vP1( (vPh1.x*v1MinusHalfPixelRecip.x)*0.5f + 0.5f, -(vPh1.y*v1MinusHalfPixelRecip.y)*0.5f + 0.5f );
-				vP1.x *= (float)CEngine::GetInstance().GetFrameBuffer().iWidth;
-				vP1.y *= (float)CEngine::GetInstance().GetFrameBuffer().iHeight;
 				SVector2 v;
 				SVector2::Sub( v, vP1, vP0 );
-				if ( SVector2::LengthSq( v ) > 1.0f )
+				float fLSq = SVector2::LengthSq( v );
+				if ( fLSq > 1.0f )
 				{
+					//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
+					uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
 					DrawLine( CEngine::GetInstance().GetFrameBuffer(), vP0, vP1, BGRA8{ 255, 255, 255, alpha } );
 				}
 				else
 				{
+					uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
 					DrawPixel( CEngine::GetInstance().GetFrameBuffer(), (int)vP0.x, (int)vP0.y, BGRA8{ 255, 255, 255, alpha } );
 				}
 			}
@@ -364,7 +369,7 @@ void CScene01::Render()
 	}
 
 	{
-		int iInstCount = 10;
+		int iInstCount = 1;
 		for ( int iInstIndX = 0; iInstIndX < iInstCount; iInstIndX++ )
 		for ( int iInstIndY = 0; iInstIndY < iInstCount; iInstIndY++ )
 		for ( int iInstIndZ = 0; iInstIndZ < iInstCount; iInstIndZ++ )
