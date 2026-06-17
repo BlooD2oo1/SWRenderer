@@ -37,12 +37,10 @@ public:
 	bool On_MouseButtonDown( uint32_t button );
 	bool On_MouseButtonUp( uint32_t button );
 
-	SFrameBuffer&	GetFrameBuffer() { return m_sFrameBuffer; }
 	SMouseState&	GetMouseState() { return m_sMouseState; }
 	uint32_t		GetFrameCount() const { return m_iFrameCount; }
 
 private:
-	SFrameBuffer	m_sFrameBuffer;
 
 	SMouseState		m_sMouseState;
 

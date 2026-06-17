@@ -3,27 +3,30 @@
 CEngine* CEngine::m_pThis = nullptr;
 
 CEngine::CEngine()
-	: m_sFrameBuffer( nullptr, 0, 0 )
+
 {
+	CGraphics::CreateInstance();
 	Clear();
 }
 
 CEngine::~CEngine()
 {
-	m_sFrameBuffer = SFrameBuffer( nullptr, 0, 0 );
 	Clear();
+	CGraphics::Destroy();
 }
 
 void CEngine::Clear()
 {
 	m_iFrameCount = 0;
 	m_cScene01.Clear();
+	CGraphics::GetInstance().Clear();
 }
 
 void CEngine::Create( SFrameBuffer& sFrameBuffer )
 {
 	Clear();
-	m_sFrameBuffer = sFrameBuffer;
+
+	CGraphics::GetInstance().Create( sFrameBuffer );
 	m_cScene01.Create();
 }
 
@@ -35,7 +38,7 @@ void CEngine::Update()
 void CEngine::Render()
 {
 	// clear framebuffer
-	memset( m_sFrameBuffer.pData, 0, m_sFrameBuffer.iWidth * m_sFrameBuffer.iHeight * sizeof( uint32_t ) );
+	CGraphics::GetInstance().ClearFrameBuffer( BGRA8{ 0, 0, 0, 0 } );
 
 	m_cScene01.Render();
 	
@@ -66,9 +69,9 @@ void CEngine::Render()
 	}*/
 
 
-	DrawLine( GetFrameBuffer(), SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
-	DrawPixel( GetFrameBuffer(), 100, 100, BGRA8{ 255, 0, 255, 255 } );
-	DrawPixel( GetFrameBuffer(), GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
+	CGraphics::GetInstance().DrawLine( SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
+	CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
+	CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
 
 	m_iFrameCount++;
 }
@@ -87,8 +90,8 @@ bool CEngine::On_MouseMove( int deltax, int deltay )
 {
 	m_sMouseState.x += deltax;
 	m_sMouseState.y += deltay;
-	m_sMouseState.x = Clamp( m_sMouseState.x, 0, m_sFrameBuffer.iWidth-1 );
-	m_sMouseState.y = Clamp( m_sMouseState.y, 0, m_sFrameBuffer.iHeight-1 );
+	m_sMouseState.x = Clamp( m_sMouseState.x, 0, CGraphics::GetInstance().GetFrameBuffer().iWidth-1 );
+	m_sMouseState.y = Clamp( m_sMouseState.y, 0, CGraphics::GetInstance().GetFrameBuffer().iHeight-1 );
     return false;
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )
