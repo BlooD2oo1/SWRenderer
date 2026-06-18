@@ -16,6 +16,17 @@
 #pragma comment(lib, "dwmapi.lib")
 #endif
 
+// Frame cap: enable to cap to TARGET_FPS (uses a coarse Sleep + spin-wait for precision)
+#define FRAME_CAP
+#ifdef FRAME_CAP
+#include <chrono>
+#include <thread>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+constexpr double TARGET_FPS = 60.0;
+constexpr double TARGET_FRAME_TIME = 1.0 / TARGET_FPS;
+#endif
+
 // ============================================================
 // CONFIG
 // ============================================================
@@ -268,9 +279,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	CEngine::CreateInstance();
 	CEngine::GetInstance().Create(sFrameBuffer);
 
+#ifdef FRAME_CAP
+	// improve Sleep resolution for more accurate sleep durations
+	timeBeginPeriod(1);
+#endif
+
 	float fElapsedTimeMs = 0.0f;
 	while (bRunning)
 	{
+		// high-resolution frame start timestamp (used for frame-capping)
+#ifdef FRAME_CAP
+		auto frameStart = std::chrono::high_resolution_clock::now();
+#endif
+
 		CPerf cPerfFrame;
 		cPerfFrame.BeginPerf();
 
@@ -293,6 +314,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 		Present(hwnd);
 
+#ifdef FRAME_CAP
+		// frameTime is measured by CPerf; we'll use chrono for the wait so it's independent of the perf helper.
+		auto now = std::chrono::high_resolution_clock::now();
+		double elapsed = std::chrono::duration<double>(now - frameStart).count();
+
+		if (elapsed < TARGET_FRAME_TIME)
+		{
+			double remaining = TARGET_FRAME_TIME - elapsed;
+
+			// coarse sleep for the integer-millisecond portion (leave ~1ms margin), then spin-wait
+			if (remaining > 0.003) // larger than ~3us margin
+			{
+				DWORD ms = (DWORD)((remaining - 0.001) * 1000.0);
+				if (ms > 0)
+					Sleep(ms);
+			}
+
+			// busy-wait until exact target time (use yield to be nicer to scheduler)
+			while (std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - frameStart).count() < TARGET_FRAME_TIME)
+			{
+				std::this_thread::yield();
+			}
+		}
+#endif
 		double frameTime = cPerfFrame.EndPerf();
 		fElapsedTimeMs = (float)( frameTime * 1000.0 );
 		{
@@ -306,6 +351,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 	DeleteObject(hBitmapFrameBuffer);
 	DeleteDC(hDCFrameBuffer);
+
+#ifdef FRAME_CAP
+	timeEndPeriod(1);
+#endif
 
 	return 0;
 }

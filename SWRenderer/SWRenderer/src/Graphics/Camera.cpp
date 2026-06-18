@@ -14,7 +14,7 @@ CCameraFree::CCameraFree()
 	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
 	m_fAspect = 1.0f;
 	m_fNear = 0.1f;
-	m_fFar = 1000.0f;
+	m_fFar = 100000.0f;
 
 	SMatrix::Identity( m_matView );
 	SMatrix::Identity( m_matProj );
