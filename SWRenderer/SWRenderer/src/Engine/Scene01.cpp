@@ -26,6 +26,9 @@ void CScene01::Clear()
 void CScene01::Create()
 {
 	Clear();
+
+	m_cCamera.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
+
 	m_iParticleCount = 10000;
 	m_pParticles = new SParticle[m_iParticleCount];
 	for ( int i = 0; i < m_iParticleCount; i++ )
@@ -36,7 +39,8 @@ void CScene01::Create()
 		m_pParticles[i].vPos.x = cosf(fU)*fR;
 		m_pParticles[i].vPos.y = sinf(fU)*fR;
 		m_pParticles[i].vPos.z = fV;
-		SVector3::Mul( m_pParticles[i].vPos, m_pParticles[i].vPos, 300.0f );
+		m_pParticles[i].vPos *= 300.0f;
+
 		m_pParticles[i].a = ((float)rand()/(float)RAND_MAX) * 0.55f + 0.45f;
 		m_pParticles[i].a *= m_pParticles[i].a;
 		m_pParticles[i].a *= m_pParticles[i].a;
@@ -272,13 +276,14 @@ void CScene01::Create()
 
 void CScene01::Update()
 {
-
+	m_cCamera.Update( CEngine::GetInstance().GetElapsedTimeMs() );
 }
 
 void CScene01::Render()
 {
-	SMatrix matViewProj;
-	{
+	const SMatrix& matViewProj = m_cCamera.GetViewProjectionMatrix();
+	const SMatrix& matViewProjPrev = m_cCamera.GetViewProjectionMatrixPrev();
+	/*{
 		static float fTime = 0.0f;
 		fTime += 0.1f * ( (float)CEngine::GetInstance().GetMouseState().x / (float)CGraphics::GetInstance().GetFrameBuffer().iWidth );
 		SVector3 vEye( 10.0f*cosf( fTime ), 10.0f * sinf( fTime ), 5.0f * sinf( fTime * 0.2f ) );
@@ -298,7 +303,7 @@ void CScene01::Render()
 		SMatrix::BuildProjectionMatrix( matProj, fFOVY, fAspect, fNear, fFar );
 		SMatrix::Mul( matViewProj, matView, matProj );
 	}
-	static SMatrix matViewProjPrev( matViewProj );
+	static SMatrix matViewProjPrev( matViewProj );*/
 
 	// draw particles
 	for ( int i = 0; i < m_iParticleCount; i++ )
@@ -338,19 +343,14 @@ void CScene01::Render()
 			if ( CGraphics::GetInstance().ClipLineXY( vPh0, vPh1 ) )
 			{
 				SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
-				vP0.x *= (float)(CGraphics::GetInstance().GetFrameBuffer().iWidth-1);
-				vP0.y *= (float)(CGraphics::GetInstance().GetFrameBuffer().iHeight-1);
-				vP0.x += 0.5f;
-				vP0.y += 0.5f;
+				vP0.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+				vP0.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 				
 				SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
-				vP1.x *= (float)(CGraphics::GetInstance().GetFrameBuffer().iWidth-1);
-				vP1.y *= (float)(CGraphics::GetInstance().GetFrameBuffer().iHeight-1);
-				vP1.x += 0.5f;
-				vP1.y += 0.5f;
+				vP1.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+				vP1.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
-				SVector2 v;
-				SVector2::Sub( v, vP1, vP0 );
+				SVector2 v( vP1 - vP0 );
 				float fLSq = SVector2::LengthSq( v );
 				if ( fLSq > 1.0f )
 				{
@@ -386,11 +386,49 @@ void CScene01::Render()
 			fAlpha = Clamp( fAlpha, 0.0f, 1.0f );
 			uint8_t iAlpha = (uint8_t)(fAlpha*255.0f);
 			for ( int i = 0; i < m_iLineListSpaceShipCount; i++ )
-			{				
+			{
 				CGraphics::GetInstance().DrawLine3D( m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, BGRA8{ 100, 50, 30, iAlpha } );
 			}
 		}
 	}
 
-	matViewProjPrev = matViewProj;
+	//matViewProjPrev = matViewProj;
+}
+
+bool CScene01::On_KeyDown( uint32_t key )
+{
+	return false;
+}
+
+bool CScene01::On_KeyUp( uint32_t key )
+{
+	return false;
+}
+
+bool CScene01::On_MouseMove( int deltax, int deltay )
+{
+	if ( CEngine::GetInstance().GetMouseState().bLeftButton )
+	{
+		m_cCamera.Rotate( (float)deltax * 0.005f, (float)deltay * 0.005f );
+	}
+	else if ( CEngine::GetInstance().GetMouseState().bRightButton )
+	{
+		m_cCamera.Pan( SVector2( (float)deltax * 0.005f, (float)deltay * 0.005f ) );
+	}
+	return false;
+}
+bool CScene01::On_MouseButtonDown( uint32_t button )
+{
+	return false;
+}
+
+bool CScene01::On_MouseButtonUp( uint32_t button )
+{
+	return false;
+}
+
+bool CScene01::On_MouseWheel( int iDelta )
+{
+	m_cCamera.Zoom( (float)iDelta * 0.001f );
+	return false;
 }

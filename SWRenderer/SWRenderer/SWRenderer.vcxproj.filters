@@ -34,6 +34,9 @@
     <ClCompile Include="src\Graphics\Math.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Camera.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.h">
@@ -55,6 +58,9 @@
       <Filter>src\Engine</Filter>
     </ClInclude>
     <ClInclude Include="src\Graphics\Math.h">
+      <Filter>src\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Camera.h">
       <Filter>src\Graphics</Filter>
     </ClInclude>
   </ItemGroup>

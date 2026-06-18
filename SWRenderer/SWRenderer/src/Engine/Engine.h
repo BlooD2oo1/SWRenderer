@@ -28,7 +28,7 @@ private:
 public:
 	void Create( SFrameBuffer& sFrameBuffer );
 	void Clear();
-	void Update();
+	void Update( float fElapsedTimeMs );
 	void Render();
 
 	bool On_KeyDown( uint32_t key );
@@ -36,15 +36,18 @@ public:
 	bool On_MouseMove( int deltax, int deltay );
 	bool On_MouseButtonDown( uint32_t button );
 	bool On_MouseButtonUp( uint32_t button );
+	bool On_MouseWheel( int iDelta );
 
 	SMouseState&	GetMouseState() { return m_sMouseState; }
 	uint32_t		GetFrameCount() const { return m_iFrameCount; }
+	float			GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
 
 private:
 
 	SMouseState		m_sMouseState;
 
 	uint32_t		m_iFrameCount;
+	float			m_fElapsedTimeMs;
 
 	CScene01		m_cScene01;
 };

@@ -30,8 +30,9 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	m_cScene01.Create();
 }
 
-void CEngine::Update()
+void CEngine::Update( float fElapsedTimeMs )
 {
+	m_fElapsedTimeMs = fElapsedTimeMs;
 	m_cScene01.Update();
 }
 
@@ -69,21 +70,21 @@ void CEngine::Render()
 	}*/
 
 
-	CGraphics::GetInstance().DrawLine( SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
-	CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
-	CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
+	//CGraphics::GetInstance().DrawLine( SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
+	//CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
+	//CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
 
 	m_iFrameCount++;
 }
 
 bool CEngine::On_KeyDown( uint32_t key )
 {
-    return false;
+    return m_cScene01.On_KeyDown( key );
 }
 
 bool CEngine::On_KeyUp( uint32_t key )
 {
-    return false;
+	return m_cScene01.On_KeyUp( key );
 }
 
 bool CEngine::On_MouseMove( int deltax, int deltay )
@@ -92,7 +93,7 @@ bool CEngine::On_MouseMove( int deltax, int deltay )
 	m_sMouseState.y += deltay;
 	m_sMouseState.x = Clamp( m_sMouseState.x, 0, CGraphics::GetInstance().GetFrameBuffer().iWidth-1 );
 	m_sMouseState.y = Clamp( m_sMouseState.y, 0, CGraphics::GetInstance().GetFrameBuffer().iHeight-1 );
-    return false;
+    return m_cScene01.On_MouseMove( deltax, deltay );
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )
 {
@@ -109,7 +110,7 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 	break;
 	}
 
-    return false;
+	return m_cScene01.On_MouseButtonDown( button );
 }
 
 bool CEngine::On_MouseButtonUp( uint32_t button )
@@ -127,5 +128,10 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 	break;
 	}
 
-    return false;
+	return m_cScene01.On_MouseButtonUp( button );
+}
+
+bool CEngine::On_MouseWheel( int iDelta )
+{
+	return m_cScene01.On_MouseWheel( iDelta );
 }

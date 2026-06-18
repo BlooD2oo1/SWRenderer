@@ -3,13 +3,6 @@
 #include "Common/Globals.h"
 #include "Vector.h"
 
-#define PI05		1.5707963267948966192313216916398f
-#define PI			3.1415926535897932384626433832795f
-#define PI2			6.283185307179586476925286766559f
-#define PIRECIP		0.31830988618379067153776752674503f
-#define SQRT2		1.4142135623730950488016887242097f
-#define E_NUMBER	2.7182818284590452353602874713527f
-
 struct BGRA8
 {
 	union
@@ -27,13 +20,21 @@ struct BGRA8
 
 struct SFrameBuffer
 {
+	SFrameBuffer()
+		: pData( nullptr ), iWidth( 0 ), iHeight( 0 )
+	{
+		vClipScaleInHom = SVector2( 1.0f, 1.0f );
+	}
 	SFrameBuffer( uint32_t* pData, int iWidth, int iHeight )
 		: pData( pData ), iWidth( iWidth ), iHeight( iHeight )
 	{
+		vClipScaleInHom = SVector2( 1.0f - 0.5f/(float)iWidth, 1.0f - 0.5f/(float)iHeight );
 	}
 	uint32_t*	pData = nullptr;
 	int			iWidth = 0;
 	int			iHeight = 0;
+	SVector2	vClipScaleInHom;
+
 };
 
 class CGraphics
@@ -62,12 +63,13 @@ public:
 	void DrawLine3D( SVector4& vPh0, SVector4 vPh1, BGRA8 sColor );
 	void DrawLine3D( const SVector3& vP0, const SVector3 vP1, const SMatrix& matViewProj, BGRA8 sColor );
 
-	static bool ClipLineDepth( SVector4& vPh0, SVector4& vPh1 );
-	static bool ClipLineXY( SVector4& vPh0, SVector4& vPh1 );
+	bool ClipLineDepth( SVector4& vPh0, SVector4& vPh1 );
+	bool ClipLineXY( SVector4& vPh0, SVector4& vPh1 );
 
 private:
-		static uint32_t BlendAdditive( uint32_t dest, BGRA8 src );
-		static uint8_t ClipCode( const SVector4& vP4 );
+	uint8_t ClipCode( const SVector4& vP4 );	
+
+	static uint32_t BlendAdditive( uint32_t dest, BGRA8 src );		
 
 private:
 	SFrameBuffer	m_sFrameBuffer;

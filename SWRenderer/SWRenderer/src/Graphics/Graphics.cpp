@@ -3,13 +3,11 @@
 CGraphics* CGraphics::m_pThis = nullptr;
 
 CGraphics::CGraphics()
-	: m_sFrameBuffer( nullptr, 0, 0 )
 {
 }
 
 CGraphics::~CGraphics()
 {
-	m_sFrameBuffer = SFrameBuffer( nullptr, 0, 0 );
 }
 
 void CGraphics::Create( SFrameBuffer& sFrameBuffer )
@@ -63,8 +61,8 @@ void CGraphics::DrawPixelAA( const SVector2& v, BGRA8 sColor )
 
 void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor )
 {
-	SVector2 v;
-	SVector2::Sub( v, v1o, v0o );
+	SVector2 v( v1o - v0o );
+
 	if ( v.x == 0.0f && v.y == 0.0f )
 	{
 		return;
@@ -80,9 +78,7 @@ void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor
 		std::swap( v1.x, v1.y );
 	}
 	if ( v1.x < v0.x ) std::swap( v0, v1 );
-	SVector2::Sub( v, v1, v0 );
-
-	//if ( bSwizzle ) sColor.r=sColor.r>>2;
+	v = v1 - v0;
 
 	int iXStart = (int)(v0.x+0.5f);
 	int iXEnd = (int)(v1.x+0.5f);
@@ -123,17 +119,12 @@ void CGraphics::DrawLine3D( SVector4& vPh0, SVector4 vPh1, BGRA8 sColor )
 		if ( ClipLineXY( vPh0, vPh1 ) )
 		{
 			SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
-			// igy kicsit valtozik a FOV raadasul felbontas fuggoen, de elengedem, mert cserebe nem kell a clippingnel fel pixellel beljebb venni a viewportot.
-			vP0.x *= (float)(m_sFrameBuffer.iWidth-1);
-			vP0.y *= (float)(m_sFrameBuffer.iHeight-1);
-			vP0.x += 0.5f;
-			vP0.y += 0.5f;
+			vP0.x *= (float)m_sFrameBuffer.iWidth;
+			vP0.y *= (float)m_sFrameBuffer.iHeight;
 
 			SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
-			vP1.x *= (float)(m_sFrameBuffer.iWidth-1);
-			vP1.y *= (float)(m_sFrameBuffer.iHeight-1);
-			vP1.x += 0.5f;
-			vP1.y += 0.5f;
+			vP1.x *= (float)m_sFrameBuffer.iWidth;
+			vP1.y *= (float)m_sFrameBuffer.iHeight;
 
 			DrawLine( vP0, vP1, sColor );
 		}
@@ -240,20 +231,20 @@ bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 )
 		switch( bit )
 		{
 		case 1:
-			vTemp.x = -1.0f;//vPh0.x + ( vPh1.x - vPh0.x ) * ( -1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
-			vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( -1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+			vTemp.x = -m_sFrameBuffer.vClipScaleInHom.x;//vPh0.x + ( vPh1.x - vPh0.x ) * ( -1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+			vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( -m_sFrameBuffer.vClipScaleInHom.x - vPh0.x ) / ( vPh1.x - vPh0.x );
 			break;
 		case 2:
-			vTemp.x = 1.0f;//vPh0.x + ( vPh1.x - vPh0.x ) * ( 1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
-			vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( 1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+			vTemp.x = m_sFrameBuffer.vClipScaleInHom.x;//vPh0.x + ( vPh1.x - vPh0.x ) * ( 1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
+			vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( m_sFrameBuffer.vClipScaleInHom.x - vPh0.x ) / ( vPh1.x - vPh0.x );
 			break;
 		case 4:
-			vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( -1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
-			vTemp.y = -1.0f;//vPh0.y + ( vPh1.y - vPh0.y ) * ( -1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
+			vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( -m_sFrameBuffer.vClipScaleInHom.y - vPh0.y ) / ( vPh1.y - vPh0.y );
+			vTemp.y = -m_sFrameBuffer.vClipScaleInHom.y;//vPh0.y + ( vPh1.y - vPh0.y ) * ( -1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
 			break;
 		case 8:
-			vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( 1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
-			vTemp.y = 1.0f;//vPh0.y + ( vPh1.y - vPh0.y ) * ( 1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
+			vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( m_sFrameBuffer.vClipScaleInHom.y - vPh0.y ) / ( vPh1.y - vPh0.y );
+			vTemp.y = m_sFrameBuffer.vClipScaleInHom.y;//vPh0.y + ( vPh1.y - vPh0.y ) * ( 1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
 			break;
 		}
 
@@ -272,6 +263,16 @@ bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 )
 	return true;
 }
 
+uint8_t CGraphics::ClipCode( const SVector4& vP4 )
+{
+	uint8_t iRet = 0;
+	iRet |= ( vP4.x < -m_sFrameBuffer.vClipScaleInHom.x ) ? 1 : 0;
+	iRet |= ( vP4.x > m_sFrameBuffer.vClipScaleInHom.x ) ? 2 : 0;
+	iRet |= ( vP4.y < -m_sFrameBuffer.vClipScaleInHom.y ) ? 4 : 0;
+	iRet |= ( vP4.y > m_sFrameBuffer.vClipScaleInHom.y ) ? 8 : 0;
+	return iRet;
+}
+
 uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;
@@ -285,12 +286,3 @@ uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 	return (rOut) | (gOut << 8) | (bOut << 16);
 }
 
-uint8_t CGraphics::ClipCode( const SVector4& vP4 )
-{
-	uint8_t iRet = 0;
-	iRet |= ( vP4.x < -vP4.w ) ? 1 : 0;
-	iRet |= ( vP4.x > vP4.w ) ? 2 : 0;
-	iRet |= ( vP4.y < -vP4.w ) ? 4 : 0;
-	iRet |= ( vP4.y > vP4.w ) ? 8 : 0;
-	return iRet;
-}

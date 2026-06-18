@@ -17,33 +17,13 @@ struct SVector2
 		: x(_x), y(_y)
 	{}
 
-	constexpr static SVector2& Add( SVector2& out, const SVector2& a, const SVector2& b )
-	{
-		out.x = a.x + b.x;
-		out.y = a.y + b.y;
-		return out;
-	}
+	inline SVector2& operator+=(const SVector2& rhs) noexcept { x += rhs.x; y += rhs.y; return *this; }
+	inline SVector2& operator-=(const SVector2& rhs) noexcept { x -= rhs.x; y -= rhs.y; return *this; }
+	inline SVector2& operator*=(const SVector2& rhs) noexcept { x *= rhs.x; y *= rhs.y; return *this; }
+	inline SVector2& operator/=(const SVector2& rhs) noexcept { x /= rhs.x; y /= rhs.y; return *this; }
 
-	constexpr static SVector2& Sub( SVector2& out, const SVector2& a, const SVector2& b )
-	{
-		out.x = a.x - b.x;
-		out.y = a.y - b.y;
-		return out;
-	}
-
-	constexpr static SVector2& Mul( SVector2& out, const SVector2& a, const float b )
-	{
-		out.x = a.x * b;
-		out.y = a.y * b;
-		return out;
-	}
-
-	constexpr static SVector2& Mul( SVector2& out, const SVector2& a, const SVector2& b )
-	{
-		out.x = a.x * b.x;
-		out.y = a.y * b.y;
-		return out;
-	}
+	inline SVector2& operator*=(float s) noexcept { x *= s; y *= s; return *this; }
+	inline SVector2& operator/=(float s) noexcept { x /= s; y /= s; return *this; }
 
 	constexpr static float LengthSq( const SVector2& v )
 	{
@@ -55,6 +35,17 @@ struct SVector2
 		return sqrtf( v.x * v.x + v.y * v.y );
 	}
 };
+
+inline SVector2 operator+(const SVector2& a, const SVector2& b) { return SVector2(a.x + b.x, a.y + b.y); }
+inline SVector2 operator-(const SVector2& a, const SVector2& b) { return SVector2(a.x - b.x, a.y - b.y); }
+
+inline SVector2 operator*(const SVector2& a, const SVector2& b) { return SVector2(a.x * b.x, a.y * b.y); }
+inline SVector2 operator*(const SVector2& a, float s)            { return SVector2(a.x * s,    a.y * s); }
+inline SVector2 operator*(float s, const SVector2& a)            { return SVector2(a.x * s,    a.y * s); }
+
+inline SVector2 operator/(const SVector2& a, const SVector2& b) { return SVector2(a.x / b.x, a.y / b.y); }
+inline SVector2 operator/(const SVector2& a, float s)            { return SVector2(a.x / s,    a.y / s); }
+
 
 struct SVector3
 {
@@ -71,29 +62,13 @@ struct SVector3
 		: x(_x), y(_y), z(_z)
 	{}
 
-	constexpr static SVector3& Mul( SVector3& out, const SVector3& a, const float b )
-	{
-		out.x = a.x * b;
-		out.y = a.y * b;
-		out.z = a.z * b;
-		return out;
-	}
+	inline SVector3& operator+=(const SVector3& rhs) noexcept { x += rhs.x; y += rhs.y; z += rhs.z; return *this; }
+	inline SVector3& operator-=(const SVector3& rhs) noexcept { x -= rhs.x; y -= rhs.y; z -= rhs.z; return *this; }
+	inline SVector3& operator*=(const SVector3& rhs) noexcept { x *= rhs.x; y *= rhs.y; z *= rhs.z; return *this; }
+	inline SVector3& operator/=(const SVector3& rhs) noexcept { x /= rhs.x; y /= rhs.y; z /= rhs.z; return *this; }
 
-	constexpr static SVector3& Add( SVector3& out, const SVector3& a, const SVector3& b )
-	{
-		out.x = a.x + b.x;
-		out.y = a.y + b.y;
-		out.z = a.z + b.z;
-		return out;
-	}
-
-	constexpr static SVector3& Sub( SVector3& out, const SVector3& a, const SVector3& b )
-	{
-		out.x = a.x - b.x;
-		out.y = a.y - b.y;
-		out.z = a.z - b.z;
-		return out;
-	}
+	inline SVector3& operator*=(float s) noexcept { x *= s; y *= s; z *= s; return *this; }
+	inline SVector3& operator/=(float s) noexcept { x /= s; y /= s; z /= s; return *this; }
 
 	constexpr static float Dot( const SVector3& a, const SVector3& b )
 	{
@@ -136,6 +111,17 @@ struct SVector3
 		return out;
 	}
 };
+
+inline SVector3 operator+(const SVector3& a, const SVector3& b) { return SVector3(a.x + b.x, a.y + b.y, a.z + b.z); }
+inline SVector3 operator-(const SVector3& a, const SVector3& b) { return SVector3(a.x - b.x, a.y - b.y, a.z - b.z); }
+
+inline SVector3 operator*(const SVector3& a, const SVector3& b) { return SVector3(a.x * b.x, a.y * b.y, a.z * b.z); }
+inline SVector3 operator*(const SVector3& a, float s)            { return SVector3(a.x * s,    a.y * s,    a.z * s); }
+inline SVector3 operator*(float s, const SVector3& a)            { return SVector3(a.x * s,    a.y * s,    a.z * s); }
+
+inline SVector3 operator/(const SVector3& a, const SVector3& b) { return SVector3(a.x / b.x, a.y / b.y, a.z / b.z); }
+inline SVector3 operator/(const SVector3& a, float s)            { return SVector3(a.x / s,    a.y / s,    a.z / s); }
+
 
 struct SVector4
 {
@@ -238,8 +224,7 @@ struct SMatrix
 
 	static SMatrix& BuildViewMatrix( SMatrix& out, const SVector3& eye, const SVector3& target, const SVector3& up )
 	{
-		SVector3 zaxis;
-		SVector3::Sub( zaxis, eye, target );
+		SVector3 zaxis = eye - target;
 		SVector3::Normalize( zaxis, zaxis );
 		SVector3 xaxis;
 		SVector3::Cross( xaxis, up, zaxis );

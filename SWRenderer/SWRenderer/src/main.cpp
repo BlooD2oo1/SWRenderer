@@ -159,6 +159,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_RBUTTONUP:
 			CEngine::GetInstance().On_MouseButtonUp(1);
 			return 0;
+
+			//scroll wheel:
+		case WM_MOUSEWHEEL:
+		{
+			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			CEngine::GetInstance().On_MouseWheel(zDelta);
+			return 0;
+		}
 	}
 
 	return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -260,6 +268,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	CEngine::CreateInstance();
 	CEngine::GetInstance().Create(sFrameBuffer);
 
+	float fElapsedTimeMs = 0.0f;
 	while (bRunning)
 	{
 		CPerf cPerfFrame;
@@ -275,7 +284,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			DispatchMessage(&msg);
 		}
 
-		CEngine::GetInstance().Update();
+		CEngine::GetInstance().Update( fElapsedTimeMs );
 
 		CPerf cPerfRender;
 		cPerfRender.BeginPerf();
@@ -285,10 +294,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		Present(hwnd);
 
 		double frameTime = cPerfFrame.EndPerf();
-
+		fElapsedTimeMs = (float)( frameTime * 1000.0 );
 		{
 			wchar_t title[256];
-			swprintf(title, 256, L" SWRenderer - %dx%d - %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, frameTime * 1000, 1.0 / frameTime);
+			swprintf(title, 256, L" SWRenderer - %dx%d - %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, frameTime * 1000.0, 1.0 / frameTime);
 			SetWindowText(hwnd, title);
 		}
 	}
