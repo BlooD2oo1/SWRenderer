@@ -294,11 +294,10 @@ void CScene01::Render()
 			SVector4 vPh0;
 			SVector4 vPh1;
 			{
-				SVector3 v( m_pParticles[i].vPos * fStarBoxSize );
-				v.x = v.x - floorf((v.x - m_cCamera.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				v.y = v.y - floorf((v.y - m_cCamera.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				v.z = v.z - floorf((v.z - m_cCamera.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				SVector4 vPhSrc( v, 1.0f );
+				SVector4 vPhSrc( m_pParticles[i].vPos * fStarBoxSize, 1.0f );
+				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_cCamera.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_cCamera.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_cCamera.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
 				SMatrix::Mul( vPh0, vPhSrc, m_cCamera.GetViewProjectionMatrix() );			
 				SMatrix::Mul( vPh1, vPhSrc, m_cCamera.GetViewProjectionMatrixPrev() );
 			}
