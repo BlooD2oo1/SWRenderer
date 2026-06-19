@@ -304,6 +304,12 @@ void CScene01::Render()
 
 			if ( CGraphics::GetInstance().ClipLineDepth( vPh0, vPh1 ) )
 			{
+				// a ket kulonbozo viewproj matrix miatt:
+				if ( abs( vPh0.w ) < 0.00001f || abs( vPh1.w ) < 0.00001f )
+				{
+					continue;
+				}
+
 				{
 					float fWRec0 = 1.0f / vPh0.w;
 					vPh0.x = vPh0.x * fWRec0;

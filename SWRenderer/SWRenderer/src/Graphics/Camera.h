@@ -18,11 +18,11 @@ public:
 
 	void Update( float fElapsedTimeMs );
 	
-	const SVector3& GetEye() const { return m_vEyeSmooth; }
-	const SMatrix& GetViewMatrix() { return m_matView; }
-	const SMatrix& GetProjectionMatrix() { return m_matProj; }
-	const SMatrix& GetViewProjectionMatrix() { return m_matViewProj; }
-	const SMatrix& GetViewProjectionMatrixPrev() { return m_matViewProjPrev; }
+	const SVector3&	GetEye() const { return m_vEyeSmooth; }
+	const SMatrix&	GetViewMatrix() { return m_matView; }
+	const SMatrix&	GetProjectionMatrix() { return m_matProj; }
+	const SMatrix&	GetViewProjectionMatrix() { return m_matViewProj; }
+	const SMatrix&	GetViewProjectionMatrixPrev() { return m_matViewProjPrev; }
 
 private:
 	void UpdateEye();

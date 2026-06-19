@@ -176,14 +176,14 @@ bool CGraphics::ClipLineDepth( SVector4& vPh0, SVector4& vPh1 )
 				}
 				break;
 			case 2:
-					{
+				{
 					float t = ( vPh0.w - vPh0.z ) / ( vPh1.z - vPh0.z - vPh1.w + vPh0.w );
 					vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
 					vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
 					vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
 					vTemp.z = vTemp.w;
 				}
-					break;
+				break;
 			}
 		}
 

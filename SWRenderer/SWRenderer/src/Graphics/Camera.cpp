@@ -75,11 +75,12 @@ void CCameraFree::Update( float fElapsedTimeMs )
 {
 	UpdateEye();
 
+	m_matViewProjPrev = m_matViewProj;
+
 	float fW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 	m_vEyeSmooth = Lerp( m_vEye, m_vEyeSmooth, fW );
 	m_vLookAtSmooth = Lerp( m_vLookAt, m_vLookAtSmooth, fW );
-
-	m_matViewProjPrev = m_matViewProj;
+	
 	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUp );
 	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
