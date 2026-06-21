@@ -89,7 +89,7 @@ void CCameraFree::Update( float fElapsedTimeMs )
 
 CCameraShip::CCameraShip()
 {
-	m_fFOVY = 70.0f / 180.0f * PI;
+	m_fFOVY = 110.0f / 180.0f * PI;
 	m_fAspect = 1.0f;
 	m_fNear = 0.1f;
 	m_fFar = 100000.0f;
@@ -98,12 +98,12 @@ CCameraShip::CCameraShip()
 	m_vLookAtInShip = SVector3( 0.0f, 0.0f, 3.0f );
 	m_vUpInShip = SVector3( 0.0f, 0.0f, 1.0f );
 
-	m_vLookAt = SVector3( 0.0f, 0.0f, 0.0f );
-	m_vLookAtSmooth = SVector3( 0.0f, 0.0f, 0.0f );
-	m_vEye = SVector3( -1.0f, 0.0f, 0.0f );
-	m_vEyeSmooth = SVector3( -1.0f, 0.0f, 0.0f );
-	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
-	m_vUpSmooth = SVector3( 0.0f, 0.0f, 1.0f );
+	m_vLookAtSmooth0 = SVector3( 0.0f, 0.0f, 0.0f );
+	m_vLookAtSmooth1 = SVector3( 0.0f, 0.0f, 0.0f );
+	m_vEyeSmooth0 = SVector3( -1.0f, 0.0f, 0.0f );
+	m_vEyeSmooth1 = SVector3( -1.0f, 0.0f, 0.0f );
+	m_vUpSmooth0 = SVector3( 0.0f, 0.0f, 1.0f );
+	m_vUpSmooth1 = SVector3( 0.0f, 0.0f, 1.0f );
 
 	SMatrix::Identity( m_matView );
 	SMatrix::Identity( m_matProj );
@@ -119,16 +119,32 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 {
 	m_matViewProjPrev = m_matViewProj;
 
-	SMatrix::TransformCoord( m_vEye, m_vEyeInShip, matShip );
-	SMatrix::TransformCoord( m_vLookAt, m_vLookAtInShip, matShip );
-	SMatrix::TransformNormal( m_vUp, m_vUpInShip, matShip );
+	SVector3 vEye;
+	SVector3 vLookAt;
+	SVector3 vUp;
 
-	float fW = CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs );
-	m_vEyeSmooth = Lerp( m_vEye, m_vEyeSmooth, fW );
-	m_vLookAtSmooth = Lerp( m_vLookAt, m_vLookAtSmooth, fW );
-	m_vUpSmooth = Lerp( m_vUp, m_vUpSmooth, fW );
+	SMatrix::TransformNormal( vEye, m_vEyeInShip, matShip );
+	SMatrix::TransformNormal( vLookAt, m_vLookAtInShip, matShip );
+	SMatrix::TransformNormal( vUp, m_vUpInShip, matShip );
 
-	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUpSmooth );
+	{
+		float fW = CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs );
+		m_vEyeSmooth0 = Lerp( vEye, m_vEyeSmooth0, fW );
+		m_vLookAtSmooth0 = Lerp( vLookAt, m_vLookAtSmooth0, fW );
+		m_vUpSmooth0 = Lerp( vUp, m_vUpSmooth0, fW );
+	}
+
+	vEye = m_vEyeSmooth0 + SVector3( matShip.m30, matShip.m31, matShip.m32 );
+	vLookAt = m_vLookAtSmooth0 + SVector3( matShip.m30, matShip.m31, matShip.m32 );
+	vUp = m_vUpSmooth0;
+	{
+		float fW = CalcSmoothUpdateWeight( 1.02f, fElapsedTimeMs );
+		m_vEyeSmooth1 = Lerp( vEye, m_vEyeSmooth1, fW );
+		m_vLookAtSmooth1 = Lerp( vLookAt, m_vLookAtSmooth1, fW );
+		m_vUpSmooth1 = Lerp( vUp, m_vUpSmooth1, fW );
+	}
+
+	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth1, m_vLookAtSmooth1, m_vUpSmooth1 );
 	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
 }

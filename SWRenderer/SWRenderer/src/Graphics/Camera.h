@@ -58,7 +58,7 @@ public:
 
 	void Update( float fElapsedTimeMs, const SMatrix& matShip );
 
-	const SVector3&	GetEye() const { return m_vEye; }
+	const SVector3&	GetEye() const { return m_vEyeSmooth1; }
 	const SMatrix&	GetViewMatrix() { return m_matView; }
 	const SMatrix&	GetProjectionMatrix() { return m_matProj; }
 	const SMatrix&	GetViewProjectionMatrix() { return m_matViewProj; }
@@ -75,12 +75,12 @@ private:
 	SVector3	m_vLookAtInShip;
 	SVector3	m_vUpInShip;
 
-	SVector3	m_vEye;
-	SVector3	m_vEyeSmooth;
-	SVector3	m_vLookAt;
-	SVector3	m_vLookAtSmooth;
-	SVector3	m_vUp;
-	SVector3	m_vUpSmooth;
+	SVector3	m_vEyeSmooth0;
+	SVector3	m_vEyeSmooth1;
+	SVector3	m_vLookAtSmooth0;
+	SVector3	m_vLookAtSmooth1;
+	SVector3	m_vUpSmooth0;
+	SVector3	m_vUpSmooth1;
 
 	SMatrix		m_matView;
 	SMatrix		m_matProj;

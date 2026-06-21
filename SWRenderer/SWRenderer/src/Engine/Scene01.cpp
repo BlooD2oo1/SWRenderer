@@ -20,7 +20,7 @@ void SShip::Init()
 
 void SShip::Accelerate( float fValue )
 {
-	m_fSpeedForward += fValue*0.001f;
+	m_fSpeedForward += fValue*0.01f;
 	m_fSpeedForward = std::max( 0.0f, m_fSpeedForward );
 }
 
@@ -103,9 +103,9 @@ void SShip::Update( float fElapsedTimeMs )
 		SVector3::Normalize( m_vRight, m_vRight );
 	}
 
-	{
+	/*{
 		SQuaternion q;
-		SQuaternion::FromAxisAngle( q, m_vUp, -m_fSpeedRight*0.4f );
+		SQuaternion::FromAxisAngle( q, m_vUp, -m_fSpeedRight );
 		SMatrix matRot;
 		SQuaternion::ToMatrix( matRot, q );
 
@@ -133,7 +133,39 @@ void SShip::Update( float fElapsedTimeMs )
 		SVector3::Normalize( m_vDir, m_vDir );
 		SVector3::Normalize( m_vUp, m_vUp );
 		SVector3::Normalize( m_vRight, m_vRight );
-	}
+	}*/
+
+	/*{
+		SQuaternion q;
+		SQuaternion::FromAxisAngle( q, m_vRight, abs( m_fSpeedRight ) );
+		SMatrix matRot;
+		SQuaternion::ToMatrix( matRot, q );
+
+		SVector4 vTemp;
+		SVector4 vDir4( m_vDir, 1.0f );		
+		SMatrix::Mul( vTemp, vDir4, matRot );
+		m_vDir.x = vTemp.x;
+		m_vDir.y = vTemp.y;
+		m_vDir.z = vTemp.z;
+
+		SVector4 vUp4( m_vUp, 1.0f );
+		SMatrix::Mul( vTemp, vUp4, matRot );
+		m_vUp.x = vTemp.x;
+		m_vUp.y = vTemp.y;
+		m_vUp.z = vTemp.z;
+
+		SVector4 vRight4( m_vRight, 1.0f );
+		SMatrix::Mul( vTemp, vRight4, matRot );
+		m_vRight.x = vTemp.x;
+		m_vRight.y = vTemp.y;
+		m_vRight.z = vTemp.z;
+
+		SVector3::Cross( m_vRight, m_vDir, m_vUp );
+		SVector3::Cross( m_vUp, m_vRight, m_vDir );
+		SVector3::Normalize( m_vDir, m_vDir );
+		SVector3::Normalize( m_vUp, m_vUp );
+		SVector3::Normalize( m_vRight, m_vRight );
+	}*/
 
 	m_vPos += m_vDir * m_fSpeedForward * fElapsedTimeMs;
 }
