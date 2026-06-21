@@ -8,6 +8,28 @@ struct SVertex
 	SVector3 vPos;
 };
 
+struct SShip
+{
+	SShip();
+	void Init();
+	void Accelerate( float fValue );
+	void MoveUp( float fValue );
+	void MoveRight( float fValue );
+
+	void Update( float fElapsedTimeMs );
+
+	void GetMatrix( SMatrix& sOut );
+
+	SVector3	m_vPos;
+	SVector3	m_vDir;
+	SVector3	m_vUp;
+	SVector3	m_vRight;
+
+	float		m_fSpeedForward;
+	float		m_fSpeedUp;
+	float		m_fSpeedRight;
+};
+
 class CScene01
 {
 public:
@@ -39,7 +61,7 @@ private:
 
 	SVertex*		m_pLineListSpaceShip;
 	int				m_iLineListSpaceShipCount;
-	SMatrix			m_matWorldSpaceShip;
-
+	SShip			m_sShip;
 	CCameraFree		m_cCamera;
+	CCameraShip		m_cCameraShip;
 };

@@ -33,7 +33,10 @@ void CGraphics::ClearFrameBuffer( BGRA8 sColor )
 void CGraphics::DrawPixel( int x, int y, BGRA8 sColor )
 {
 	assert( x >= 0 && x < m_sFrameBuffer.iWidth && y >= 0 && y < m_sFrameBuffer.iHeight );
-	m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x] = BlendAdditive( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], sColor );
+	//if ( x >= 0 && x < m_sFrameBuffer.iWidth && y >= 0 && y < m_sFrameBuffer.iHeight )
+	{
+		m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x] = BlendAdditive( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], sColor );
+	}
 }
 
 void CGraphics::DrawPixelAA( const SVector2& v, BGRA8 sColor )

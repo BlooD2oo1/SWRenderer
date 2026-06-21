@@ -3,18 +3,19 @@
 
 CCameraFree::CCameraFree()
 {
-	m_fAngleXY = PI;
+	m_fAngleXY = -PI05;
 	m_fAngleZ = 0.3f;
 	m_fDist = 10.0f;
 	m_fFOVY = 70.0f / 180.0f * PI;
-	m_vEye = SVector3( -1.0f, 0.0f, 0.0f );
-	m_vEyeSmooth = SVector3( -1.0f, 0.0f, 0.0f );
 	m_vLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 	m_vLookAtSmooth = SVector3( 0.0f, 0.0f, 0.0f );
 	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
 	m_fAspect = 1.0f;
 	m_fNear = 0.1f;
 	m_fFar = 100000.0f;
+
+	UpdateEye();
+	m_vEyeSmooth = m_vEye;
 
 	SMatrix::Identity( m_matView );
 	SMatrix::Identity( m_matProj );
@@ -82,6 +83,52 @@ void CCameraFree::Update( float fElapsedTimeMs )
 	m_vLookAtSmooth = Lerp( m_vLookAt, m_vLookAtSmooth, fW );
 	
 	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUp );
+	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
+	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
+}
+
+CCameraShip::CCameraShip()
+{
+	m_fFOVY = 70.0f / 180.0f * PI;
+	m_fAspect = 1.0f;
+	m_fNear = 0.1f;
+	m_fFar = 100000.0f;
+
+	m_vEyeInShip = SVector3( -5.0f, 0.0f, 3.0f );
+	m_vLookAtInShip = SVector3( 0.0f, 0.0f, 3.0f );
+	m_vUpInShip = SVector3( 0.0f, 0.0f, 1.0f );
+
+	m_vLookAt = SVector3( 0.0f, 0.0f, 0.0f );
+	m_vLookAtSmooth = SVector3( 0.0f, 0.0f, 0.0f );
+	m_vEye = SVector3( -1.0f, 0.0f, 0.0f );
+	m_vEyeSmooth = SVector3( -1.0f, 0.0f, 0.0f );
+	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
+	m_vUpSmooth = SVector3( 0.0f, 0.0f, 1.0f );
+
+	SMatrix::Identity( m_matView );
+	SMatrix::Identity( m_matProj );
+	SMatrix::Identity( m_matViewProj );
+	SMatrix::Identity( m_matViewProjPrev );
+}
+
+CCameraShip::~CCameraShip()
+{
+}
+
+void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
+{
+	m_matViewProjPrev = m_matViewProj;
+
+	SMatrix::TransformCoord( m_vEye, m_vEyeInShip, matShip );
+	SMatrix::TransformCoord( m_vLookAt, m_vLookAtInShip, matShip );
+	SMatrix::TransformNormal( m_vUp, m_vUpInShip, matShip );
+
+	float fW = CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs );
+	m_vEyeSmooth = Lerp( m_vEye, m_vEyeSmooth, fW );
+	m_vLookAtSmooth = Lerp( m_vLookAt, m_vLookAtSmooth, fW );
+	m_vUpSmooth = Lerp( m_vUp, m_vUpSmooth, fW );
+
+	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUpSmooth );
 	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
 }

@@ -222,6 +222,24 @@ struct SMatrix
 		return out;
 	}
 
+	static SVector3& TransformCoord( SVector3& out, const SVector3& v, const SMatrix& m )
+	{
+		assert( &out != &v );
+		out.x = v.x * m.m00 + v.y * m.m10 + v.z * m.m20 + m.m30;
+		out.y = v.x * m.m01 + v.y * m.m11 + v.z * m.m21 + m.m31;
+		out.z = v.x * m.m02 + v.y * m.m12 + v.z * m.m22 + m.m32;
+		return out;
+	}
+
+	static SVector3& TransformNormal( SVector3& out, const SVector3& v, const SMatrix& m )
+	{
+		assert( &out != &v );
+		out.x = v.x * m.m00 + v.y * m.m10 + v.z * m.m20;
+		out.y = v.x * m.m01 + v.y * m.m11 + v.z * m.m21;
+		out.z = v.x * m.m02 + v.y * m.m12 + v.z * m.m22;
+		return out;
+	}
+
 	static SMatrix& BuildViewMatrix( SMatrix& out, const SVector3& eye, const SVector3& target, const SVector3& up )
 	{
 		SVector3 zaxis = eye - target;
@@ -264,4 +282,158 @@ struct SMatrix
 
 		return out;
 	}	
+};
+
+struct SQuaternion
+{
+	union
+	{
+		struct { float x, y, z, w; };
+		float m[4];
+	};
+
+	SQuaternion()
+	{}
+
+	SQuaternion( float _x, float _y, float _z, float _w )
+		: x( _x ), y( _y ), z( _z ), w( _w )
+	{}
+
+	constexpr static SQuaternion& Identity( SQuaternion& out )
+	{
+		out.x = 0.0f;
+		out.y = 0.0f;
+		out.z = 0.0f;
+		out.w = 1.0f;
+		return out;
+	}
+
+	static float Length( const SQuaternion& q )
+	{
+		return sqrtf(
+			q.x * q.x +
+			q.y * q.y +
+			q.z * q.z +
+			q.w * q.w );
+	}
+
+	static SQuaternion& Normalize( SQuaternion& out, const SQuaternion& q )
+	{
+		float len = Length( q );
+
+		if ( len > 0.000001f )
+		{
+			float invLen = 1.0f / len;
+
+			out.x = q.x * invLen;
+			out.y = q.y * invLen;
+			out.z = q.z * invLen;
+			out.w = q.w * invLen;
+		}
+		else
+		{
+			Identity( out );
+		}
+
+		return out;
+	}
+
+	static SQuaternion& Conjugate( SQuaternion& out, const SQuaternion& q )
+	{
+		out.x = -q.x;
+		out.y = -q.y;
+		out.z = -q.z;
+		out.w =  q.w;
+		return out;
+	}
+
+	static SQuaternion& Mul( SQuaternion& out, const SQuaternion& a, const SQuaternion& b )
+	{
+		SQuaternion r;
+
+		r.x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
+		r.y = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x;
+		r.z = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w;
+		r.w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z;
+
+		out = r;
+		return out;
+	}
+
+	static SQuaternion& FromAxisAngle(
+		SQuaternion& out,
+		const SVector3& axis,
+		float angleRadians )
+	{
+		SVector3 n;
+		SVector3::Normalize( n, axis );
+
+		float half = angleRadians * 0.5f;
+		float s = sinf( half );
+
+		out.x = n.x * s;
+		out.y = n.y * s;
+		out.z = n.z * s;
+		out.w = cosf( half );
+
+		return out;
+	}
+
+	static SQuaternion& FromEulerXYZ(
+		SQuaternion& out,
+		float pitch,
+		float yaw,
+		float roll )
+	{
+		SQuaternion qx, qy, qz, temp;
+
+		FromAxisAngle( qx, SVector3(1,0,0), pitch );
+		FromAxisAngle( qy, SVector3(0,1,0), yaw );
+		FromAxisAngle( qz, SVector3(0,0,1), roll );
+
+		Mul( temp, qx, qy );
+		Mul( out, temp, qz );
+
+		return out;
+	}
+
+	static SMatrix& ToMatrix( SMatrix& out, const SQuaternion& qin )
+	{
+		SQuaternion q;
+		Normalize( q, qin );
+
+		float xx = q.x * q.x;
+		float yy = q.y * q.y;
+		float zz = q.z * q.z;
+
+		float xy = q.x * q.y;
+		float xz = q.x * q.z;
+		float yz = q.y * q.z;
+
+		float wx = q.w * q.x;
+		float wy = q.w * q.y;
+		float wz = q.w * q.z;
+
+		out.m00 = 1.0f - 2.0f * (yy + zz);
+		out.m01 = 2.0f * (xy + wz);
+		out.m02 = 2.0f * (xz - wy);
+		out.m03 = 0.0f;
+
+		out.m10 = 2.0f * (xy - wz);
+		out.m11 = 1.0f - 2.0f * (xx + zz);
+		out.m12 = 2.0f * (yz + wx);
+		out.m13 = 0.0f;
+
+		out.m20 = 2.0f * (xz + wy);
+		out.m21 = 2.0f * (yz - wx);
+		out.m22 = 1.0f - 2.0f * (xx + yy);
+		out.m23 = 0.0f;
+
+		out.m30 = 0.0f;
+		out.m31 = 0.0f;
+		out.m32 = 0.0f;
+		out.m33 = 1.0f;
+
+		return out;
+	}
 };

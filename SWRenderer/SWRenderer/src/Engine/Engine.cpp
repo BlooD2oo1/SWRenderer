@@ -42,7 +42,7 @@ void CEngine::Render()
 	CGraphics::GetInstance().ClearFrameBuffer( BGRA8{ 0, 0, 0, 0 } );
 
 	m_cScene01.Render();
-	
+
 	/*const uint16_t iLineCount = 16;
 	for ( int i = 0; i < iLineCount; i++ )
 	{

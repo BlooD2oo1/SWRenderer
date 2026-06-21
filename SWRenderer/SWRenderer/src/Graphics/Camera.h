@@ -46,3 +46,44 @@ private:
 	SMatrix		m_matViewProj;
 	SMatrix		m_matViewProjPrev;
 };
+
+class CCameraShip
+{
+public:
+	CCameraShip();
+	~CCameraShip();
+
+	void SetAspect( float fAspect ) { m_fAspect = fAspect; }
+	void SetNearFar( float fNear, float fFar ) { m_fNear = fNear; m_fFar = fFar; }
+
+	void Update( float fElapsedTimeMs, const SMatrix& matShip );
+
+	const SVector3&	GetEye() const { return m_vEye; }
+	const SMatrix&	GetViewMatrix() { return m_matView; }
+	const SMatrix&	GetProjectionMatrix() { return m_matProj; }
+	const SMatrix&	GetViewProjectionMatrix() { return m_matViewProj; }
+	const SMatrix&	GetViewProjectionMatrixPrev() { return m_matViewProjPrev; }
+
+private:
+
+	float		m_fFOVY;
+	float		m_fAspect;
+	float		m_fNear;
+	float		m_fFar;
+
+	SVector3	m_vEyeInShip;
+	SVector3	m_vLookAtInShip;
+	SVector3	m_vUpInShip;
+
+	SVector3	m_vEye;
+	SVector3	m_vEyeSmooth;
+	SVector3	m_vLookAt;
+	SVector3	m_vLookAtSmooth;
+	SVector3	m_vUp;
+	SVector3	m_vUpSmooth;
+
+	SMatrix		m_matView;
+	SMatrix		m_matProj;
+	SMatrix		m_matViewProj;
+	SMatrix		m_matViewProjPrev;
+};

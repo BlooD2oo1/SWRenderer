@@ -2,6 +2,150 @@
 #include "Common/Globals.h"
 #include "Engine/Engine.h"
 
+SShip::SShip()
+{
+	Init();
+}
+
+void SShip::Init()
+{
+	m_vPos = SVector3( 0.0f, 0.0f, 0.0f );
+	m_vDir = SVector3( 1.0f, 0.0f, 0.0f );
+	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
+	m_vRight = SVector3( 0.0f, 1.0f, 0.0f );
+	m_fSpeedForward = 0.0f;
+	m_fSpeedUp =  0.0f;
+	m_fSpeedRight = 0.0f;
+}
+
+void SShip::Accelerate( float fValue )
+{
+	m_fSpeedForward += fValue*0.001f;
+	m_fSpeedForward = std::max( 0.0f, m_fSpeedForward );
+}
+
+void SShip::MoveUp( float fValue )
+{
+	m_fSpeedUp += fValue*0.0001f;
+}
+
+void SShip::MoveRight( float fValue )
+{
+	m_fSpeedRight += fValue*0.0001f;
+}
+
+void SShip::Update( float fElapsedTimeMs )
+{
+	float fWDir = CalcSmoothUpdateWeight( 1.004f, fElapsedTimeMs );
+	m_fSpeedUp *= fWDir;
+	m_fSpeedRight *= fWDir;
+	{
+		SQuaternion q;
+		SQuaternion::FromAxisAngle( q, m_vRight, m_fSpeedUp );
+		SMatrix matRot;
+		SQuaternion::ToMatrix( matRot, q );
+		
+		SVector4 vTemp;
+		SVector4 vDir4( m_vDir, 1.0f );		
+		SMatrix::Mul( vTemp, vDir4, matRot );
+		m_vDir.x = vTemp.x;
+		m_vDir.y = vTemp.y;
+		m_vDir.z = vTemp.z;
+
+		SVector4 vUp4( m_vUp, 1.0f );
+		SMatrix::Mul( vTemp, vUp4, matRot );
+		m_vUp.x = vTemp.x;
+		m_vUp.y = vTemp.y;
+		m_vUp.z = vTemp.z;
+		
+		SVector4 vRight4( m_vRight, 1.0f );
+		SMatrix::Mul( vTemp, vRight4, matRot );
+		m_vRight.x = vTemp.x;
+		m_vRight.y = vTemp.y;
+		m_vRight.z = vTemp.z;
+
+		SVector3::Cross( m_vRight, m_vDir, m_vUp );
+		SVector3::Cross( m_vUp, m_vRight, m_vDir );
+		SVector3::Normalize( m_vDir, m_vDir );
+		SVector3::Normalize( m_vUp, m_vUp );
+		SVector3::Normalize( m_vRight, m_vRight );
+	}
+
+	{
+		SQuaternion q;
+		SQuaternion::FromAxisAngle( q, m_vDir, m_fSpeedRight );
+		SMatrix matRot;
+		SQuaternion::ToMatrix( matRot, q );
+
+		SVector4 vTemp;
+		SVector4 vDir4( m_vDir, 1.0f );		
+		SMatrix::Mul( vTemp, vDir4, matRot );
+		m_vDir.x = vTemp.x;
+		m_vDir.y = vTemp.y;
+		m_vDir.z = vTemp.z;
+
+		SVector4 vUp4( m_vUp, 1.0f );
+		SMatrix::Mul( vTemp, vUp4, matRot );
+		m_vUp.x = vTemp.x;
+		m_vUp.y = vTemp.y;
+		m_vUp.z = vTemp.z;
+
+		SVector4 vRight4( m_vRight, 1.0f );
+		SMatrix::Mul( vTemp, vRight4, matRot );
+		m_vRight.x = vTemp.x;
+		m_vRight.y = vTemp.y;
+		m_vRight.z = vTemp.z;
+
+		SVector3::Cross( m_vRight, m_vDir, m_vUp );
+		SVector3::Cross( m_vUp, m_vRight, m_vDir );
+		SVector3::Normalize( m_vDir, m_vDir );
+		SVector3::Normalize( m_vUp, m_vUp );
+		SVector3::Normalize( m_vRight, m_vRight );
+	}
+
+	{
+		SQuaternion q;
+		SQuaternion::FromAxisAngle( q, m_vUp, -m_fSpeedRight*0.4f );
+		SMatrix matRot;
+		SQuaternion::ToMatrix( matRot, q );
+
+		SVector4 vTemp;
+		SVector4 vDir4( m_vDir, 1.0f );		
+		SMatrix::Mul( vTemp, vDir4, matRot );
+		m_vDir.x = vTemp.x;
+		m_vDir.y = vTemp.y;
+		m_vDir.z = vTemp.z;
+
+		SVector4 vUp4( m_vUp, 1.0f );
+		SMatrix::Mul( vTemp, vUp4, matRot );
+		m_vUp.x = vTemp.x;
+		m_vUp.y = vTemp.y;
+		m_vUp.z = vTemp.z;
+
+		SVector4 vRight4( m_vRight, 1.0f );
+		SMatrix::Mul( vTemp, vRight4, matRot );
+		m_vRight.x = vTemp.x;
+		m_vRight.y = vTemp.y;
+		m_vRight.z = vTemp.z;
+
+		SVector3::Cross( m_vRight, m_vDir, m_vUp );
+		SVector3::Cross( m_vUp, m_vRight, m_vDir );
+		SVector3::Normalize( m_vDir, m_vDir );
+		SVector3::Normalize( m_vUp, m_vUp );
+		SVector3::Normalize( m_vRight, m_vRight );
+	}
+
+	m_vPos += m_vDir * m_fSpeedForward * fElapsedTimeMs;
+}
+
+void SShip::GetMatrix( SMatrix& sOut )
+{
+	sOut.m00 = m_vDir.x;	sOut.m01 = m_vDir.y;	sOut.m02 = m_vDir.z;	sOut.m03 = 0.0f;
+	sOut.m10 = m_vRight.x;	sOut.m11 = m_vRight.y;	sOut.m12 = m_vRight.z;	sOut.m13 = 0.0f;
+	sOut.m20 = m_vUp.x;		sOut.m21 = m_vUp.y;		sOut.m22 = m_vUp.z;		sOut.m23 = 0.0f;
+	sOut.m30 = m_vPos.x;	sOut.m31 = m_vPos.y;	sOut.m32 = m_vPos.z;	sOut.m33 = 1.0f;
+}
+
 CScene01::CScene01()
 {
 	m_pParticles = nullptr;
@@ -20,7 +164,6 @@ void CScene01::Clear()
 	m_iParticleCount = 0;
 	SAFE_DELETE_ARRAY( m_pLineListSpaceShip );
 	m_iLineListSpaceShipCount = 0;
-	SMatrix::Identity( m_matWorldSpaceShip );
 }
 
 void CScene01::Create()
@@ -28,6 +171,7 @@ void CScene01::Create()
 	Clear();
 
 	m_cCamera.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
+	m_cCameraShip.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
 
 	m_iParticleCount = 10000;
 	m_pParticles = new SParticle[m_iParticleCount];
@@ -59,7 +203,7 @@ void CScene01::Create()
 			auto AddPoint =
 				[&](float x, float y, float z) -> int
 				{
-					pts.emplace_back(x, y, z);
+					pts.emplace_back(y, -x, z);
 					return (int)pts.size() - 1;
 				};
 
@@ -281,13 +425,19 @@ void CScene01::Create()
 void CScene01::Update()
 {
 	m_cCamera.Update( CEngine::GetInstance().GetElapsedTimeMs() );
+	
+	m_sShip.Update( CEngine::GetInstance().GetElapsedTimeMs() );
+
+	SMatrix matShip;
+	m_sShip.GetMatrix( matShip );
+	m_cCameraShip.Update( CEngine::GetInstance().GetElapsedTimeMs(), matShip );
 }
 
 void CScene01::Render()
 {
-	// draw particles
+	// draw stars
 	{
-		float fStarBoxSize = 10000.0f;
+		float fStarBoxSize = 1000.0f;
 		float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 		for ( int i = 0; i < m_iParticleCount; i++ )
 		{
@@ -295,21 +445,15 @@ void CScene01::Render()
 			SVector4 vPh1;
 			{
 				SVector4 vPhSrc( m_pParticles[i].vPos * fStarBoxSize, 1.0f );
-				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_cCamera.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_cCamera.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_cCamera.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				SMatrix::Mul( vPh0, vPhSrc, m_cCamera.GetViewProjectionMatrix() );			
-				SMatrix::Mul( vPh1, vPhSrc, m_cCamera.GetViewProjectionMatrixPrev() );
+				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_cCameraShip.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_cCameraShip.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_cCameraShip.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix() );			
+				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev() );
 			}
 
 			if ( CGraphics::GetInstance().ClipLineDepth( vPh0, vPh1 ) )
 			{
-				// a ket kulonbozo viewproj matrix miatt:
-				if ( abs( vPh0.w ) < 0.00001f || abs( vPh1.w ) < 0.00001f )
-				{
-					continue;
-				}
-
 				{
 					float fWRec0 = 1.0f / vPh0.w;
 					vPh0.x = vPh0.x * fWRec0;
@@ -353,21 +497,31 @@ void CScene01::Render()
 	}
 
 	{
+		/*SMatrix matWorld;
+		matWorld.m00 = m_sShip.m_vDir.x;	matWorld.m01 = m_sShip.m_vRight.x;	matWorld.m02 = m_sShip.m_vUp.x;		matWorld.m03 = 0.0f;
+		matWorld.m10 = m_sShip.m_vDir.y;	matWorld.m11 = m_sShip.m_vRight.y;	matWorld.m12 = m_sShip.m_vUp.y;		matWorld.m13 = 0.0f;
+		matWorld.m20 = m_sShip.m_vDir.z;	matWorld.m21 = m_sShip.m_vRight.z;	matWorld.m22 = m_sShip.m_vUp.z;		matWorld.m23 = 0.0f;
+		matWorld.m30 = m_sShip.m_vPos.x;	matWorld.m31 = m_sShip.m_vPos.y;	matWorld.m32 = m_sShip.m_vPos.z;	matWorld.m33 = 1.0f;*/
+
+		SMatrix matWorld;
+		m_sShip.GetMatrix( matWorld );
+
 		int iInstCount = 1;
 		for ( int iInstIndX = 0; iInstIndX < iInstCount; iInstIndX++ )
 		for ( int iInstIndY = 0; iInstIndY < iInstCount; iInstIndY++ )
 		for ( int iInstIndZ = 0; iInstIndZ < iInstCount; iInstIndZ++ )
 		{
-			SVector3 vPos( (float)(iInstIndX-(float)(iInstCount-1)/2.0f)*10.0f, (float)(iInstIndY-(float)(iInstCount-1)/2.0f)*8.0f, (float)(iInstIndZ-(float)(iInstCount-1)/2.0f)*5.0f );
-			SMatrix matWorld;
-			SMatrix::Identity( matWorld );
-			matWorld.m30 = vPos.x;
-			matWorld.m31 = vPos.y;
-			matWorld.m32 = vPos.z;
+			//SVector3 vPos( (float)(iInstIndX-(float)(iInstCount-1)/2.0f)*10.0f, (float)(iInstIndY-(float)(iInstCount-1)/2.0f)*8.0f, (float)(iInstIndZ-(float)(iInstCount-1)/2.0f)*5.0f );
+			//SMatrix matWorld;
+			//SMatrix::Identity( matWorld );
+			//matWorld.m30 = vPos.x;
+			//matWorld.m31 = vPos.y;
+			//matWorld.m32 = vPos.z;
 			SMatrix matWorldViewProj;
-			SMatrix::Mul( matWorldViewProj, matWorld, m_cCamera.GetViewProjectionMatrix() );
-			float fAlpha = 10.0f / SVector3::Length( vPos );
-			fAlpha = Clamp( fAlpha, 0.0f, 1.0f );
+			SMatrix::Mul( matWorldViewProj, matWorld, m_cCameraShip.GetViewProjectionMatrix() );
+			float fAlpha = 1.0f;
+			//float fAlpha = 10.0f / SVector3::Length( m_sShip.m_vPos );
+			//fAlpha = Clamp( fAlpha, 0.0f, 1.0f );
 			uint8_t iAlpha = (uint8_t)(fAlpha*255.0f);
 			for ( int i = 0; i < m_iLineListSpaceShipCount; i++ )
 			{
@@ -379,6 +533,19 @@ void CScene01::Render()
 
 bool CScene01::On_KeyDown( uint32_t key )
 {
+	switch ( key )
+	{
+	case 0x26:
+	{
+		m_sShip.Accelerate( 1.0f );
+	}
+	break;
+	case 0x28:
+	{
+		m_sShip.Accelerate( -1.0f );
+	}
+	break;
+	}
 	return false;
 }
 
@@ -396,6 +563,11 @@ bool CScene01::On_MouseMove( int deltax, int deltay )
 	else if ( CEngine::GetInstance().GetMouseState().bRightButton )
 	{
 		m_cCamera.Pan( SVector2( (float)deltax * 0.005f, (float)deltay * 0.005f ) );
+	}
+	else
+	{
+		m_sShip.MoveRight( (float)deltax );
+		m_sShip.MoveUp( (float)deltay );		
 	}
 	return false;
 }
