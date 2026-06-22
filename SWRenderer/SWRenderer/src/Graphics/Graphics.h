@@ -65,6 +65,7 @@ public:
 
 	bool ClipLineDepth( SVector4& vPh0, SVector4& vPh1 );
 	bool ClipLineXY( SVector4& vPh0, SVector4& vPh1 );
+	bool ClipPixel( SVector4 vPh );
 
 private:
 	uint8_t ClipCode( const SVector4& vP4 );	

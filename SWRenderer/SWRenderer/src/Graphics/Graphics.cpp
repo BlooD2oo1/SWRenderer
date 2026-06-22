@@ -266,6 +266,16 @@ bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 )
 	return true;
 }
 
+bool CGraphics::ClipPixel( SVector4 vPh )
+{
+	uint8_t iClipCode = ClipCode( vPh );
+	if ( iClipCode != 0 )
+	{
+		return false;
+	}
+	return true;
+}
+
 uint8_t CGraphics::ClipCode( const SVector4& vP4 )
 {
 	uint8_t iRet = 0;

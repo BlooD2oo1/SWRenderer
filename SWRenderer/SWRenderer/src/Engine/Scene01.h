@@ -56,8 +56,11 @@ private:
 		SVector3 vPos;
 		float a;
 	};
-	SParticle*		m_pParticles;
-	int				m_iParticleCount;
+	SParticle*		m_pStars;
+	int				m_iStarsCount;
+
+	SParticle*		m_pBGStars;
+	int				m_iBGStarsCount;
 
 	SVertex*		m_pLineListSpaceShip;
 	int				m_iLineListSpaceShipCount;

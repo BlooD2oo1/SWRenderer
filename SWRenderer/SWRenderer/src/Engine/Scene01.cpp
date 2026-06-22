@@ -20,7 +20,7 @@ void SShip::Init()
 
 void SShip::Accelerate( float fValue )
 {
-	m_fSpeedForward += fValue*0.01f;
+	m_fSpeedForward += fValue*0.1f;
 	m_fSpeedForward = std::max( 0.0f, m_fSpeedForward );
 }
 
@@ -180,7 +180,8 @@ void SShip::GetMatrix( SMatrix& sOut )
 
 CScene01::CScene01()
 {
-	m_pParticles = nullptr;
+	m_pStars = nullptr;
+	m_pBGStars = nullptr;
 	m_pLineListSpaceShip = nullptr;
 	Clear();
 }
@@ -192,8 +193,10 @@ CScene01::~CScene01()
 
 void CScene01::Clear()
 {
-	SAFE_DELETE_ARRAY( m_pParticles );
-	m_iParticleCount = 0;
+	SAFE_DELETE_ARRAY( m_pStars );
+	m_iStarsCount = 0;
+	SAFE_DELETE_ARRAY( m_pBGStars );
+	m_iBGStarsCount = 0;
 	SAFE_DELETE_ARRAY( m_pLineListSpaceShip );
 	m_iLineListSpaceShipCount = 0;
 }
@@ -205,26 +208,40 @@ void CScene01::Create()
 	m_cCamera.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
 	m_cCameraShip.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
 
-	m_iParticleCount = 10000;
-	m_pParticles = new SParticle[m_iParticleCount];
-	for ( int i = 0; i < m_iParticleCount; i++ )
+	m_iStarsCount = 10000;
+	m_pStars = new SParticle[m_iStarsCount];
+	for ( int i = 0; i < m_iStarsCount; i++ )
 	{
-		/*float fU = ((float)rand()/(float)RAND_MAX)*PI2;
-		float fV = ((float)rand()/(float)RAND_MAX)*2.0f-1.0f;
-		float fR = sqrtf( 1.0f - fV*fV );
-		m_pParticles[i].vPos.x = cosf(fU)*fR;
-		m_pParticles[i].vPos.y = sinf(fU)*fR;
-		m_pParticles[i].vPos.z = fV;
-		m_pParticles[i].vPos *= ( powf( (float)rand()/(float)RAND_MAX, 1.0f/3.0f ) ) * 3000.0f;*/
+		m_pStars[i].vPos.x = ((float)rand()/(float)RAND_MAX);
+		m_pStars[i].vPos.y = ((float)rand()/(float)RAND_MAX);
+		m_pStars[i].vPos.z = ((float)rand()/(float)RAND_MAX);
 
-		m_pParticles[i].vPos.x = ((float)rand()/(float)RAND_MAX);
-		m_pParticles[i].vPos.y = ((float)rand()/(float)RAND_MAX);
-		m_pParticles[i].vPos.z = ((float)rand()/(float)RAND_MAX);
+		m_pStars[i].a = ((float)rand()/(float)RAND_MAX) * 0.55f + 0.45f;
+		m_pStars[i].a *= m_pStars[i].a;
+		m_pStars[i].a *= m_pStars[i].a;
+		m_pStars[i].a = powf( m_pStars[i].a, 3.0f );
+	}
 
-		m_pParticles[i].a = ((float)rand()/(float)RAND_MAX) * 0.55f + 0.45f;
-		m_pParticles[i].a *= m_pParticles[i].a;
-		m_pParticles[i].a *= m_pParticles[i].a;
-		m_pParticles[i].a *= 0.3f;
+	m_iBGStarsCount = 10000;
+	m_pBGStars = new SParticle[m_iBGStarsCount];
+	for ( int i = 0; i < m_iBGStarsCount; i++ )
+	{
+		float fU = ((float)rand()/(float)RAND_MAX)*PI2;
+		float fV = ((float)rand()/(float)RAND_MAX);
+		
+		fV = 1.0f - powf( 1.0f - fV, 0.3f );
+		fV = powf( fV, 1.5f );
+
+		fV = asinf( fV );		
+		fV = rand() % 2 == 0 ? -fV : fV;
+		m_pBGStars[i].vPos.x = cosf(fU)*cosf(fV);
+		m_pBGStars[i].vPos.y = sinf(fU)*cosf(fV);
+		m_pBGStars[i].vPos.z = sinf(fV);
+		m_pBGStars[i].vPos *= 10000.0f;
+
+		m_pBGStars[i].a = ((float)rand()/(float)RAND_MAX) * 0.8f + 0.2f;
+		m_pBGStars[i].a *= m_pBGStars[i].a;
+		m_pBGStars[i].a *= m_pBGStars[i].a;
 	}
 
 	{
@@ -468,15 +485,17 @@ void CScene01::Update()
 void CScene01::Render()
 {
 	// draw stars
+	const int iSteps = 3;
+	for ( int j =0; j < iSteps; j++ )
 	{
-		float fStarBoxSize = 1000.0f;
+		float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 3000.0f;
 		float fStarBoxSizeInv = 1.0f / fStarBoxSize;
-		for ( int i = 0; i < m_iParticleCount; i++ )
+		for ( int i = 0; i < m_iStarsCount/(float)((iSteps+1)-j); i++ )
 		{
 			SVector4 vPh0;
 			SVector4 vPh1;
 			{
-				SVector4 vPhSrc( m_pParticles[i].vPos * fStarBoxSize, 1.0f );
+				SVector4 vPhSrc( m_pStars[i].vPos * fStarBoxSize, 1.0f );
 				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_cCameraShip.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
 				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_cCameraShip.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
 				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_cCameraShip.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
@@ -515,12 +534,67 @@ void CScene01::Render()
 					if ( fLSq > 1.0f )
 					{
 						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pStars[i].a*0.6f * 255.0f);
 						CGraphics::GetInstance().DrawLine( vP0, vP1, BGRA8{ 255, 200, 180, alpha } );
 					}
 					else
 					{
-						uint8_t alpha = (uint8_t)(m_pParticles[i].a * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pStars[i].a*0.6f * 255.0f);
+						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, BGRA8{ 255, 200, 180, alpha } );
+					}
+				}
+			}
+		}
+	}
+
+	{
+		for ( int i = 0; i < m_iBGStarsCount; i++ )
+		{
+			SVector4 vPh0;
+			SVector4 vPh1;
+			{
+				SVector4 vPhSrc( m_pBGStars[i].vPos + m_cCameraShip.GetEye(), 1.0f );
+				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix() );			
+				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev() );
+			}
+
+			if ( CGraphics::GetInstance().ClipLineDepth( vPh0, vPh1 ) )
+			{
+				{
+					float fWRec0 = 1.0f / vPh0.w;
+					vPh0.x = vPh0.x * fWRec0;
+					vPh0.y = vPh0.y * fWRec0;
+					//vPh0.z = vPh0.z * fWRec0;
+					vPh0.w = 1.0f;
+
+					float fWRec1 = 1.0f / vPh1.w;
+					vPh1.x = vPh1.x * fWRec1;
+					vPh1.y = vPh1.y * fWRec1;
+					//vPh1.z = vPh1.z * fWRec1;
+					vPh1.w = 1.0f;
+				}
+
+				if ( CGraphics::GetInstance().ClipLineXY( vPh0, vPh1 ) )
+				{
+					SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
+					vP0.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+					vP0.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+
+					SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
+					vP1.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+					vP1.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+
+					SVector2 v( vP1 - vP0 );
+					float fLSq = SVector2::LengthSq( v );
+					if ( fLSq > 1.0f )
+					{
+						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pBGStars[i].a*0.4f * 255.0f);
+						CGraphics::GetInstance().DrawLine( vP0, vP1, BGRA8{ 255, 200, 180, alpha } );
+					}
+					else
+					{
+						uint8_t alpha = (uint8_t)(m_pBGStars[i].a*0.4f * 255.0f);
 						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, BGRA8{ 255, 200, 180, alpha } );
 					}
 				}
