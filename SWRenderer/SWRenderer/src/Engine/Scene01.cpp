@@ -488,7 +488,7 @@ void CScene01::Render()
 	const int iSteps = 3;
 	for ( int j =0; j < iSteps; j++ )
 	{
-		float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 3000.0f;
+		float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 1000.0f;
 		float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 		for ( int i = 0; i < m_iStarsCount/(float)((iSteps+1)-j); i++ )
 		{
@@ -499,7 +499,7 @@ void CScene01::Render()
 				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_cCameraShip.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
 				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_cCameraShip.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
 				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_cCameraShip.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix() );			
+				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix() );
 				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev() );
 			}
 
@@ -553,9 +553,9 @@ void CScene01::Render()
 			SVector4 vPh0;
 			SVector4 vPh1;
 			{
-				SVector4 vPhSrc( m_pBGStars[i].vPos + m_cCameraShip.GetEye(), 1.0f );
-				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix() );			
-				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev() );
+				SVector4 vPhSrc( m_pBGStars[i].vPos, 1.0f );
+				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix000() );
+				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev000() );
 			}
 
 			if ( CGraphics::GetInstance().ClipLineDepth( vPh0, vPh1 ) )

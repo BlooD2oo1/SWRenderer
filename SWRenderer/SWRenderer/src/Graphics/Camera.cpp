@@ -92,7 +92,7 @@ CCameraShip::CCameraShip()
 	m_fFOVY = 110.0f / 180.0f * PI;
 	m_fAspect = 1.0f;
 	m_fNear = 0.1f;
-	m_fFar = 100000.0f;
+	m_fFar = 10000.0f;
 
 	m_vEyeInShip = SVector3( -5.0f, 0.0f, 2.0f );
 	m_vLookAtInShip = SVector3( 0.0f, 0.0f, 2.0f );
@@ -102,6 +102,7 @@ CCameraShip::CCameraShip()
 	m_vLookAtSmooth1 = SVector3( 0.0f, 0.0f, 0.0f );
 	m_vEyeSmooth0 = SVector3( -1.0f, 0.0f, 0.0f );
 	m_vEyeSmooth1 = SVector3( -1.0f, 0.0f, 0.0f );
+	m_vEyeSmooth1Prev = SVector3( -1.0f, 0.0f, 0.0f );
 	m_vUpSmooth0 = SVector3( 0.0f, 0.0f, 1.0f );
 	m_vUpSmooth1 = SVector3( 0.0f, 0.0f, 1.0f );
 
@@ -109,6 +110,10 @@ CCameraShip::CCameraShip()
 	SMatrix::Identity( m_matProj );
 	SMatrix::Identity( m_matViewProj );
 	SMatrix::Identity( m_matViewProjPrev );
+
+	SMatrix::Identity( m_matView000 );
+	SMatrix::Identity( m_matViewProj000 );
+	SMatrix::Identity( m_matViewProjPrev000 );
 }
 
 CCameraShip::~CCameraShip()
@@ -118,6 +123,9 @@ CCameraShip::~CCameraShip()
 void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 {
 	m_matViewProjPrev = m_matViewProj;
+	m_matViewProjPrev000 = m_matViewProj000;
+	m_vEyeSmooth1Prev = m_vEyeSmooth1;
+
 
 	SVector3 vEye;
 	SVector3 vLookAt;
@@ -128,8 +136,8 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 	SMatrix::TransformNormal( vUp, m_vUpInShip, matShip );
 
 	{
-		float fW01 = CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs );
-		float fW02 = CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs );
+		float fW01 = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
+		float fW02 = CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs );
 		m_vEyeSmooth0 = Lerp( vEye, m_vEyeSmooth0, fW01 );
 		m_vLookAtSmooth0 = Lerp( vLookAt, m_vLookAtSmooth0, fW01 );
 		m_vUpSmooth0 = Lerp( vUp, m_vUpSmooth0, fW02 );
@@ -151,4 +159,10 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth1, m_vLookAtSmooth1, m_vUpSmooth1 );
 	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
+
+	m_matView000 = m_matView;
+	m_matView000.m30 = 0.0f;
+	m_matView000.m31 = 0.0f;
+	m_matView000.m32 = 0.0f;
+	SMatrix::Mul( m_matViewProj000, m_matView000, m_matProj );
 }

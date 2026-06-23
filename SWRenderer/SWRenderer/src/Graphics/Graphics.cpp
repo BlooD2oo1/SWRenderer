@@ -50,15 +50,15 @@ void CGraphics::DrawPixelAA( const SVector2& v, BGRA8 sColor )
 		float fymod = v.y - (float)iy;
 		float fxmodinv = 1.0f - fxmod;
 		float fymodinv = 1.0f - fymod;
-		uint8_t i00 = (uint8_t)( sqrtf( fxmodinv*fymodinv ) * 255.0f );
-		uint8_t i01 = (uint8_t)( sqrtf( fxmodinv*fymod ) * 255.0f );
-		uint8_t i10 = (uint8_t)( sqrtf( fxmod * fymodinv ) * 255.0f);
-		uint8_t i11 = (uint8_t)( sqrtf( fxmod * fymod ) * 255.0f);
+		uint8_t i00 = (uint8_t)( sqrtf( fxmodinv*fymodinv ) * sColor.a);
+		uint8_t i01 = (uint8_t)( sqrtf( fxmodinv*fymod ) * sColor.a);
+		uint8_t i10 = (uint8_t)( sqrtf( fxmod * fymodinv ) * sColor.a);
+		uint8_t i11 = (uint8_t)( sqrtf( fxmod * fymod ) * sColor.a);
 
-		m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix] = BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix], BGRA8{ i00, i00, i00, 0 } );
-		m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1] = BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ i10, i10, i10, 0 } );
-		m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix] = BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix], BGRA8{ i01, i01, i01, 0 } );
-		m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1] = BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ i11, i11, i11, 0 } );
+		m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix] = BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i00 } );
+		m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1] = BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i10 } );
+		m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix] = BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i01 } );
+		m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1] = BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i11 } );
 	}
 }
 
