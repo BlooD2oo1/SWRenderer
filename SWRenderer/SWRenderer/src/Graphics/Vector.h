@@ -110,6 +110,29 @@ struct SVector3
 		}
 		return out;
 	}
+
+	static SVector3& Slerp( SVector3& out, const SVector3& a, const SVector3& b, float w)
+	{
+		float dot = Dot(a, b);
+
+		dot = Clamp(dot, -1.0f, 1.0f);
+
+		float theta = acosf(dot);
+
+		if (theta < 0.0001f)
+		{
+			out = a;
+			return out;
+		}
+
+		float sinTheta = sinf(theta);
+
+		float w0 = sinf((1.0f - w) * theta) / sinTheta;
+		float w1 = sinf(w * theta) / sinTheta;
+
+		out = SVector3( a.x * w0 + b.x * w1, a.y * w0 + b.y * w1, a.z * w0 + b.z * w1 );
+		return out;
+	}
 };
 
 inline SVector3 operator+(const SVector3& a, const SVector3& b) { return SVector3(a.x + b.x, a.y + b.y, a.z + b.z); }

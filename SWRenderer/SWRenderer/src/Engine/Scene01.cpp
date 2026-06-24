@@ -473,6 +473,16 @@ void CScene01::Create()
 
 void CScene01::Update()
 {
+	if ( CEngine::GetInstance().GetMouseState().bLeftButton )
+	{
+		m_sShip.Accelerate( CEngine::GetInstance().GetElapsedTimeMs() * 0.01f );
+	}
+
+	if ( CEngine::GetInstance().GetMouseState().bRightButton )
+	{
+		m_sShip.Accelerate( CEngine::GetInstance().GetElapsedTimeMs() * -0.01f );
+	}
+
 	m_cCamera.Update( CEngine::GetInstance().GetElapsedTimeMs() );
 	
 	m_sShip.Update( CEngine::GetInstance().GetElapsedTimeMs() );

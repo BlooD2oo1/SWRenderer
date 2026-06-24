@@ -94,8 +94,8 @@ CCameraShip::CCameraShip()
 	m_fNear = 0.1f;
 	m_fFar = 10000.0f;
 
-	m_vEyeInShip = SVector3( -5.0f, 0.0f, 2.0f );
-	m_vLookAtInShip = SVector3( 0.0f, 0.0f, 2.0f );
+	m_vEyeInShip = SVector3( -5.0f, 0.0f, 0.0f );
+	m_vLookAtInShip = SVector3( 0.0f, 0.0f, 0.0f );
 	m_vUpInShip = SVector3( 0.0f, 0.0f, 1.0f );
 
 	m_vLookAtSmooth0 = SVector3( 0.0f, 0.0f, 0.0f );
@@ -136,11 +136,12 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 	SMatrix::TransformNormal( vUp, m_vUpInShip, matShip );
 
 	{
-		float fW01 = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
+		float fW01 = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 		float fW02 = CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs );
 		m_vEyeSmooth0 = Lerp( vEye, m_vEyeSmooth0, fW01 );
 		m_vLookAtSmooth0 = Lerp( vLookAt, m_vLookAtSmooth0, fW01 );
 		m_vUpSmooth0 = Lerp( vUp, m_vUpSmooth0, fW02 );
+		//m_vUpSmooth0 = SVector3::Slerp( m_vUpSmooth0, vUp, m_vUpSmooth0, fW02 );
 		SVector3::Normalize( m_vUpSmooth0, m_vUpSmooth0 );
 	}
 
@@ -153,6 +154,7 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 		m_vEyeSmooth1 = Lerp( vEye, m_vEyeSmooth1, fW01 );
 		m_vLookAtSmooth1 = Lerp( vLookAt, m_vLookAtSmooth1, fW01 );
 		m_vUpSmooth1 = Lerp( vUp, m_vUpSmooth1, fW02 );
+		//m_vUpSmooth1 = SVector3::Slerp( m_vUpSmooth1, vUp, m_vUpSmooth1, fW02 );
 		SVector3::Normalize( m_vUpSmooth1, m_vUpSmooth1 );
 	}
 
