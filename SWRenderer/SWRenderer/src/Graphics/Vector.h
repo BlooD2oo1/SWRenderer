@@ -25,6 +25,11 @@ struct SVector2
 	inline SVector2& operator*=(float s) noexcept { x *= s; y *= s; return *this; }
 	inline SVector2& operator/=(float s) noexcept { x /= s; y /= s; return *this; }
 
+	constexpr static float Dot( const SVector2& a, const SVector2& b )
+	{
+		return a.x * b.x + a.y * b.y;
+	}
+
 	constexpr static float LengthSq( const SVector2& v )
 	{
 		return v.x * v.x + v.y * v.y;
@@ -33,6 +38,22 @@ struct SVector2
 	static float Length( const SVector2& v )
 	{
 		return sqrtf( v.x * v.x + v.y * v.y );
+	}
+
+	static SVector2& Normalize( SVector2& out, const SVector2& v ) noexcept
+	{
+		float len = Length( v );
+		if ( len > 0.000001f )
+		{
+			out.x = v.x / len;
+			out.y = v.y / len;
+		}
+		else
+		{
+			out.x = 0.0f;
+			out.y = 0.0f;
+		}
+		return out;
 	}
 };
 
@@ -302,6 +323,32 @@ struct SMatrix
 		out.m31 = 0.0f;
 		out.m32 = (2.0f * zfar * znear) / (znear - zfar);
 		out.m33 = 0.0f;
+
+		return out;
+	}
+
+	constexpr static SMatrix& Transpose( SMatrix& out, const SMatrix& m )
+	{
+		assert( &out != &m );
+		out.m00 = m.m00;
+		out.m01 = m.m10;
+		out.m02 = m.m20;
+		out.m03 = m.m30;
+
+		out.m10 = m.m01;
+		out.m11 = m.m11;
+		out.m12 = m.m21;
+		out.m13 = m.m31;
+
+		out.m20 = m.m02;
+		out.m21 = m.m12;
+		out.m22 = m.m22;
+		out.m23 = m.m32;
+
+		out.m30 = m.m03;
+		out.m31 = m.m13;
+		out.m32 = m.m23;
+		out.m33 = m.m33;
 
 		return out;
 	}

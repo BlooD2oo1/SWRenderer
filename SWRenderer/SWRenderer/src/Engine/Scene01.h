@@ -16,7 +16,7 @@ struct SShip
 	void MoveUp( float fValue );
 	void MoveRight( float fValue );
 
-	void Update( float fElapsedTimeMs );
+	void Update( float fElapsedTimeMs, const SMatrix& matView000 );
 
 	void GetMatrix( SMatrix& sOut );
 

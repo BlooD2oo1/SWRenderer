@@ -13,7 +13,7 @@ void SShip::Init()
 	m_vDir = SVector3( 1.0f, 0.0f, 0.0f );
 	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
 	m_vRight = SVector3( 0.0f, 1.0f, 0.0f );
-	m_fSpeedForward = 0.0f;
+	m_fSpeedForward = 0.1f;
 	m_fSpeedUp =  0.0f;
 	m_fSpeedRight = 0.0f;
 }
@@ -34,12 +34,100 @@ void SShip::MoveRight( float fValue )
 	m_fSpeedRight += fValue*0.0001f;
 }
 
-void SShip::Update( float fElapsedTimeMs )
+void SShip::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 {
-	float fWDir = CalcSmoothUpdateWeight( 1.004f, fElapsedTimeMs );
-	m_fSpeedUp *= fWDir;
-	m_fSpeedRight *= fWDir;
 	{
+		const SVector2 vMouseDir2D( m_fSpeedRight, m_fSpeedUp );
+
+		SVector3 vUpView;
+		SMatrix::TransformNormal( vUpView, m_vUp, matView000 );
+		SVector2 vUpView2DNorm( -vUpView.x, vUpView.y );
+		SVector2::Normalize( vUpView2DNorm, vUpView2DNorm );
+
+		SVector3 vRightView;
+		SMatrix::TransformNormal( vRightView, m_vRight, matView000 );
+		SVector2 vRightView2DNorm( -vRightView.x, vRightView.y );
+		SVector2::Normalize( vRightView2DNorm, vRightView2DNorm );
+		
+		SVector2 vMouseDir2DNorm;		
+		SVector2::Normalize( vMouseDir2DNorm, vMouseDir2D );
+
+		float fUp = -SVector2::Dot( vUpView2DNorm, vMouseDir2D );
+		float fRoll = -SVector2::Dot( vRightView2DNorm, vMouseDir2D );
+
+		{
+			SQuaternion q;
+			SQuaternion::FromAxisAngle( q, m_vRight, fUp*1.0f );
+			SMatrix matRot;
+			SQuaternion::ToMatrix( matRot, q );
+
+			SVector4 vTemp;
+			SVector4 vDir4( m_vDir, 1.0f );		
+			SMatrix::Mul( vTemp, vDir4, matRot );
+			m_vDir.x = vTemp.x;
+			m_vDir.y = vTemp.y;
+			m_vDir.z = vTemp.z;
+
+			SVector4 vUp4( m_vUp, 1.0f );
+			SMatrix::Mul( vTemp, vUp4, matRot );
+			m_vUp.x = vTemp.x;
+			m_vUp.y = vTemp.y;
+			m_vUp.z = vTemp.z;
+
+			SVector4 vRight4( m_vRight, 1.0f );
+			SMatrix::Mul( vTemp, vRight4, matRot );
+			m_vRight.x = vTemp.x;
+			m_vRight.y = vTemp.y;
+			m_vRight.z = vTemp.z;
+
+			SVector3::Cross( m_vRight, m_vDir, m_vUp );
+			SVector3::Cross( m_vUp, m_vRight, m_vDir );
+			SVector3::Normalize( m_vDir, m_vDir );
+			SVector3::Normalize( m_vUp, m_vUp );
+			SVector3::Normalize( m_vRight, m_vRight );
+		}
+
+		{
+			SQuaternion q;
+			SQuaternion::FromAxisAngle( q, m_vDir, fRoll*3.0f );
+			SMatrix matRot;
+			SQuaternion::ToMatrix( matRot, q );
+
+			SVector4 vTemp;
+			SVector4 vDir4( m_vDir, 1.0f );		
+			SMatrix::Mul( vTemp, vDir4, matRot );
+			m_vDir.x = vTemp.x;
+			m_vDir.y = vTemp.y;
+			m_vDir.z = vTemp.z;
+
+			SVector4 vUp4( m_vUp, 1.0f );
+			SMatrix::Mul( vTemp, vUp4, matRot );
+			m_vUp.x = vTemp.x;
+			m_vUp.y = vTemp.y;
+			m_vUp.z = vTemp.z;
+
+			SVector4 vRight4( m_vRight, 1.0f );
+			SMatrix::Mul( vTemp, vRight4, matRot );
+			m_vRight.x = vTemp.x;
+			m_vRight.y = vTemp.y;
+			m_vRight.z = vTemp.z;
+
+			SVector3::Cross( m_vRight, m_vDir, m_vUp );
+			SVector3::Cross( m_vUp, m_vRight, m_vDir );
+			SVector3::Normalize( m_vDir, m_vDir );
+			SVector3::Normalize( m_vUp, m_vUp );
+			SVector3::Normalize( m_vRight, m_vRight );
+		}
+
+
+		/*SMatrix matView000Inv;
+		SMatrix::Transpose( matView000Inv, matView000 );
+		SVector3 vMouseDirWorld;
+		SMatrix::TransformNormal( vMouseDirWorld, vMouseDir, matView000Inv );*/
+		
+	}
+
+	/*{
 		SQuaternion q;
 		SQuaternion::FromAxisAngle( q, m_vRight, m_fSpeedUp );
 		SMatrix matRot;
@@ -101,7 +189,7 @@ void SShip::Update( float fElapsedTimeMs )
 		SVector3::Normalize( m_vDir, m_vDir );
 		SVector3::Normalize( m_vUp, m_vUp );
 		SVector3::Normalize( m_vRight, m_vRight );
-	}
+	}*/
 
 	/*{
 		SQuaternion q;
@@ -168,6 +256,10 @@ void SShip::Update( float fElapsedTimeMs )
 	}*/
 
 	m_vPos += m_vDir * m_fSpeedForward * fElapsedTimeMs;
+
+	float fWDir = CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs );
+	m_fSpeedUp *= fWDir;
+	m_fSpeedRight *= fWDir;
 }
 
 void SShip::GetMatrix( SMatrix& sOut )
@@ -208,7 +300,7 @@ void CScene01::Create()
 	m_cCamera.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
 	m_cCameraShip.SetAspect( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight );
 
-	m_iStarsCount = 10000;
+	m_iStarsCount = 1000;
 	m_pStars = new SParticle[m_iStarsCount];
 	for ( int i = 0; i < m_iStarsCount; i++ )
 	{
@@ -216,32 +308,44 @@ void CScene01::Create()
 		m_pStars[i].vPos.y = ((float)rand()/(float)RAND_MAX);
 		m_pStars[i].vPos.z = ((float)rand()/(float)RAND_MAX);
 
-		m_pStars[i].a = ((float)rand()/(float)RAND_MAX) * 0.55f + 0.45f;
-		m_pStars[i].a *= m_pStars[i].a;
-		m_pStars[i].a *= m_pStars[i].a;
-		m_pStars[i].a = powf( m_pStars[i].a, 3.0f );
+		m_pStars[i].a = ((float)rand()/(float)RAND_MAX);
+		m_pStars[i].a = powf( m_pStars[i].a, 40.0f );
+		m_pStars[i].a = m_pStars[i].a * 0.8f + 0.2f;
 	}
 
-	m_iBGStarsCount = 10000;
+	m_iBGStarsCount = 20000;
 	m_pBGStars = new SParticle[m_iBGStarsCount];
 	for ( int i = 0; i < m_iBGStarsCount; i++ )
 	{
-		float fU = ((float)rand()/(float)RAND_MAX)*PI2;
+		float fU = ((float)rand()/(float)RAND_MAX);
 		float fV = ((float)rand()/(float)RAND_MAX);
-		
-		fV = 1.0f - powf( 1.0f - fV, 0.3f );
+
+		fU *= PI2;
+
+		if ( i%3!=0)
+		{
+			fV = 1.0f - powf( 1.0f - fV, 0.3f );
+		}
+
 		fV = powf( fV, 1.5f );
 
 		fV = asinf( fV );		
-		fV = rand() % 2 == 0 ? -fV : fV;
+		fV = i % 2 == 0 ? -fV : fV;
+
+		float fNoiseScale = 2.0f;
+		float fNoise = 1.0f;
+		fNoise *= Noise2DPeriodic( fU/PI2*128.0f, fV/PI2*128.0f, 128 )*0.6f+0.4f;
+		fNoise *= Noise2DPeriodic( fU/PI2*32.0f, fV/PI2*32.0f, 32 )*0.6f+0.4f;
+
 		m_pBGStars[i].vPos.x = cosf(fU)*cosf(fV);
 		m_pBGStars[i].vPos.y = sinf(fU)*cosf(fV);
 		m_pBGStars[i].vPos.z = sinf(fV);
 		m_pBGStars[i].vPos *= 10000.0f;
 
-		m_pBGStars[i].a = ((float)rand()/(float)RAND_MAX) * 0.8f + 0.2f;
-		m_pBGStars[i].a *= m_pBGStars[i].a;
-		m_pBGStars[i].a *= m_pBGStars[i].a;
+		m_pBGStars[i].a = ((float)rand()/(float)RAND_MAX);
+		m_pBGStars[i].a = powf( m_pBGStars[i].a, 40.0f );
+		m_pBGStars[i].a = m_pBGStars[i].a * 0.8f + 0.2f;
+		m_pBGStars[i].a *= fNoise;
 	}
 
 	{
@@ -485,7 +589,7 @@ void CScene01::Update()
 
 	m_cCamera.Update( CEngine::GetInstance().GetElapsedTimeMs() );
 	
-	m_sShip.Update( CEngine::GetInstance().GetElapsedTimeMs() );
+	m_sShip.Update( CEngine::GetInstance().GetElapsedTimeMs(), m_cCameraShip.GetViewMatrix() );
 
 	SMatrix matShip;
 	m_sShip.GetMatrix( matShip );
@@ -544,12 +648,12 @@ void CScene01::Render()
 					if ( fLSq > 1.0f )
 					{
 						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						uint8_t alpha = (uint8_t)(m_pStars[i].a*0.6f * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pStars[i].a * 255.0f);
 						CGraphics::GetInstance().DrawLine( vP0, vP1, BGRA8{ 255, 200, 180, alpha } );
 					}
 					else
 					{
-						uint8_t alpha = (uint8_t)(m_pStars[i].a*0.6f * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pStars[i].a * 255.0f);
 						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, BGRA8{ 255, 200, 180, alpha } );
 					}
 				}
@@ -599,12 +703,12 @@ void CScene01::Render()
 					if ( fLSq > 1.0f )
 					{
 						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						uint8_t alpha = (uint8_t)(m_pBGStars[i].a*0.4f * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pBGStars[i].a * 255.0f);
 						CGraphics::GetInstance().DrawLine( vP0, vP1, BGRA8{ 255, 200, 180, alpha } );
 					}
 					else
 					{
-						uint8_t alpha = (uint8_t)(m_pBGStars[i].a*0.4f * 255.0f);
+						uint8_t alpha = (uint8_t)(m_pBGStars[i].a * 255.0f);
 						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, BGRA8{ 255, 200, 180, alpha } );
 					}
 				}
@@ -641,7 +745,7 @@ void CScene01::Render()
 			uint8_t iAlpha = (uint8_t)(fAlpha*255.0f);
 			for ( int i = 0; i < m_iLineListSpaceShipCount; i++ )
 			{
-				CGraphics::GetInstance().DrawLine3D( m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, BGRA8{ 30, 50, 100, iAlpha } );
+				CGraphics::GetInstance().DrawLine3D( m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, BGRA8{ 30, 50, 110, iAlpha } );
 			}
 		}
 	}
@@ -672,6 +776,9 @@ bool CScene01::On_KeyUp( uint32_t key )
 
 bool CScene01::On_MouseMove( int deltax, int deltay )
 {
+	m_sShip.MoveRight( (float)deltax );
+	m_sShip.MoveUp( (float)deltay );
+
 	if ( CEngine::GetInstance().GetMouseState().bLeftButton )
 	{
 		m_cCamera.Rotate( (float)deltax * 0.005f, (float)deltay * 0.005f );
@@ -680,11 +787,7 @@ bool CScene01::On_MouseMove( int deltax, int deltay )
 	{
 		m_cCamera.Pan( SVector2( (float)deltax * 0.005f, (float)deltay * 0.005f ) );
 	}
-	else
-	{
-		m_sShip.MoveRight( (float)deltax );
-		m_sShip.MoveUp( (float)deltay );		
-	}
+
 	return false;
 }
 bool CScene01::On_MouseButtonDown( uint32_t button )
