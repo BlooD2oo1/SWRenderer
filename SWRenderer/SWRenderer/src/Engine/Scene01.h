@@ -67,4 +67,11 @@ private:
 	SShip			m_sShip;
 	CCameraFree		m_cCamera;
 	CCameraShip		m_cCameraShip;
+
+	SVertex*		m_pVBCircle;
+	int				m_iVBCircleCount;
+	int*			m_pIBCircle;
+	int				m_iIBCircleCount;
+
+	SVector3		m_vCirclePos;
 };

@@ -275,6 +275,8 @@ CScene01::CScene01()
 	m_pStars = nullptr;
 	m_pBGStars = nullptr;
 	m_pLineListSpaceShip = nullptr;
+	m_pVBCircle = nullptr;
+	m_pIBCircle = nullptr;
 	Clear();
 }
 
@@ -291,6 +293,12 @@ void CScene01::Clear()
 	m_iBGStarsCount = 0;
 	SAFE_DELETE_ARRAY( m_pLineListSpaceShip );
 	m_iLineListSpaceShipCount = 0;
+	SAFE_DELETE_ARRAY( m_pVBCircle );
+	m_iVBCircleCount = 0;
+	SAFE_DELETE_ARRAY( m_pIBCircle );
+	m_iIBCircleCount = 0;
+
+	m_vCirclePos = SVector3( 1000.0f, 0.0f, 0.0f );
 }
 
 void CScene01::Create()
@@ -346,6 +354,26 @@ void CScene01::Create()
 		m_pBGStars[i].a = powf( m_pBGStars[i].a, 40.0f );
 		m_pBGStars[i].a = m_pBGStars[i].a * 0.8f + 0.2f;
 		m_pBGStars[i].a *= fNoise;
+	}
+
+	{
+		m_iVBCircleCount = 8;
+		m_pVBCircle = new SVertex[m_iVBCircleCount];
+		for ( int i = 0; i < m_iVBCircleCount; i++ )
+		{
+			float fW = (float)i/(float)m_iVBCircleCount;
+			m_pVBCircle[i].vPos.x = cosf( fW*PI2 );
+			m_pVBCircle[i].vPos.y = sinf( fW*PI2 );
+			m_pVBCircle[i].vPos.z = 0.0f;
+		}
+
+		m_iIBCircleCount = m_iVBCircleCount*2;
+		m_pIBCircle = new int[m_iIBCircleCount];
+		for ( int i = 0; i < m_iVBCircleCount; i++ )
+		{
+			m_pIBCircle[i*2+0] = i;
+			m_pIBCircle[i*2+1] = (i+1)%m_iVBCircleCount;
+		}
 	}
 
 	{
@@ -747,6 +775,23 @@ void CScene01::Render()
 			{
 				CGraphics::GetInstance().DrawLine3D( m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, BGRA8{ 30, 50, 110, iAlpha } );
 			}
+		}
+	}
+
+	{
+		SMatrix matWorld;
+		SMatrix::Identity( matWorld );
+		SMatrix::BuildViewMatrix( matWorld, m_vCirclePos, m_sShip.m_vPos, SVector3( 0.0f, 0.0f, 1.0f ) );
+		SMatrix::Inverse( matWorld, matWorld );
+
+		SMatrix matWorldViewProj;
+		SMatrix::Mul( matWorldViewProj, matWorld, m_cCameraShip.GetViewProjectionMatrix() );
+		float fAlpha = 1.0f;
+		uint8_t iAlpha = (uint8_t)(fAlpha*255.0f);
+		for ( int i = 0; i < m_iIBCircleCount/2; i++ )
+		{
+			CGraphics::GetInstance().DrawLine3D( m_pVBCircle[m_pIBCircle[i*2+0]].vPos*100.0f, m_pVBCircle[m_pIBCircle[i*2+1]].vPos*100.0f, matWorldViewProj, BGRA8{ 20, 20, 155, iAlpha } );
+			CGraphics::GetInstance().DrawLine3D( m_pVBCircle[m_pIBCircle[i*2+0]].vPos*100.0f*0.95f, m_pVBCircle[m_pIBCircle[i*2+1]].vPos*100.0f*0.95f, matWorldViewProj, BGRA8{ 90, 20, 90, iAlpha } );
 		}
 	}
 }
