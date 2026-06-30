@@ -16,6 +16,37 @@ struct BGRA8
 		};
 		uint32_t rgba;
 	};
+
+	BGRA8()	{}
+
+	BGRA8( uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a )
+		: r(_r), g(_g), b(_b), a(_a)
+	{
+	}
+
+	BGRA8( uint32_t _rgba )
+		: rgba(_rgba)
+	{
+	}
+
+	BGRA8( float fR, float fG, float fB, float fA )
+	{
+		r = (uint8_t)( Clamp( fR, 0.0f, 1.0f ) * 255.0f );
+		g = (uint8_t)( Clamp( fG, 0.0f, 1.0f ) * 255.0f );
+		b = (uint8_t)( Clamp( fB, 0.0f, 1.0f ) * 255.0f );
+		a = (uint8_t)( Clamp( fA, 0.0f, 1.0f ) * 255.0f );
+	}
+};
+
+struct SVertexP
+{
+	SVector3 vPos;
+};
+
+struct SVertexPC
+{
+	SVector3	vPos;
+	BGRA8		dwColor;
 };
 
 struct SFrameBuffer

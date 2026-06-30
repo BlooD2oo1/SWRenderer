@@ -39,7 +39,7 @@ void CEngine::Update( float fElapsedTimeMs )
 void CEngine::Render()
 {
 	// clear framebuffer
-	CGraphics::GetInstance().ClearFrameBuffer( BGRA8{ 0, 0, 0, 0 } );
+	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 0 ) );
 
 	m_cScene01.Render();
 

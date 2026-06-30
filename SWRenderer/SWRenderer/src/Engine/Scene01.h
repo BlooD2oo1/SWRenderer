@@ -2,11 +2,7 @@
 
 #include "Graphics/Vector.h"
 #include "Graphics/Camera.h"
-
-struct SVertex
-{
-	SVector3 vPos;
-};
+#include "Graphics/Graphics.h"
 
 struct SShip
 {
@@ -51,24 +47,19 @@ public:
 
 private:
 
-	struct SParticle
-	{
-		SVector3 vPos;
-		float a;
-	};
-	SParticle*		m_pStars;
+	SVertexPC*		m_pStars;
 	int				m_iStarsCount;
 
-	SParticle*		m_pBGStars;
+	SVertexPC*		m_pBGStars;
 	int				m_iBGStarsCount;
 
-	SVertex*		m_pLineListSpaceShip;
+	SVertexP*		m_pLineListSpaceShip;
 	int				m_iLineListSpaceShipCount;
 	SShip			m_sShip;
 	CCameraFree		m_cCamera;
 	CCameraShip		m_cCameraShip;
 
-	SVertex*		m_pVBCircle;
+	SVertexP*		m_pVBCircle;
 	int				m_iVBCircleCount;
 	int*			m_pIBCircle;
 	int				m_iIBCircleCount;
