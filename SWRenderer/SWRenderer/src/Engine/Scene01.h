@@ -48,21 +48,21 @@ public:
 private:
 
 	SVertexPC*		m_pStars;
-	int				m_iStarsCount;
+	uint32_t		m_iStarsCount;
 
 	SVertexPC*		m_pBGStars;
-	int				m_iBGStarsCount;
+	uint32_t		m_iBGStarsCount;
 
 	SVertexP*		m_pLineListSpaceShip;
-	int				m_iLineListSpaceShipCount;
+	uint32_t		m_iLineListSpaceShipCount;
 	SShip			m_sShip;
 	CCameraFree		m_cCamera;
 	CCameraShip		m_cCameraShip;
 
 	SVertexP*		m_pVBCircle;
-	int				m_iVBCircleCount;
-	int*			m_pIBCircle;
-	int				m_iIBCircleCount;
+	uint32_t		m_iVBCircleCount;
+	uint32_t*		m_pIBCircle;
+	uint32_t		m_iIBCircleCount;
 
 	SVector3		m_vCirclePos;
 };

@@ -46,7 +46,7 @@ struct SVertexP
 struct SVertexPC
 {
 	SVector3	vPos;
-	BGRA8		dwColor;
+	BGRA8		sColor;
 };
 
 struct SFrameBuffer
@@ -91,17 +91,23 @@ public:
 	void DrawPixel( int x, int y, BGRA8 sColor );
 	void DrawPixelAA( const SVector2& v, BGRA8 sColor );
 	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
-	void DrawLine3D( SVector4& vPh0, SVector4 vPh1, BGRA8 sColor );
-	void DrawLine3D( const SVector3& vP0, const SVector3 vP1, const SMatrix& matViewProj, BGRA8 sColor );
+	
+	void DrawLine3D( const SVertexP& sV0, const SVertexP& sV1, const SMatrix& matViewProj, BGRA8 sColor );
+	void DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const SMatrix& matViewProj );
+	
+	void DrawLineList3D( const SVertexP* pLineList, int iLineCount, const SMatrix& matViewProj, BGRA8 sColor );
+	void DrawLineList3D( const SVertexPC* pLineList, int iLineCount, const SMatrix& matViewProj );
 
-	bool ClipLineDepth( SVector4& vPh0, SVector4& vPh1 );
-	bool ClipLineXY( SVector4& vPh0, SVector4& vPh1 );
-	bool ClipPixel( SVector4 vPh );
+	void DrawLineList3D( const SVertexP* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SMatrix& matViewProj, BGRA8 sColor );
+
+	bool ClipLineDepth( SVector4& vPh0, SVector4& vPh1 ) const;
+	bool ClipLineXY( SVector4& vPh0, SVector4& vPh1 ) const;
+	bool ClipPixel( SVector4 vPh ) const;
 
 private:
-	uint8_t ClipCode( const SVector4& vP4 );	
+	uint8_t ClipCode( const SVector4& vP4 ) const;
 
-	static uint32_t BlendAdditive( uint32_t dest, BGRA8 src );		
+	static uint32_t BlendAdditive( uint32_t dest, BGRA8 src );
 
 private:
 	SFrameBuffer	m_sFrameBuffer;

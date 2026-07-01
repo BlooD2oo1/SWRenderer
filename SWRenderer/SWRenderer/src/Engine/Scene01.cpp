@@ -310,7 +310,7 @@ void CScene01::Create()
 
 	m_iStarsCount = 1000;
 	m_pStars = new SVertexPC[m_iStarsCount];
-	for ( int i = 0; i < m_iStarsCount; i++ )
+	for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 	{
 		m_pStars[i].vPos.x = ((float)rand()/(float)RAND_MAX);
 		m_pStars[i].vPos.y = ((float)rand()/(float)RAND_MAX);
@@ -319,12 +319,12 @@ void CScene01::Create()
 		float a = ((float)rand()/(float)RAND_MAX);
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
-		m_pStars[i].dwColor = BGRA8( 1.0f, 0.7f, 0.6f, a );
+		m_pStars[i].sColor = BGRA8( 1.0f, 0.7f, 0.6f, a );
 	}
 
 	m_iBGStarsCount = 20000;
 	m_pBGStars = new SVertexPC[m_iBGStarsCount];
-	for ( int i = 0; i < m_iBGStarsCount; i++ )
+	for ( uint32_t i = 0; i < m_iBGStarsCount; i++ )
 	{
 		float fU = ((float)rand()/(float)RAND_MAX);
 		float fV = ((float)rand()/(float)RAND_MAX);
@@ -355,13 +355,13 @@ void CScene01::Create()
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
 		a *= fNoise;
-		m_pBGStars[i].dwColor = BGRA8( 1.0f, 0.7f, 0.6f, a );
+		m_pBGStars[i].sColor = BGRA8( 1.0f, 0.7f, 0.6f, a );
 	}
 
 	{
 		m_iVBCircleCount = 8;
 		m_pVBCircle = new SVertexP[m_iVBCircleCount];
-		for ( int i = 0; i < m_iVBCircleCount; i++ )
+		for ( uint32_t i = 0; i < m_iVBCircleCount; i++ )
 		{
 			float fW = (float)i/(float)m_iVBCircleCount;
 			m_pVBCircle[i].vPos.x = cosf( fW*PI2 );
@@ -370,8 +370,8 @@ void CScene01::Create()
 		}
 
 		m_iIBCircleCount = m_iVBCircleCount*2;
-		m_pIBCircle = new int[m_iIBCircleCount];
-		for ( int i = 0; i < m_iVBCircleCount; i++ )
+		m_pIBCircle = new uint32_t[m_iIBCircleCount];
+		for ( uint32_t i = 0; i < m_iVBCircleCount; i++ )
 		{
 			m_pIBCircle[i*2+0] = i;
 			m_pIBCircle[i*2+1] = (i+1)%m_iVBCircleCount;
@@ -589,9 +589,7 @@ void CScene01::Create()
 				new SVertexP[
 					m_iLineListSpaceShipCount * 2];
 
-			for(int i=0;
-				i<m_iLineListSpaceShipCount;
-				++i)
+			for(uint32_t i=0; i<m_iLineListSpaceShipCount; ++i)
 			{
 				m_pLineListSpaceShip[i*2+0]
 					.vPos =
@@ -678,11 +676,11 @@ void CScene01::Render()
 					if ( fLSq > 1.0f )
 					{
 						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						CGraphics::GetInstance().DrawLine( vP0, vP1, m_pStars[i].dwColor );
+						CGraphics::GetInstance().DrawLine( vP0, vP1, m_pStars[i].sColor );
 					}
 					else
 					{
-						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, m_pStars[i].dwColor );
+						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, m_pStars[i].sColor );
 					}
 				}
 			}
@@ -690,7 +688,7 @@ void CScene01::Render()
 	}
 
 	{
-		for ( int i = 0; i < m_iBGStarsCount; i++ )
+		for ( uint32_t i = 0; i < m_iBGStarsCount; i++ )
 		{
 			SVector4 vPh0;
 			SVector4 vPh1;
@@ -731,11 +729,11 @@ void CScene01::Render()
 					if ( fLSq > 1.0f )
 					{
 						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						CGraphics::GetInstance().DrawLine( vP0, vP1, m_pBGStars[i].dwColor );
+						CGraphics::GetInstance().DrawLine( vP0, vP1, m_pBGStars[i].sColor );
 					}
 					else
 					{
-						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, m_pBGStars[i].dwColor );
+						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, m_pBGStars[i].sColor );
 					}
 				}
 			}
@@ -766,13 +764,7 @@ void CScene01::Render()
 			SMatrix matWorldViewProj;
 			SMatrix::Mul( matWorldViewProj, matWorld, m_cCameraShip.GetViewProjectionMatrix() );
 			float fAlpha = 1.0f;
-			//float fAlpha = 10.0f / SVector3::Length( m_sShip.m_vPos );
-			//fAlpha = Clamp( fAlpha, 0.0f, 1.0f );
-			uint8_t iAlpha = (uint8_t)(fAlpha*255.0f);
-			for ( int i = 0; i < m_iLineListSpaceShipCount; i++ )
-			{
-				CGraphics::GetInstance().DrawLine3D( m_pLineListSpaceShip[i*2+0].vPos, m_pLineListSpaceShip[i*2+1].vPos, matWorldViewProj, BGRA8{ 0.2f, 0.3f, 0.6f, fAlpha } );
-			}
+			CGraphics::GetInstance().DrawLineList3D( m_pLineListSpaceShip, m_iLineListSpaceShipCount, matWorldViewProj, BGRA8( 0.2f, 0.3f, 0.6f, fAlpha ) );
 		}
 	}
 
@@ -781,16 +773,12 @@ void CScene01::Render()
 		SMatrix::Identity( matWorld );
 		SMatrix::BuildViewMatrix( matWorld, m_vCirclePos, m_sShip.m_vPos, SVector3( 0.0f, 0.0f, 1.0f ) );
 		SMatrix::Inverse( matWorld, matWorld );
+		SMatrix::Scale( matWorld, 100.0f );
 
 		SMatrix matWorldViewProj;
 		SMatrix::Mul( matWorldViewProj, matWorld, m_cCameraShip.GetViewProjectionMatrix() );
 		float fAlpha = 0.8f;
-		for ( int i = 0; i < m_iIBCircleCount/2; i++ )
-		{
-			CGraphics::GetInstance().DrawLine3D( m_pVBCircle[m_pIBCircle[i*2+0]].vPos*100.0f, m_pVBCircle[m_pIBCircle[i*2+1]].vPos*100.0f, matWorldViewProj, BGRA8{ 0.3f, 0.2f, 1.0f, fAlpha } );
-			CGraphics::GetInstance().DrawLine3D( m_pVBCircle[m_pIBCircle[i*2+0]].vPos*100.0f*0.95f, m_pVBCircle[m_pIBCircle[i*2+1]].vPos*100.0f*0.95f, matWorldViewProj, BGRA8{ 0.1f, 0.2f, 0.7f, fAlpha } );
-			CGraphics::GetInstance().DrawLine3D( m_pVBCircle[m_pIBCircle[i*2+0]].vPos*100.0f*1.05f, m_pVBCircle[m_pIBCircle[i*2+1]].vPos*100.0f*1.05f, matWorldViewProj, BGRA8{ 0.1f, 0.2f, 0.7f, fAlpha } );
-		}
+		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, matWorldViewProj, BGRA8{ 0.3f, 0.2f, 1.0f, fAlpha } );
 	}
 }
 

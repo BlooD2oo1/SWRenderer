@@ -101,8 +101,17 @@ void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor
 	}
 }
 
-void CGraphics::DrawLine3D( SVector4& vPh0, SVector4 vPh1, BGRA8 sColor )
+void CGraphics::DrawLine3D( const SVertexP& sV0, const SVertexP& sV1, const SMatrix& matViewProj, BGRA8 sColor )
 {
+	SVector4 vPh0;
+	SVector4 vPh1;
+	{
+		SVector4 vPh0Src( sV0.vPos, 1.0f );
+		SMatrix::Mul( vPh0, vPh0Src, matViewProj );
+		SVector4 vPh1Src( sV1.vPos, 1.0f );
+		SMatrix::Mul( vPh1, vPh1Src, matViewProj );
+	}
+
 	if ( ClipLineDepth( vPh0, vPh1 ) )
 	{
 		{
@@ -134,21 +143,83 @@ void CGraphics::DrawLine3D( SVector4& vPh0, SVector4 vPh1, BGRA8 sColor )
 	}
 }
 
-void CGraphics::DrawLine3D( const SVector3& vP0, const SVector3 vP1, const SMatrix& matViewProj, BGRA8 sColor )
+void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const SMatrix& matViewProj )
 {
 	SVector4 vPh0;
 	SVector4 vPh1;
 	{
-		SVector4 vPh0Src( vP0, 1.0f );
-		SMatrix::Mul( vPh0, vPh0Src, matViewProj );			
-		SVector4 vPh1Src( vP1, 1.0f );
-		SMatrix::Mul( vPh1, vPh1Src, matViewProj );				
+		SVector4 vPh0Src( sV0.vPos, 1.0f );
+		SMatrix::Mul( vPh0, vPh0Src, matViewProj );
+		SVector4 vPh1Src( sV1.vPos, 1.0f );
+		SMatrix::Mul( vPh1, vPh1Src, matViewProj );
 	}
 
-	DrawLine3D( vPh0, vPh1, sColor );
+	if ( ClipLineDepth( vPh0, vPh1 ) )
+	{
+		{
+			float fWRec0 = 1.0f / vPh0.w;
+			vPh0.x = vPh0.x * fWRec0;
+			vPh0.y = vPh0.y * fWRec0;
+			//vPh0.z = vPh0.z * fWRec0;
+			vPh0.w = 1.0f;
+
+			float fWRec1 = 1.0f / vPh1.w;
+			vPh1.x = vPh1.x * fWRec1;
+			vPh1.y = vPh1.y * fWRec1;
+			//vPh1.z = vPh1.z * fWRec1;
+			vPh1.w = 1.0f;
+		}
+
+		if ( ClipLineXY( vPh0, vPh1 ) )
+		{
+			SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
+			vP0.x *= (float)m_sFrameBuffer.iWidth;
+			vP0.y *= (float)m_sFrameBuffer.iHeight;
+
+			SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
+			vP1.x *= (float)m_sFrameBuffer.iWidth;
+			vP1.y *= (float)m_sFrameBuffer.iHeight;
+
+			DrawLine( vP0, vP1, sV0.sColor );
+		}
+	}
 }
 
-bool CGraphics::ClipLineDepth( SVector4& vPh0, SVector4& vPh1 )
+
+void CGraphics::DrawLineList3D( const SVertexP* pLineList, int iLineCount, const SMatrix& matViewProj, BGRA8 sColor )
+{
+	assert( pLineList != nullptr && iLineCount > 0 );
+	for ( int i = 0; i < iLineCount; i++ )
+	{
+		int iInd0 = i*2+0;
+		int iInd1 = i*2+1;
+		DrawLine3D( pLineList[iInd0], pLineList[iInd1], matViewProj, sColor );
+	}
+}
+
+void CGraphics::DrawLineList3D( const SVertexPC* pLineList, int iLineCount, const SMatrix& matViewProj )
+{
+	assert( pLineList != nullptr && iLineCount > 0 );
+	for ( int i = 0; i < iLineCount; i++ )
+	{
+		int iInd0 = i*2+0;
+		int iInd1 = i*2+1;
+		DrawLine3D( pLineList[iInd0], pLineList[iInd1], matViewProj );
+	}
+}
+
+void CGraphics::DrawLineList3D( const SVertexP* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SMatrix& matViewProj, BGRA8 sColor )
+{
+	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
+	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
+	{
+		uint32_t iInd0 = pIndices[i * 2 + 0];
+		uint32_t iInd1 = pIndices[i * 2 + 1];
+		DrawLine3D( pVertices[iInd0], pVertices[iInd1], matViewProj, sColor );
+	}
+}
+
+bool CGraphics::ClipLineDepth( SVector4& vPh0, SVector4& vPh1 ) const
 {
 	while ( 1 )
 	{
@@ -203,7 +274,7 @@ bool CGraphics::ClipLineDepth( SVector4& vPh0, SVector4& vPh1 )
 	return true;
 }
 
-bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 )
+bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 ) const
 {
 	/*if ( iClipCode0 != 0 || iClipCode1 != 0 )
 	{
@@ -266,7 +337,7 @@ bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 )
 	return true;
 }
 
-bool CGraphics::ClipPixel( SVector4 vPh )
+bool CGraphics::ClipPixel( SVector4 vPh ) const
 {
 	uint8_t iClipCode = ClipCode( vPh );
 	if ( iClipCode != 0 )
@@ -276,7 +347,7 @@ bool CGraphics::ClipPixel( SVector4 vPh )
 	return true;
 }
 
-uint8_t CGraphics::ClipCode( const SVector4& vP4 )
+uint8_t CGraphics::ClipCode( const SVector4& vP4 ) const
 {
 	uint8_t iRet = 0;
 	iRet |= ( vP4.x < -m_sFrameBuffer.vClipScaleInHom.x ) ? 1 : 0;

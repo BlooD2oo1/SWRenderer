@@ -266,6 +266,15 @@ struct SMatrix
 		return out;
 	}
 
+	constexpr static SMatrix& Scale( SMatrix& out, float f )
+	{
+		out.m00 *= f;		out.m01 *= f;		out.m02 *= f;
+		out.m10 *= f;		out.m11 *= f;		out.m12 *= f;
+		out.m20 *= f;		out.m21 *= f;		out.m22 *= f;
+		return out;
+
+	}
+
 	static SVector3& TransformCoord( SVector3& out, const SVector3& v, const SMatrix& m )
 	{
 		assert( &out != &v );
