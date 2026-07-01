@@ -319,10 +319,10 @@ void CScene01::Create()
 		float a = ((float)rand()/(float)RAND_MAX);
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
-		m_pStars[i].sColor = BGRA8( 1.0f, 0.7f, 0.6f, a );
+		m_pStars[i].vColor = SVector4( 1.0f, 0.7f, 0.6f, a*2.0f );
 	}
 
-	m_iBGStarsCount = 20000;
+	m_iBGStarsCount = 10000;
 	m_pBGStars = new SVertexPC[m_iBGStarsCount];
 	for ( uint32_t i = 0; i < m_iBGStarsCount; i++ )
 	{
@@ -355,18 +355,19 @@ void CScene01::Create()
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
 		a *= fNoise;
-		m_pBGStars[i].sColor = BGRA8( 1.0f, 0.7f, 0.6f, a );
+		m_pBGStars[i].vColor = SVector4( 1.0f, 0.7f, 0.6f, a*2.0f );
 	}
 
 	{
 		m_iVBCircleCount = 8;
-		m_pVBCircle = new SVertexP[m_iVBCircleCount];
+		m_pVBCircle = new SVertexPC[m_iVBCircleCount];
 		for ( uint32_t i = 0; i < m_iVBCircleCount; i++ )
 		{
 			float fW = (float)i/(float)m_iVBCircleCount;
 			m_pVBCircle[i].vPos.x = cosf( fW*PI2 );
 			m_pVBCircle[i].vPos.y = sinf( fW*PI2 );
 			m_pVBCircle[i].vPos.z = 0.0f;
+			m_pVBCircle[i].vColor = SVector4( 0.1f, 0.0f, 1.0f, 0.8f );
 		}
 
 		m_iIBCircleCount = m_iVBCircleCount*2;
@@ -585,9 +586,7 @@ void CScene01::Create()
 
 			delete[] m_pLineListSpaceShip;
 
-			m_pLineListSpaceShip =
-				new SVertexP[
-					m_iLineListSpaceShipCount * 2];
+			m_pLineListSpaceShip = new SVertexPC[m_iLineListSpaceShipCount * 2];
 
 			for(uint32_t i=0; i<m_iLineListSpaceShipCount; ++i)
 			{
@@ -598,6 +597,9 @@ void CScene01::Create()
 				m_pLineListSpaceShip[i*2+1]
 					.vPos =
 					pts[edges[i].second];
+
+				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.6f );
+				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.4f, 0.1f, 0.6f, 0.6f );
 			}
 		}
 	}
@@ -626,6 +628,8 @@ void CScene01::Update()
 
 void CScene01::Render()
 {
+#define cCamera m_cCameraShip
+
 	// draw stars
 	const int iSteps = 3;
 	for ( int j =0; j < iSteps; j++ )
@@ -634,53 +638,52 @@ void CScene01::Render()
 		float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 		for ( int i = 0; i < m_iStarsCount/(float)((iSteps+1)-j); i++ )
 		{
-			SVector4 vPh0;
-			SVector4 vPh1;
+			SVertexPh sPh0;
+			SVertexPh sPh1;
 			{
 				SVector4 vPhSrc( m_pStars[i].vPos * fStarBoxSize, 1.0f );
-				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_cCameraShip.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_cCameraShip.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_cCameraShip.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix() );
-				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev() );
+				vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - cCamera.GetEye().x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - cCamera.GetEye().y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - cCamera.GetEye().z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+				SMatrix::Mul( sPh0.vPos, vPhSrc, cCamera.GetViewProjectionMatrix() );
+				SMatrix::Mul( sPh1.vPos, vPhSrc, cCamera.GetViewProjectionMatrixPrev() );
 			}
 
-			if ( CGraphics::GetInstance().ClipLineDepth( vPh0, vPh1 ) )
+			if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
 			{
 				{
-					float fWRec0 = 1.0f / vPh0.w;
-					vPh0.x = vPh0.x * fWRec0;
-					vPh0.y = vPh0.y * fWRec0;
-					//vPh0.z = vPh0.z * fWRec0;
-					vPh0.w = 1.0f;
+					float fWRec0 = 1.0f / sPh0.vPos.w;
+					sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+					sPh0.vPos.y = sPh0.vPos.y * fWRec0;
 
-					float fWRec1 = 1.0f / vPh1.w;
-					vPh1.x = vPh1.x * fWRec1;
-					vPh1.y = vPh1.y * fWRec1;
-					//vPh1.z = vPh1.z * fWRec1;
-					vPh1.w = 1.0f;
+					float fWRec1 = 1.0f / sPh1.vPos.w;
+					sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+					sPh1.vPos.y = sPh1.vPos.y * fWRec1;
 				}
 
-				if ( CGraphics::GetInstance().ClipLineXY( vPh0, vPh1 ) )
+				SVector2 v( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+				v.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
+				v.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
+				float fL = SVector2::Length( v );
+				if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
 				{
-					SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
-					vP0.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
-					vP0.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
-				
-					SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
-					vP1.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
-					vP1.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+					sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
+					sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
+					sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+					sPh0.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
-					SVector2 v( vP1 - vP0 );
-					float fLSq = SVector2::LengthSq( v );
-					if ( fLSq > 1.0f )
+					sPh1.vPos.x = sPh1.vPos.x * 0.5f + 0.5f;
+					sPh1.vPos.y = -(sPh1.vPos.y) * 0.5f + 0.5f;
+					sPh1.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+					sPh1.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+
+					if ( fL > 1.5f )
 					{
-						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						CGraphics::GetInstance().DrawLine( vP0, vP1, m_pStars[i].sColor );
+						CGraphics::GetInstance().DrawLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), BGRA8( m_pStars[i].vColor.x, m_pStars[i].vColor.y, m_pStars[i].vColor.z, m_pStars[i].vColor.w/(fL*0.2f+1.0f) ) );
 					}
 					else
 					{
-						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, m_pStars[i].sColor );
+						CGraphics::GetInstance().DrawPixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, BGRA8(m_pStars[i].vColor.x, m_pStars[i].vColor.y, m_pStars[i].vColor.z, m_pStars[i].vColor.w ) );
 					}
 				}
 			}
@@ -690,50 +693,51 @@ void CScene01::Render()
 	{
 		for ( uint32_t i = 0; i < m_iBGStarsCount; i++ )
 		{
-			SVector4 vPh0;
-			SVector4 vPh1;
+			SVertexPh sPh0;
+			SVertexPh sPh1;
 			{
 				SVector4 vPhSrc( m_pBGStars[i].vPos, 1.0f );
-				SMatrix::Mul( vPh0, vPhSrc, m_cCameraShip.GetViewProjectionMatrix000() );
-				SMatrix::Mul( vPh1, vPhSrc, m_cCameraShip.GetViewProjectionMatrixPrev000() );
+				SMatrix::Mul( sPh0.vPos, vPhSrc, cCamera.GetViewProjectionMatrix000() );
+				SMatrix::Mul( sPh1.vPos, vPhSrc, cCamera.GetViewProjectionMatrixPrev000() );
 			}
 
-			if ( CGraphics::GetInstance().ClipLineDepth( vPh0, vPh1 ) )
+			if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
 			{
 				{
-					float fWRec0 = 1.0f / vPh0.w;
-					vPh0.x = vPh0.x * fWRec0;
-					vPh0.y = vPh0.y * fWRec0;
-					//vPh0.z = vPh0.z * fWRec0;
-					vPh0.w = 1.0f;
+					float fWRec0 = 1.0f / sPh0.vPos.w;
+					sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+					sPh0.vPos.y = sPh0.vPos.y * fWRec0;
 
-					float fWRec1 = 1.0f / vPh1.w;
-					vPh1.x = vPh1.x * fWRec1;
-					vPh1.y = vPh1.y * fWRec1;
-					//vPh1.z = vPh1.z * fWRec1;
-					vPh1.w = 1.0f;
+					float fWRec1 = 1.0f / sPh1.vPos.w;
+					sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+					sPh1.vPos.y = sPh1.vPos.y * fWRec1;
 				}
 
-				if ( CGraphics::GetInstance().ClipLineXY( vPh0, vPh1 ) )
+				SVector2 v( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+				v.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
+				v.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
+				float fL = SVector2::Length( v );
+				if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
 				{
-					SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
-					vP0.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
-					vP0.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+					sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
+					sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
+					sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+					sPh0.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
-					SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
-					vP1.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
-					vP1.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+					sPh1.vPos.x = sPh1.vPos.x * 0.5f + 0.5f;
+					sPh1.vPos.y = -(sPh1.vPos.y) * 0.5f + 0.5f;
+					sPh1.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+					sPh1.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
-					SVector2 v( vP1 - vP0 );
+					SVector2 v( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
 					float fLSq = SVector2::LengthSq( v );
-					if ( fLSq > 1.0f )
+					if ( fLSq > 1.5f )
 					{
-						//uint8_t alpha = (uint8_t)(m_pParticles[i].a/fL * 255.0f);
-						CGraphics::GetInstance().DrawLine( vP0, vP1, m_pBGStars[i].sColor );
+						CGraphics::GetInstance().DrawLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), BGRA8( m_pBGStars[i].vColor.x, m_pBGStars[i].vColor.y, m_pBGStars[i].vColor.z, m_pBGStars[i].vColor.w/(fL*0.2f+1.0f) ) );
 					}
 					else
 					{
-						CGraphics::GetInstance().DrawPixel( (int)vP0.x, (int)vP0.y, m_pBGStars[i].sColor );
+						CGraphics::GetInstance().DrawPixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, BGRA8(m_pBGStars[i].vColor.x, m_pBGStars[i].vColor.y, m_pBGStars[i].vColor.z, m_pBGStars[i].vColor.w ) );
 					}
 				}
 			}
@@ -755,16 +759,10 @@ void CScene01::Render()
 		for ( int iInstIndY = 0; iInstIndY < iInstCount; iInstIndY++ )
 		for ( int iInstIndZ = 0; iInstIndZ < iInstCount; iInstIndZ++ )
 		{
-			//SVector3 vPos( (float)(iInstIndX-(float)(iInstCount-1)/2.0f)*10.0f, (float)(iInstIndY-(float)(iInstCount-1)/2.0f)*8.0f, (float)(iInstIndZ-(float)(iInstCount-1)/2.0f)*5.0f );
-			//SMatrix matWorld;
-			//SMatrix::Identity( matWorld );
-			//matWorld.m30 = vPos.x;
-			//matWorld.m31 = vPos.y;
-			//matWorld.m32 = vPos.z;
 			SMatrix matWorldViewProj;
-			SMatrix::Mul( matWorldViewProj, matWorld, m_cCameraShip.GetViewProjectionMatrix() );
+			SMatrix::Mul( matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
 			float fAlpha = 1.0f;
-			CGraphics::GetInstance().DrawLineList3D( m_pLineListSpaceShip, m_iLineListSpaceShipCount, matWorldViewProj, BGRA8( 0.2f, 0.3f, 0.6f, fAlpha ) );
+			CGraphics::GetInstance().DrawLineList3D( m_pLineListSpaceShip, m_iLineListSpaceShipCount, matWorldViewProj );
 		}
 	}
 
@@ -776,9 +774,25 @@ void CScene01::Render()
 		SMatrix::Scale( matWorld, 100.0f );
 
 		SMatrix matWorldViewProj;
-		SMatrix::Mul( matWorldViewProj, matWorld, m_cCameraShip.GetViewProjectionMatrix() );
+		SMatrix::Mul( matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
 		float fAlpha = 0.8f;
-		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, matWorldViewProj, BGRA8{ 0.3f, 0.2f, 1.0f, fAlpha } );
+		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, matWorldViewProj );
+	}
+
+	{
+		SVertexPC v[4];
+		v[0].vPos = SVector3( 0.0f, 0.0f, 0.0f );
+		v[1].vPos = SVector3( 1.0f, 0.0f, 0.0f );
+		v[2].vPos = SVector3( 1.0f, 1.0f, 0.0f );
+		v[3].vPos = SVector3( 0.0f, 1.0f, 0.0f );
+		v[0].vColor = SVector4( 1.0f, 0.0f, 0.0f, 1.0f );
+		v[1].vColor = SVector4( 0.0f, 1.0f, 0.0f, 1.0f );
+		v[2].vColor = SVector4( 0.0f, 0.0f, 1.0f, 1.0f );
+		v[3].vColor = SVector4( 1.0f, 1.0f, 1.0f, 1.0f );
+
+		SMatrix matWorldViewProj;
+		matWorldViewProj = cCamera.GetViewProjectionMatrix();
+		CGraphics::GetInstance().DrawLineList3D( v, 2, matWorldViewProj );
 	}
 }
 

@@ -192,6 +192,16 @@ struct SVector4
 	}
 };
 
+inline SVector4 operator+(const SVector4& a, const SVector4& b) { return SVector4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
+inline SVector4 operator-(const SVector4& a, const SVector4& b) { return SVector4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
+
+inline SVector4 operator*(const SVector4& a, const SVector4& b) { return SVector4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w); }
+inline SVector4 operator*(const SVector4& a, float s)            { return SVector4(a.x * s,    a.y * s,    a.z * s, a.w * s); }
+inline SVector4 operator*(float s, const SVector4& a)            { return SVector4(a.x * s,    a.y * s,    a.z * s, a.w * s); }
+
+inline SVector4 operator/(const SVector4& a, const SVector4& b) { return SVector4(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w); }
+inline SVector4 operator/(const SVector4& a, float s)            { return SVector4(a.x / s,    a.y / s,    a.z / s, a.w / s); }
+
 struct SMatrix
 {
 	union

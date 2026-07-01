@@ -10,7 +10,7 @@
 #include "Common/Perf.h"
 #include "Engine/Engine.h"
 
-#define VSYNC
+//#define VSYNC
 #ifdef VSYNC
 #include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")

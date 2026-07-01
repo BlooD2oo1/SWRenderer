@@ -23,6 +23,8 @@ public:
 	const SMatrix&	GetProjectionMatrix() { return m_matProj; }
 	const SMatrix&	GetViewProjectionMatrix() { return m_matViewProj; }
 	const SMatrix&	GetViewProjectionMatrixPrev() { return m_matViewProjPrev; }
+	const SMatrix&	GetViewProjectionMatrix000() { return m_matViewProj000; }
+	const SMatrix&	GetViewProjectionMatrixPrev000() { return m_matViewProjPrev000; }
 
 private:
 	void UpdateEye();
@@ -45,6 +47,10 @@ private:
 	SMatrix		m_matProj;
 	SMatrix		m_matViewProj;
 	SMatrix		m_matViewProjPrev;
+
+	SMatrix		m_matView000;
+	SMatrix		m_matViewProj000;
+	SMatrix		m_matViewProjPrev000;
 };
 
 class CCameraShip

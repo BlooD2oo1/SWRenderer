@@ -53,13 +53,13 @@ private:
 	SVertexPC*		m_pBGStars;
 	uint32_t		m_iBGStarsCount;
 
-	SVertexP*		m_pLineListSpaceShip;
+	SVertexPC*		m_pLineListSpaceShip;
 	uint32_t		m_iLineListSpaceShipCount;
 	SShip			m_sShip;
 	CCameraFree		m_cCamera;
 	CCameraShip		m_cCameraShip;
 
-	SVertexP*		m_pVBCircle;
+	SVertexPC*		m_pVBCircle;
 	uint32_t		m_iVBCircleCount;
 	uint32_t*		m_pIBCircle;
 	uint32_t		m_iIBCircleCount;

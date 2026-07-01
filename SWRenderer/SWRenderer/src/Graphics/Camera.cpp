@@ -21,6 +21,10 @@ CCameraFree::CCameraFree()
 	SMatrix::Identity( m_matProj );
 	SMatrix::Identity( m_matViewProj );
 	SMatrix::Identity( m_matViewProjPrev );
+
+	SMatrix::Identity( m_matView000 );
+	SMatrix::Identity( m_matViewProj000 );
+	SMatrix::Identity( m_matViewProjPrev000 );
 }
 
 CCameraFree::~CCameraFree()
@@ -77,6 +81,7 @@ void CCameraFree::Update( float fElapsedTimeMs )
 	UpdateEye();
 
 	m_matViewProjPrev = m_matViewProj;
+	m_matViewProjPrev000 = m_matViewProj000;
 
 	float fW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 	m_vEyeSmooth = Lerp( m_vEye, m_vEyeSmooth, fW );
@@ -85,6 +90,12 @@ void CCameraFree::Update( float fElapsedTimeMs )
 	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUp );
 	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
+
+	m_matView000 = m_matView;
+	m_matView000.m30 = 0.0f;
+	m_matView000.m31 = 0.0f;
+	m_matView000.m32 = 0.0f;
+	SMatrix::Mul( m_matViewProj000, m_matView000, m_matProj );
 }
 
 CCameraShip::CCameraShip()

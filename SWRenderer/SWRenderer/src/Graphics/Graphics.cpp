@@ -101,240 +101,120 @@ void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor
 	}
 }
 
-void CGraphics::DrawLine3D( const SVertexP& sV0, const SVertexP& sV1, const SMatrix& matViewProj, BGRA8 sColor )
+void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
 {
-	SVector4 vPh0;
-	SVector4 vPh1;
+	SVector2 v( v1o.vPos.x - v0o.vPos.x, v1o.vPos.y - v0o.vPos.y );
+
+	if ( v.x == 0.0f && v.y == 0.0f )
 	{
-		SVector4 vPh0Src( sV0.vPos, 1.0f );
-		SMatrix::Mul( vPh0, vPh0Src, matViewProj );
-		SVector4 vPh1Src( sV1.vPos, 1.0f );
-		SMatrix::Mul( vPh1, vPh1Src, matViewProj );
+		return;
 	}
 
-	if ( ClipLineDepth( vPh0, vPh1 ) )
-	{
-		{
-			float fWRec0 = 1.0f / vPh0.w;
-			vPh0.x = vPh0.x * fWRec0;
-			vPh0.y = vPh0.y * fWRec0;
-			//vPh0.z = vPh0.z * fWRec0;
-			vPh0.w = 1.0f;
+	bool bSwizzle = fabsf(v.x) < fabsf(v.y);
 
-			float fWRec1 = 1.0f / vPh1.w;
-			vPh1.x = vPh1.x * fWRec1;
-			vPh1.y = vPh1.y * fWRec1;
-			//vPh1.z = vPh1.z * fWRec1;
-			vPh1.w = 1.0f;
+	SVertexPhC v0( v0o );
+	SVertexPhC v1( v1o );
+	if ( bSwizzle )
+	{
+		std::swap( v0.vPos.x, v0.vPos.y );
+		std::swap( v1.vPos.x, v1.vPos.y );
+	}
+	if ( v1.vPos.x < v0.vPos.x )
+	{
+		std::swap( v0, v1 );
+	}
+	v.x = v1.vPos.x - v0.vPos.x;
+	v.y = v1.vPos.y - v0.vPos.y;
+
+	int iXStart = (int)(v0.vPos.x+0.5f);
+	int iXEnd = (int)(v1.vPos.x+0.5f);
+	//assert( iXEnd-iXStart < 1000 );
+	for ( int iX = iXStart; iX < iXEnd; iX++ )
+	{
+		float t = (((float)iX + 0.5f) - v0.vPos.x) / v.x;
+		float fY = v.y * t + v0.vPos.y;
+
+		int x = iX;
+		int y = (int)fY;
+
+		float a = (1.0f - t) / v0.vPos.w;
+		float b = t / v1.vPos.w;
+
+		SVector4 vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
+		BGRA8 sColor( vColor.x, vColor.y, vColor.z, vColor.w );
+
+		if ( bSwizzle )
+		{
+			std::swap( x, y );
 		}
 
-		if ( ClipLineXY( vPh0, vPh1 ) )
+		DrawPixel( x, y, sColor );
+	}
+}
+
+void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const SMatrix& matWorldViewProj )
+{
+	SVertexPhC vPh0;
+	SVertexPhC vPh1;
+	{
+		SVector4 vPhSrc0( sV0.vPos, 1.0f );
+		SMatrix::Mul( vPh0.vPos, vPhSrc0, matWorldViewProj );
+		vPh0.vColor = sV0.vColor;
+
+		SVector4 vPhSrc1( sV1.vPos, 1.0f );
+		SMatrix::Mul( vPh1.vPos, vPhSrc1, matWorldViewProj );
+		vPh1.vColor = sV1.vColor;
+	}
+
+	if ( ClipLineDepth<SVertexPhC>( vPh0, vPh1 ) )
+	{
 		{
-			SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
-			vP0.x *= (float)m_sFrameBuffer.iWidth;
-			vP0.y *= (float)m_sFrameBuffer.iHeight;
+			float fWRec0 = 1.0f / vPh0.vPos.w;
+			vPh0.vPos.x = vPh0.vPos.x * fWRec0;
+			vPh0.vPos.y = vPh0.vPos.y * fWRec0;
 
-			SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
-			vP1.x *= (float)m_sFrameBuffer.iWidth;
-			vP1.y *= (float)m_sFrameBuffer.iHeight;
+			float fWRec1 = 1.0f / vPh1.vPos.w;
+			vPh1.vPos.x = vPh1.vPos.x * fWRec1;
+			vPh1.vPos.y = vPh1.vPos.y * fWRec1;
+		}
 
-			DrawLine( vP0, vP1, sColor );
+		if ( ClipLineXY<SVertexPhC>( vPh0, vPh1 ) )
+		{
+			vPh0.vPos.x = vPh0.vPos.x * 0.5f + 0.5f;
+			vPh0.vPos.y = -(vPh0.vPos.y) * 0.5f + 0.5f;
+			vPh0.vPos.x *= (float)m_sFrameBuffer.iWidth;
+			vPh0.vPos.y *= (float)m_sFrameBuffer.iHeight;
+
+			vPh1.vPos.x = vPh1.vPos.x * 0.5f + 0.5f;
+			vPh1.vPos.y = -(vPh1.vPos.y) * 0.5f + 0.5f;
+			vPh1.vPos.x *= (float)m_sFrameBuffer.iWidth;
+			vPh1.vPos.y *= (float)m_sFrameBuffer.iHeight;
+
+			DrawLine( vPh0, vPh1 );
 		}
 	}
 }
 
-void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const SMatrix& matViewProj )
+void CGraphics::DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const SMatrix& matWorldViewProj )
 {
-	SVector4 vPh0;
-	SVector4 vPh1;
-	{
-		SVector4 vPh0Src( sV0.vPos, 1.0f );
-		SMatrix::Mul( vPh0, vPh0Src, matViewProj );
-		SVector4 vPh1Src( sV1.vPos, 1.0f );
-		SMatrix::Mul( vPh1, vPh1Src, matViewProj );
-	}
-
-	if ( ClipLineDepth( vPh0, vPh1 ) )
-	{
-		{
-			float fWRec0 = 1.0f / vPh0.w;
-			vPh0.x = vPh0.x * fWRec0;
-			vPh0.y = vPh0.y * fWRec0;
-			//vPh0.z = vPh0.z * fWRec0;
-			vPh0.w = 1.0f;
-
-			float fWRec1 = 1.0f / vPh1.w;
-			vPh1.x = vPh1.x * fWRec1;
-			vPh1.y = vPh1.y * fWRec1;
-			//vPh1.z = vPh1.z * fWRec1;
-			vPh1.w = 1.0f;
-		}
-
-		if ( ClipLineXY( vPh0, vPh1 ) )
-		{
-			SVector2 vP0( (vPh0.x)*0.5f + 0.5f, -(vPh0.y)*0.5f + 0.5f );			
-			vP0.x *= (float)m_sFrameBuffer.iWidth;
-			vP0.y *= (float)m_sFrameBuffer.iHeight;
-
-			SVector2 vP1( (vPh1.x)*0.5f + 0.5f, -(vPh1.y)*0.5f + 0.5f );
-			vP1.x *= (float)m_sFrameBuffer.iWidth;
-			vP1.y *= (float)m_sFrameBuffer.iHeight;
-
-			DrawLine( vP0, vP1, sV0.sColor );
-		}
-	}
-}
-
-
-void CGraphics::DrawLineList3D( const SVertexP* pLineList, int iLineCount, const SMatrix& matViewProj, BGRA8 sColor )
-{
-	assert( pLineList != nullptr && iLineCount > 0 );
-	for ( int i = 0; i < iLineCount; i++ )
+	assert( pLineList != nullptr && iPrimitiveCount > 0 );
+	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		int iInd0 = i*2+0;
 		int iInd1 = i*2+1;
-		DrawLine3D( pLineList[iInd0], pLineList[iInd1], matViewProj, sColor );
+		DrawLine3D( pLineList[iInd0], pLineList[iInd1], matWorldViewProj );
 	}
 }
 
-void CGraphics::DrawLineList3D( const SVertexPC* pLineList, int iLineCount, const SMatrix& matViewProj )
-{
-	assert( pLineList != nullptr && iLineCount > 0 );
-	for ( int i = 0; i < iLineCount; i++ )
-	{
-		int iInd0 = i*2+0;
-		int iInd1 = i*2+1;
-		DrawLine3D( pLineList[iInd0], pLineList[iInd1], matViewProj );
-	}
-}
-
-void CGraphics::DrawLineList3D( const SVertexP* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SMatrix& matViewProj, BGRA8 sColor )
+void CGraphics::DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SMatrix& matWorldViewProj )
 {
 	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		uint32_t iInd0 = pIndices[i * 2 + 0];
 		uint32_t iInd1 = pIndices[i * 2 + 1];
-		DrawLine3D( pVertices[iInd0], pVertices[iInd1], matViewProj, sColor );
+		DrawLine3D( pVertices[iInd0], pVertices[iInd1], matWorldViewProj );
 	}
-}
-
-bool CGraphics::ClipLineDepth( SVector4& vPh0, SVector4& vPh1 ) const
-{
-	while ( 1 )
-	{
-		uint8_t iClipCode0 = ( vPh0.z < 0.0f ) | ( (vPh0.z > vPh0.w ) << 1 );
-		uint8_t iClipCode1 = ( vPh1.z < 0.0f ) | ( (vPh1.z > vPh1.w ) << 1 );
-		if ( iClipCode0 == 0 && iClipCode1 == 0 )
-		{
-			break;
-		}
-		if ( ( iClipCode0 & iClipCode1 ) != 0 )
-		{
-			return false;
-		}
-
-		int bit = ( ( iClipCode0 & 1 ) != ( iClipCode1 & 1 ) ) ? 1 : 2;
-
-		SVector4 vTemp;
-		{
-			switch ( bit )
-			{
-			case 1:
-				{
-					float t = ( 0.0f - vPh0.z ) / ( vPh1.z - vPh0.z );
-					vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
-					vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
-					vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
-					vTemp.z = 0.0f;
-				}
-				break;
-			case 2:
-				{
-					float t = ( vPh0.w - vPh0.z ) / ( vPh1.z - vPh0.z - vPh1.w + vPh0.w );
-					vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * t;
-					vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * t;
-					vTemp.w = vPh0.w + ( vPh1.w - vPh0.w ) * t;
-					vTemp.z = vTemp.w;
-				}
-				break;
-			}
-		}
-
-		if ( iClipCode0 & bit )
-		{
-			vPh0 = vTemp;
-		}
-		else
-		{
-			vPh1 = vTemp;
-		}
-	}
-
-	return true;
-}
-
-bool CGraphics::ClipLineXY( SVector4& vPh0, SVector4& vPh1 ) const
-{
-	/*if ( iClipCode0 != 0 || iClipCode1 != 0 )
-	{
-	return false;
-	}*/
-
-	while ( 1 )
-	{
-		uint8_t iClipCode0 = ClipCode( vPh0 );
-		uint8_t iClipCode1 = ClipCode( vPh1 );
-
-		if ( iClipCode0 == 0 && iClipCode1 == 0 )
-		{
-			break;
-		}
-		if ( ( iClipCode0 & iClipCode1 ) != 0 )
-		{
-			return false;
-		}
-
-		uint8_t bit;
-		if		( ( iClipCode0 & 1 ) != ( iClipCode1 & 1 ) )	bit = 1;
-		else if	( ( iClipCode0 & 2 ) != ( iClipCode1 & 2 ) )	bit = 2;
-		else if	( ( iClipCode0 & 4 ) != ( iClipCode1 & 4 ) )	bit = 4;
-		else													bit = 8;
-
-		SVector2 vTemp;
-		switch( bit )
-		{
-		case 1:
-			vTemp.x = -m_sFrameBuffer.vClipScaleInHom.x;//vPh0.x + ( vPh1.x - vPh0.x ) * ( -1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
-			vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( -m_sFrameBuffer.vClipScaleInHom.x - vPh0.x ) / ( vPh1.x - vPh0.x );
-			break;
-		case 2:
-			vTemp.x = m_sFrameBuffer.vClipScaleInHom.x;//vPh0.x + ( vPh1.x - vPh0.x ) * ( 1.0f - vPh0.x ) / ( vPh1.x - vPh0.x );
-			vTemp.y = vPh0.y + ( vPh1.y - vPh0.y ) * ( m_sFrameBuffer.vClipScaleInHom.x - vPh0.x ) / ( vPh1.x - vPh0.x );
-			break;
-		case 4:
-			vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( -m_sFrameBuffer.vClipScaleInHom.y - vPh0.y ) / ( vPh1.y - vPh0.y );
-			vTemp.y = -m_sFrameBuffer.vClipScaleInHom.y;//vPh0.y + ( vPh1.y - vPh0.y ) * ( -1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
-			break;
-		case 8:
-			vTemp.x = vPh0.x + ( vPh1.x - vPh0.x ) * ( m_sFrameBuffer.vClipScaleInHom.y - vPh0.y ) / ( vPh1.y - vPh0.y );
-			vTemp.y = m_sFrameBuffer.vClipScaleInHom.y;//vPh0.y + ( vPh1.y - vPh0.y ) * ( 1.0f - vPh0.y ) / ( vPh1.y - vPh0.y );
-			break;
-		}
-
-		if ( iClipCode0 & bit )
-		{
-			vPh0.x = vTemp.x;
-			vPh0.y = vTemp.y;
-		}
-		else
-		{
-			vPh1.x = vTemp.x;
-			vPh1.y = vTemp.y;
-		}
-	}
-
-	return true;
 }
 
 bool CGraphics::ClipPixel( SVector4 vPh ) const
