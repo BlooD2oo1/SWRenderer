@@ -12,7 +12,7 @@ CCameraFree::CCameraFree()
 	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
 	m_fAspect = 1.0f;
 	m_fNear = 0.1f;
-	m_fFar = 100000.0f;
+	m_fFar = 1000000.0f;
 
 	UpdateEye();
 	m_vEyeSmooth = m_vEye;
@@ -103,7 +103,7 @@ CCameraShip::CCameraShip()
 	m_fFOVY = 110.0f / 180.0f * PI;
 	m_fAspect = 1.0f;
 	m_fNear = 0.1f;
-	m_fFar = 10000.0f;
+	m_fFar = 100000.0f;
 
 	m_vEyeInShip = SVector3( -8.0f, 0.0f, 0.0f );
 	m_vLookAtInShip = SVector3( 100.0f, 0.0f, 0.0f );

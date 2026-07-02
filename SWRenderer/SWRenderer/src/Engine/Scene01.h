@@ -64,5 +64,8 @@ private:
 	uint32_t*		m_pIBCircle;
 	uint32_t		m_iIBCircleCount;
 
-	SVector3		m_vCirclePos;
+	SVector3*		m_pCirclePos;
+	int				m_iCirclePosCount;
+
+	float			m_fTimeMultiplier;
 };

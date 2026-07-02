@@ -57,7 +57,7 @@ void SShip::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 
 		{
 			SQuaternion q;
-			SQuaternion::FromAxisAngle( q, m_vRight, fUp*1.0f );
+			SQuaternion::FromAxisAngle( q, m_vRight, fUp*0.1f*fElapsedTimeMs );
 			SMatrix matRot;
 			SQuaternion::ToMatrix( matRot, q );
 
@@ -89,7 +89,7 @@ void SShip::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 
 		{
 			SQuaternion q;
-			SQuaternion::FromAxisAngle( q, m_vDir, fRoll*3.0f );
+			SQuaternion::FromAxisAngle( q, m_vDir, fRoll*0.3f*fElapsedTimeMs );
 			SMatrix matRot;
 			SQuaternion::ToMatrix( matRot, q );
 
@@ -297,8 +297,10 @@ void CScene01::Clear()
 	m_iVBCircleCount = 0;
 	SAFE_DELETE_ARRAY( m_pIBCircle );
 	m_iIBCircleCount = 0;
+	SAFE_DELETE_ARRAY( m_pCirclePos );
+	m_iCirclePosCount = 0;
 
-	m_vCirclePos = SVector3( 1000.0f, 0.0f, 0.0f );
+	m_fTimeMultiplier = 1.0f;
 }
 
 void CScene01::Create()
@@ -319,7 +321,7 @@ void CScene01::Create()
 		float a = ((float)rand()/(float)RAND_MAX);
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
-		m_pStars[i].vColor = SVector4( 1.0f, 0.7f, 0.6f, a*2.0f );
+		m_pStars[i].vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*3.0f );
 	}
 
 	m_iBGStarsCount = 10000;
@@ -355,7 +357,7 @@ void CScene01::Create()
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
 		a *= fNoise;
-		m_pBGStars[i].vColor = SVector4( 1.0f, 0.7f, 0.6f, a*2.0f );
+		m_pBGStars[i].vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
 	}
 
 	{
@@ -376,6 +378,18 @@ void CScene01::Create()
 		{
 			m_pIBCircle[i*2+0] = i;
 			m_pIBCircle[i*2+1] = (i+1)%m_iVBCircleCount;
+		}
+	}
+
+	{
+		m_iCirclePosCount = 100;
+		m_pCirclePos = new SVector3[m_iCirclePosCount];
+		for ( int i = 0; i < m_iCirclePosCount; i++ )
+		{
+			m_pCirclePos[i].x = ((float)rand()/(float)RAND_MAX)*2.0f-1.0f;
+			m_pCirclePos[i].y = ((float)rand()/(float)RAND_MAX)*2.0f-1.0f;
+			m_pCirclePos[i].z = ((float)rand()/(float)RAND_MAX)*2.0f-1.0f;
+			m_pCirclePos[i] *= 10000.0f;
 		}
 	}
 
@@ -598,8 +612,8 @@ void CScene01::Create()
 					.vPos =
 					pts[edges[i].second];
 
-				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.4f );
-				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.4f, 0.1f, 0.0f, 0.9f );
+				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.4f, 0.4f, 0.4f, 0.8f );
+				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.3f );
 			}
 		}
 	}
@@ -607,23 +621,29 @@ void CScene01::Create()
 
 void CScene01::Update()
 {
-	if ( CEngine::GetInstance().GetMouseState().bLeftButton )
+	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs() * m_fTimeMultiplier;
+
+	m_fTimeMultiplier = 1.0f;
+	if ( CEngine::GetInstance().GetMouseState().bLeftButton && CEngine::GetInstance().GetMouseState().bRightButton )
 	{
-		m_sShip.Accelerate( CEngine::GetInstance().GetElapsedTimeMs() * 0.01f );
+		m_fTimeMultiplier = 0.1f;
+	}
+	else if ( CEngine::GetInstance().GetMouseState().bLeftButton )
+	{
+		m_sShip.Accelerate( fElapsedTimeMs * 0.01f );
+	}
+	else if ( CEngine::GetInstance().GetMouseState().bRightButton )
+	{
+		m_sShip.Accelerate( fElapsedTimeMs * -0.05f );
 	}
 
-	if ( CEngine::GetInstance().GetMouseState().bRightButton )
-	{
-		m_sShip.Accelerate( CEngine::GetInstance().GetElapsedTimeMs() * -0.01f );
-	}
-
-	m_cCamera.Update( CEngine::GetInstance().GetElapsedTimeMs() );
+	m_cCamera.Update( fElapsedTimeMs );
 	
-	m_sShip.Update( CEngine::GetInstance().GetElapsedTimeMs(), m_cCameraShip.GetViewMatrix() );
+	m_sShip.Update( fElapsedTimeMs, m_cCameraShip.GetViewMatrix() );
 
 	SMatrix matShip;
 	m_sShip.GetMatrix( matShip );
-	m_cCameraShip.Update( CEngine::GetInstance().GetElapsedTimeMs(), matShip );
+	m_cCameraShip.Update( fElapsedTimeMs, matShip );
 }
 
 void CScene01::Render()
@@ -772,33 +792,18 @@ void CScene01::Render()
 		}
 	}
 
+	for ( int i = 0; i < m_iCirclePosCount; i++ )
 	{
 		SMatrix matWorld;
 		SMatrix::Identity( matWorld );
-		SMatrix::BuildViewMatrix( matWorld, m_vCirclePos, m_sShip.m_vPos, SVector3( 0.0f, 0.0f, 1.0f ) );
+		SMatrix::BuildViewMatrix( matWorld, m_pCirclePos[i], cCamera.GetEye() + ( cCamera.GetLookAt() - cCamera.GetEye() )*100.0f, SVector3( 0.0f, 0.0f, 1.0f ) );
 		SMatrix::Inverse( matWorld, matWorld );
 		SMatrix::Scale( matWorld, 100.0f );
 
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
-		sVertexShaderBasic.fAlpha = 0.8f;
+		sVertexShaderBasic.fAlpha = 0.5f;
 		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, sVertexShaderBasic );
 	}
-
-	/*{
-		SVertexPC v[4];
-		v[0].vPos = SVector3( 0.0f, 0.0f, 0.0f );
-		v[1].vPos = SVector3( 1.0f, 0.0f, 0.0f );
-		v[2].vPos = SVector3( 1.0f, 1.0f, 0.0f );
-		v[3].vPos = SVector3( 0.0f, 1.0f, 0.0f );
-		v[0].vColor = SVector4( 1.0f, 0.0f, 0.0f, 1.0f );
-		v[1].vColor = SVector4( 0.0f, 1.0f, 0.0f, 1.0f );
-		v[2].vColor = SVector4( 0.0f, 0.0f, 1.0f, 1.0f );
-		v[3].vColor = SVector4( 1.0f, 1.0f, 1.0f, 1.0f );
-
-		sVertexShaderBasic.matWorldViewProj = cCamera.GetViewProjectionMatrix();
-		sVertexShaderBasic.fAlpha = 1.0f;
-		CGraphics::GetInstance().DrawLineList3D( v, 2, sVertexShaderBasic );
-	}*/
 }
 
 bool CScene01::On_KeyDown( uint32_t key )
@@ -812,7 +817,7 @@ bool CScene01::On_KeyDown( uint32_t key )
 	break;
 	case 0x28:
 	{
-		m_sShip.Accelerate( -1.0f );
+		m_sShip.Accelerate( -5.0f );
 	}
 	break;
 	}
