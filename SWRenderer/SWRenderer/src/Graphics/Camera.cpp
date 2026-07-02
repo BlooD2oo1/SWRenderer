@@ -105,7 +105,7 @@ CCameraShip::CCameraShip()
 	m_fNear = 0.1f;
 	m_fFar = 10000.0f;
 
-	m_vEyeInShip = SVector3( -10.0f, 0.0f, 0.0f );
+	m_vEyeInShip = SVector3( -8.0f, 0.0f, 0.0f );
 	m_vLookAtInShip = SVector3( 100.0f, 0.0f, 0.0f );
 	m_vUpInShip = SVector3( 0.0f, 0.0f, 1.0f );
 

@@ -106,9 +106,12 @@ public:
 	void DrawPixelAA( const SVector2& v, BGRA8 sColor );
 	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
 	void DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o );	
-	void DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const SMatrix& matWorldViewProj );
-	void DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const SMatrix& matWorldViewProj );
-	void DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SMatrix& matWorldViewProj );
+	template<class TVertexShader>
+	void DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const TVertexShader& sVertexShader );
+	template<class TVertexShader>
+	void DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
+	template<class TVertexShader>
+	void DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
 
 	template<class TVertex>
 	bool ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const;
@@ -124,6 +127,67 @@ private:
 private:
 	SFrameBuffer	m_sFrameBuffer;
 };
+
+template<class TVertexShader>
+void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const TVertexShader& sVertexShader )
+{
+	SVertexPhC vPh0;
+	SVertexPhC vPh1;
+	sVertexShader.Process( vPh0, sV0 );
+	sVertexShader.Process( vPh1, sV1 );
+
+	if ( ClipLineDepth<SVertexPhC>( vPh0, vPh1 ) )
+	{
+		{
+			float fWRec0 = 1.0f / vPh0.vPos.w;
+			vPh0.vPos.x = vPh0.vPos.x * fWRec0;
+			vPh0.vPos.y = vPh0.vPos.y * fWRec0;
+
+			float fWRec1 = 1.0f / vPh1.vPos.w;
+			vPh1.vPos.x = vPh1.vPos.x * fWRec1;
+			vPh1.vPos.y = vPh1.vPos.y * fWRec1;
+		}
+
+		if ( ClipLineXY<SVertexPhC>( vPh0, vPh1 ) )
+		{
+			vPh0.vPos.x = vPh0.vPos.x * 0.5f + 0.5f;
+			vPh0.vPos.y = -(vPh0.vPos.y) * 0.5f + 0.5f;
+			vPh0.vPos.x *= (float)m_sFrameBuffer.iWidth;
+			vPh0.vPos.y *= (float)m_sFrameBuffer.iHeight;
+
+			vPh1.vPos.x = vPh1.vPos.x * 0.5f + 0.5f;
+			vPh1.vPos.y = -(vPh1.vPos.y) * 0.5f + 0.5f;
+			vPh1.vPos.x *= (float)m_sFrameBuffer.iWidth;
+			vPh1.vPos.y *= (float)m_sFrameBuffer.iHeight;
+
+			DrawLine( vPh0, vPh1 );
+		}
+	}
+}
+
+template<class TVertexShader>
+void CGraphics::DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
+{
+	assert( pLineList != nullptr && iPrimitiveCount > 0 );
+	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
+	{
+		int iInd0 = i*2+0;
+		int iInd1 = i*2+1;
+		DrawLine3D( pLineList[iInd0], pLineList[iInd1], sVertexShader );
+	}
+}
+
+template<class TVertexShader>
+void CGraphics::DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
+{
+	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
+	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
+	{
+		uint32_t iInd0 = pIndices[i * 2 + 0];
+		uint32_t iInd1 = pIndices[i * 2 + 1];
+		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sVertexShader );
+	}
+}
 
 template<class TVertex>
 bool CGraphics::ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const

@@ -598,8 +598,8 @@ void CScene01::Create()
 					.vPos =
 					pts[edges[i].second];
 
-				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.6f );
-				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.4f, 0.1f, 0.6f, 0.6f );
+				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.4f );
+				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.4f, 0.1f, 0.0f, 0.9f );
 			}
 		}
 	}
@@ -744,13 +744,20 @@ void CScene01::Render()
 		}
 	}
 
+	struct SVertexShaderBasic
 	{
-		/*SMatrix matWorld;
-		matWorld.m00 = m_sShip.m_vDir.x;	matWorld.m01 = m_sShip.m_vRight.x;	matWorld.m02 = m_sShip.m_vUp.x;		matWorld.m03 = 0.0f;
-		matWorld.m10 = m_sShip.m_vDir.y;	matWorld.m11 = m_sShip.m_vRight.y;	matWorld.m12 = m_sShip.m_vUp.y;		matWorld.m13 = 0.0f;
-		matWorld.m20 = m_sShip.m_vDir.z;	matWorld.m21 = m_sShip.m_vRight.z;	matWorld.m22 = m_sShip.m_vUp.z;		matWorld.m23 = 0.0f;
-		matWorld.m30 = m_sShip.m_vPos.x;	matWorld.m31 = m_sShip.m_vPos.y;	matWorld.m32 = m_sShip.m_vPos.z;	matWorld.m33 = 1.0f;*/
+		SMatrix matWorldViewProj;
+		float fAlpha;
+		void Process( SVertexPhC& out, const SVertexPC& in ) const
+		{
+			SVector4 vPhSrc0( in.vPos, 1.0f );
+			SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
+			out.vColor = in.vColor;
+			out.vColor.w *= fAlpha;
+		}
+	} sVertexShaderBasic;
 
+	{
 		SMatrix matWorld;
 		m_sShip.GetMatrix( matWorld );
 
@@ -759,10 +766,9 @@ void CScene01::Render()
 		for ( int iInstIndY = 0; iInstIndY < iInstCount; iInstIndY++ )
 		for ( int iInstIndZ = 0; iInstIndZ < iInstCount; iInstIndZ++ )
 		{
-			SMatrix matWorldViewProj;
-			SMatrix::Mul( matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
-			float fAlpha = 1.0f;
-			CGraphics::GetInstance().DrawLineList3D( m_pLineListSpaceShip, m_iLineListSpaceShipCount, matWorldViewProj );
+			SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
+			sVertexShaderBasic.fAlpha = 1.0f;
+			CGraphics::GetInstance().DrawLineList3D( m_pLineListSpaceShip, m_iLineListSpaceShipCount, sVertexShaderBasic );
 		}
 	}
 
@@ -773,13 +779,12 @@ void CScene01::Render()
 		SMatrix::Inverse( matWorld, matWorld );
 		SMatrix::Scale( matWorld, 100.0f );
 
-		SMatrix matWorldViewProj;
-		SMatrix::Mul( matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
-		float fAlpha = 0.8f;
-		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, matWorldViewProj );
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
+		sVertexShaderBasic.fAlpha = 0.8f;
+		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, sVertexShaderBasic );
 	}
 
-	{
+	/*{
 		SVertexPC v[4];
 		v[0].vPos = SVector3( 0.0f, 0.0f, 0.0f );
 		v[1].vPos = SVector3( 1.0f, 0.0f, 0.0f );
@@ -790,10 +795,10 @@ void CScene01::Render()
 		v[2].vColor = SVector4( 0.0f, 0.0f, 1.0f, 1.0f );
 		v[3].vColor = SVector4( 1.0f, 1.0f, 1.0f, 1.0f );
 
-		SMatrix matWorldViewProj;
-		matWorldViewProj = cCamera.GetViewProjectionMatrix();
-		CGraphics::GetInstance().DrawLineList3D( v, 2, matWorldViewProj );
-	}
+		sVertexShaderBasic.matWorldViewProj = cCamera.GetViewProjectionMatrix();
+		sVertexShaderBasic.fAlpha = 1.0f;
+		CGraphics::GetInstance().DrawLineList3D( v, 2, sVertexShaderBasic );
+	}*/
 }
 
 bool CScene01::On_KeyDown( uint32_t key )

@@ -152,71 +152,6 @@ void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
 	}
 }
 
-void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const SMatrix& matWorldViewProj )
-{
-	SVertexPhC vPh0;
-	SVertexPhC vPh1;
-	{
-		SVector4 vPhSrc0( sV0.vPos, 1.0f );
-		SMatrix::Mul( vPh0.vPos, vPhSrc0, matWorldViewProj );
-		vPh0.vColor = sV0.vColor;
-
-		SVector4 vPhSrc1( sV1.vPos, 1.0f );
-		SMatrix::Mul( vPh1.vPos, vPhSrc1, matWorldViewProj );
-		vPh1.vColor = sV1.vColor;
-	}
-
-	if ( ClipLineDepth<SVertexPhC>( vPh0, vPh1 ) )
-	{
-		{
-			float fWRec0 = 1.0f / vPh0.vPos.w;
-			vPh0.vPos.x = vPh0.vPos.x * fWRec0;
-			vPh0.vPos.y = vPh0.vPos.y * fWRec0;
-
-			float fWRec1 = 1.0f / vPh1.vPos.w;
-			vPh1.vPos.x = vPh1.vPos.x * fWRec1;
-			vPh1.vPos.y = vPh1.vPos.y * fWRec1;
-		}
-
-		if ( ClipLineXY<SVertexPhC>( vPh0, vPh1 ) )
-		{
-			vPh0.vPos.x = vPh0.vPos.x * 0.5f + 0.5f;
-			vPh0.vPos.y = -(vPh0.vPos.y) * 0.5f + 0.5f;
-			vPh0.vPos.x *= (float)m_sFrameBuffer.iWidth;
-			vPh0.vPos.y *= (float)m_sFrameBuffer.iHeight;
-
-			vPh1.vPos.x = vPh1.vPos.x * 0.5f + 0.5f;
-			vPh1.vPos.y = -(vPh1.vPos.y) * 0.5f + 0.5f;
-			vPh1.vPos.x *= (float)m_sFrameBuffer.iWidth;
-			vPh1.vPos.y *= (float)m_sFrameBuffer.iHeight;
-
-			DrawLine( vPh0, vPh1 );
-		}
-	}
-}
-
-void CGraphics::DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const SMatrix& matWorldViewProj )
-{
-	assert( pLineList != nullptr && iPrimitiveCount > 0 );
-	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
-	{
-		int iInd0 = i*2+0;
-		int iInd1 = i*2+1;
-		DrawLine3D( pLineList[iInd0], pLineList[iInd1], matWorldViewProj );
-	}
-}
-
-void CGraphics::DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SMatrix& matWorldViewProj )
-{
-	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
-	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
-	{
-		uint32_t iInd0 = pIndices[i * 2 + 0];
-		uint32_t iInd1 = pIndices[i * 2 + 1];
-		DrawLine3D( pVertices[iInd0], pVertices[iInd1], matWorldViewProj );
-	}
-}
-
 bool CGraphics::ClipPixel( SVector4 vPh ) const
 {
 	uint8_t iClipCode = ClipCode( vPh );
@@ -241,9 +176,9 @@ uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;
 	sDest.rgba = dest;
-	uint16_t rOut = sDest.r + ((src.r*src.a)>>8);
-	uint16_t gOut = sDest.g + ((src.g*src.a)>>8);
-	uint16_t bOut = sDest.b + ((src.b*src.a)>>8);
+	uint32_t rOut = sDest.r + ((src.r*src.a)>>8);
+	uint32_t gOut = sDest.g + ((src.g*src.a)>>8);
+	uint32_t bOut = sDest.b + ((src.b*src.a)>>8);
 	rOut = rOut > 255 ? 255 : rOut;
 	gOut = gOut > 255 ? 255 : gOut;
 	bOut = bOut > 255 ? 255 : bOut;
