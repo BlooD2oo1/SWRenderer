@@ -370,7 +370,7 @@ void CScene01::Create()
 			m_pVBCircle[i].vPos.x = cosf( fW*PI2 );
 			m_pVBCircle[i].vPos.y = sinf( fW*PI2 );
 			m_pVBCircle[i].vPos.z = 0.0f;
-			m_pVBCircle[i].vColor = SVector4( 0.9f, 0.8f, 0.4f, 1.0f );
+			m_pVBCircle[i].vColor = SVector4( 0.9f, 0.9f, 0.3f, 1.0f );
 		}
 
 		m_iIBCircleCount = m_iVBCircleCount*2;
@@ -721,6 +721,7 @@ void CScene01::Render()
 	}
 
 	{
+		float fAlpha = m_fTimeMultiplierW*0.5f+0.5f;
 		for ( uint32_t i = 0; i < m_iBGStarsCount; i++ )
 		{
 			SVertexPh sPh0;
@@ -764,11 +765,11 @@ void CScene01::Render()
 					float fLSq = SVector2::LengthSq( v );
 					if ( fLSq > 1.5f )
 					{
-						CGraphics::GetInstance().DrawLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), BGRA8( m_pBGStars[i].vColor.x, m_pBGStars[i].vColor.y, m_pBGStars[i].vColor.z, m_pBGStars[i].vColor.w/(fL*0.2f+1.0f) ) );
+						CGraphics::GetInstance().DrawLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), BGRA8( m_pBGStars[i].vColor.x, m_pBGStars[i].vColor.y, m_pBGStars[i].vColor.z, m_pBGStars[i].vColor.w/(fL*0.2f+1.0f)*fAlpha ) );
 					}
 					else
 					{
-						CGraphics::GetInstance().DrawPixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, BGRA8(m_pBGStars[i].vColor.x, m_pBGStars[i].vColor.y, m_pBGStars[i].vColor.z, m_pBGStars[i].vColor.w ) );
+						CGraphics::GetInstance().DrawPixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, BGRA8(m_pBGStars[i].vColor.x, m_pBGStars[i].vColor.y, m_pBGStars[i].vColor.z, m_pBGStars[i].vColor.w*fAlpha ) );
 					}
 				}
 			}
@@ -830,7 +831,7 @@ void CScene01::Render()
 
 		
 
-		SVector4 vColor = SVector4( 0.2f, 0.0f, 0.6f, (1.0f-m_fTimeMultiplierW) );
+		SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, (1.0f-m_fTimeMultiplierW) );
 		if ( vColor.w > 1.0f/255.0f )
 		{
 			float fSpacing = 200.0f;
