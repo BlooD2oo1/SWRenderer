@@ -152,26 +152,6 @@ void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
 	}
 }
 
-bool CGraphics::ClipPixel( SVector4 vPh ) const
-{
-	uint8_t iClipCode = ClipCode( vPh );
-	if ( iClipCode != 0 )
-	{
-		return false;
-	}
-	return true;
-}
-
-uint8_t CGraphics::ClipCode( const SVector4& vP4 ) const
-{
-	uint8_t iRet = 0;
-	iRet |= ( vP4.x < -m_sFrameBuffer.vClipScaleInHom.x ) ? 1 : 0;
-	iRet |= ( vP4.x > m_sFrameBuffer.vClipScaleInHom.x ) ? 2 : 0;
-	iRet |= ( vP4.y < -m_sFrameBuffer.vClipScaleInHom.y ) ? 4 : 0;
-	iRet |= ( vP4.y > m_sFrameBuffer.vClipScaleInHom.y ) ? 8 : 0;
-	return iRet;
-}
-
 uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;

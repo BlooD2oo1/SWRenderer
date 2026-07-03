@@ -117,10 +117,26 @@ public:
 	bool ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const;
 	template<class TVertex>
 	bool ClipLineXY( TVertex& vPh0, TVertex& vPh1 ) const;
-	bool ClipPixel( SVector4 vPh ) const;
+	bool ClipPixel( SVector4 vPh ) const
+	{
+		uint8_t iClipCode = ClipCode( vPh );
+		if ( iClipCode != 0 )
+		{
+			return false;
+		}
+		return true;
+	}
 
 private:
-	uint8_t ClipCode( const SVector4& vP4 ) const;
+	uint8_t ClipCode( const SVector4& vP4 ) const
+	{
+		uint8_t iRet = 0;
+		iRet |= ( vP4.x < -vP4.w * m_sFrameBuffer.vClipScaleInHom.x ) ? 1 : 0;
+		iRet |= ( vP4.x > vP4.w * m_sFrameBuffer.vClipScaleInHom.x ) ? 2 : 0;
+		iRet |= ( vP4.y < -vP4.w * m_sFrameBuffer.vClipScaleInHom.y ) ? 4 : 0;
+		iRet |= ( vP4.y > vP4.w * m_sFrameBuffer.vClipScaleInHom.y ) ? 8 : 0;
+		return iRet;
+	}
 
 	static uint32_t BlendAdditive( uint32_t dest, BGRA8 src );
 
@@ -138,18 +154,18 @@ void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const TV
 
 	if ( ClipLineDepth<SVertexPhC>( vPh0, vPh1 ) )
 	{
-		{
-			float fWRec0 = 1.0f / vPh0.vPos.w;
-			vPh0.vPos.x = vPh0.vPos.x * fWRec0;
-			vPh0.vPos.y = vPh0.vPos.y * fWRec0;
-
-			float fWRec1 = 1.0f / vPh1.vPos.w;
-			vPh1.vPos.x = vPh1.vPos.x * fWRec1;
-			vPh1.vPos.y = vPh1.vPos.y * fWRec1;
-		}
-
 		if ( ClipLineXY<SVertexPhC>( vPh0, vPh1 ) )
 		{
+			{
+				float fWRec0 = 1.0f / vPh0.vPos.w;
+				vPh0.vPos.x = vPh0.vPos.x * fWRec0;
+				vPh0.vPos.y = vPh0.vPos.y * fWRec0;
+
+				float fWRec1 = 1.0f / vPh1.vPos.w;
+				vPh1.vPos.x = vPh1.vPos.x * fWRec1;
+				vPh1.vPos.y = vPh1.vPos.y * fWRec1;
+			}
+
 			vPh0.vPos.x = vPh0.vPos.x * 0.5f + 0.5f;
 			vPh0.vPos.y = -(vPh0.vPos.y) * 0.5f + 0.5f;
 			vPh0.vPos.x *= (float)m_sFrameBuffer.iWidth;
@@ -255,9 +271,9 @@ bool CGraphics::ClipLineXY( TVertex& vPh0, TVertex& vPh1 ) const
 		uint8_t iClipCode0 = ClipCode( vPh0.vPos );
 		uint8_t iClipCode1 = ClipCode( vPh1.vPos );
 
-		if ( iClipCode0 == 0 && iClipCode1 == 0 )
+		if ( ( iClipCode0 | iClipCode1 ) == 0 )
 		{
-			break;
+			return true;
 		}
 		if ( ( iClipCode0 & iClipCode1 ) != 0 )
 		{
@@ -271,49 +287,52 @@ bool CGraphics::ClipLineXY( TVertex& vPh0, TVertex& vPh1 ) const
 		else													bit = 8;
 
 		TVertex vTemp;
-		switch( bit )
+
+		switch (bit)
 		{
 		case 1:
-		{
-			float t = (-m_sFrameBuffer.vClipScaleInHom.x - vPh0.vPos.x) / (vPh1.vPos.x - vPh0.vPos.x);
-			vTemp.vPos.x = -m_sFrameBuffer.vClipScaleInHom.x;
-			vTemp.vPos.y = vPh0.vPos.y + (vPh1.vPos.y - vPh0.vPos.y) * t;
-			vTemp.vPos.z = vPh0.vPos.z + (vPh1.vPos.z - vPh0.vPos.z) * t;
-			vTemp.vPos.w = vPh0.vPos.w + (vPh1.vPos.w - vPh0.vPos.w) * t;
-			vTemp.InterpolateAttribs( vPh0, vPh1, t );
+			{
+				float d0 = vPh0.vPos.x + vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				float d1 = vPh1.vPos.x + vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				float t = d0 / (d0 - d1);
+				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
+				vTemp.vPos.x = -vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				vTemp.InterpolateAttribs(vPh0, vPh1, t);
+			}
+			break;
 
-		}
-		break;
 		case 2:
-		{
-			float t = (m_sFrameBuffer.vClipScaleInHom.x - vPh0.vPos.x) / (vPh1.vPos.x - vPh0.vPos.x);
-			vTemp.vPos.x = m_sFrameBuffer.vClipScaleInHom.x;
-			vTemp.vPos.y = vPh0.vPos.y + (vPh1.vPos.y - vPh0.vPos.y) * t;
-			vTemp.vPos.z = vPh0.vPos.z + (vPh1.vPos.z - vPh0.vPos.z) * t;
-			vTemp.vPos.w = vPh0.vPos.w + (vPh1.vPos.w - vPh0.vPos.w) * t;
-			vTemp.InterpolateAttribs( vPh0, vPh1, t );
-		}
-		break;
+			{
+				float d0 = vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.x - vPh0.vPos.x;
+				float d1 = vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.x - vPh1.vPos.x;
+				float t = d0 / (d0 - d1);
+				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
+				vTemp.vPos.x = vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				vTemp.InterpolateAttribs(vPh0, vPh1, t);
+			}
+			break;
+
 		case 4:
-		{
-			float t = (-m_sFrameBuffer.vClipScaleInHom.y - vPh0.vPos.y) / (vPh1.vPos.y - vPh0.vPos.y);
-			vTemp.vPos.x = vPh0.vPos.x + (vPh1.vPos.x - vPh0.vPos.x) * t;
-			vTemp.vPos.y = -m_sFrameBuffer.vClipScaleInHom.y;
-			vTemp.vPos.z = vPh0.vPos.z + (vPh1.vPos.z - vPh0.vPos.z) * t;
-			vTemp.vPos.w = vPh0.vPos.w + (vPh1.vPos.w - vPh0.vPos.w) * t;
-			vTemp.InterpolateAttribs( vPh0, vPh1, t );
-		}
-		break;
-		case 8:
-		{
-			float t = (m_sFrameBuffer.vClipScaleInHom.y - vPh0.vPos.y) / (vPh1.vPos.y - vPh0.vPos.y);
-			vTemp.vPos.x = vPh0.vPos.x + (vPh1.vPos.x - vPh0.vPos.x) * t;
-			vTemp.vPos.y = m_sFrameBuffer.vClipScaleInHom.y;
-			vTemp.vPos.z = vPh0.vPos.z + (vPh1.vPos.z - vPh0.vPos.z) * t;
-			vTemp.vPos.w = vPh0.vPos.w + (vPh1.vPos.w - vPh0.vPos.w) * t;
-			vTemp.InterpolateAttribs( vPh0, vPh1, t );
-		}
-		break;
+			{
+				float d0 = vPh0.vPos.y + vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				float d1 = vPh1.vPos.y + vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				float t = d0 / (d0 - d1);
+				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
+				vTemp.vPos.y = -vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				vTemp.InterpolateAttribs(vPh0, vPh1, t);
+			}
+			break;
+
+		default:
+			{
+				float d0 = vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.y - vPh0.vPos.y;
+				float d1 = vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.y - vPh1.vPos.y;
+				float t = d0 / (d0 - d1);
+				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
+				vTemp.vPos.y = vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				vTemp.InterpolateAttribs(vPh0, vPh1, t);
+			}
+			break;
 		}
 
 		if ( iClipCode0 & bit )

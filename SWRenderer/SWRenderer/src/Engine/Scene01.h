@@ -67,5 +67,6 @@ private:
 	SVector3*		m_pCirclePos;
 	int				m_iCirclePosCount;
 
+	float			m_fTimeMultiplierW;
 	float			m_fTimeMultiplier;
 };

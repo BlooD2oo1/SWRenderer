@@ -13,7 +13,7 @@ void SShip::Init()
 	m_vDir = SVector3( 1.0f, 0.0f, 0.0f );
 	m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
 	m_vRight = SVector3( 0.0f, 1.0f, 0.0f );
-	m_fSpeedForward = 0.1f;
+	m_fSpeedForward = 2.0f;
 	m_fSpeedUp =  0.0f;
 	m_fSpeedRight = 0.0f;
 }
@@ -300,6 +300,7 @@ void CScene01::Clear()
 	SAFE_DELETE_ARRAY( m_pCirclePos );
 	m_iCirclePosCount = 0;
 
+	m_fTimeMultiplierW = 0.0f;
 	m_fTimeMultiplier = 1.0f;
 }
 
@@ -321,7 +322,7 @@ void CScene01::Create()
 		float a = ((float)rand()/(float)RAND_MAX);
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
-		m_pStars[i].vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*3.0f );
+		m_pStars[i].vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
 	}
 
 	m_iBGStarsCount = 10000;
@@ -369,7 +370,7 @@ void CScene01::Create()
 			m_pVBCircle[i].vPos.x = cosf( fW*PI2 );
 			m_pVBCircle[i].vPos.y = sinf( fW*PI2 );
 			m_pVBCircle[i].vPos.z = 0.0f;
-			m_pVBCircle[i].vColor = SVector4( 0.1f, 0.0f, 1.0f, 0.8f );
+			m_pVBCircle[i].vColor = SVector4( 0.9f, 0.8f, 0.4f, 1.0f );
 		}
 
 		m_iIBCircleCount = m_iVBCircleCount*2;
@@ -612,8 +613,8 @@ void CScene01::Create()
 					.vPos =
 					pts[edges[i].second];
 
-				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.4f, 0.4f, 0.4f, 0.8f );
-				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.3f );
+				m_pLineListSpaceShip[i * 2 + 0].vColor = SVector4( 0.4f, 0.4f, 0.4f, 1.0f );
+				m_pLineListSpaceShip[i * 2 + 1].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.4f );
 			}
 		}
 	}
@@ -621,21 +622,29 @@ void CScene01::Create()
 
 void CScene01::Update()
 {
+	if ( CEngine::GetInstance().GetMouseState().bRightButton )
+	{
+		float fW = CalcSmoothUpdateWeight( 1.02f, CEngine::GetInstance().GetElapsedTimeMs() );
+		m_fTimeMultiplierW = Lerp( 0.0f, m_fTimeMultiplierW, fW );
+	}
+	else
+	{
+		float fW = CalcSmoothUpdateWeight( 1.002f, CEngine::GetInstance().GetElapsedTimeMs() );
+		m_fTimeMultiplierW = Lerp( 1.0f, m_fTimeMultiplierW, fW );
+	}
+
+	m_fTimeMultiplier = Lerp( 0.1f, 1.0f, m_fTimeMultiplierW );
+
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs() * m_fTimeMultiplier;
 
-	m_fTimeMultiplier = 1.0f;
-	if ( CEngine::GetInstance().GetMouseState().bLeftButton && CEngine::GetInstance().GetMouseState().bRightButton )
-	{
-		m_fTimeMultiplier = 0.1f;
-	}
-	else if ( CEngine::GetInstance().GetMouseState().bLeftButton )
+	/*else if ( CEngine::GetInstance().GetMouseState().bLeftButton )
 	{
 		m_sShip.Accelerate( fElapsedTimeMs * 0.01f );
 	}
 	else if ( CEngine::GetInstance().GetMouseState().bRightButton )
 	{
 		m_sShip.Accelerate( fElapsedTimeMs * -0.05f );
-	}
+	}*/
 
 	m_cCamera.Update( fElapsedTimeMs );
 	
@@ -671,22 +680,23 @@ void CScene01::Render()
 
 			if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
 			{
-				{
-					float fWRec0 = 1.0f / sPh0.vPos.w;
-					sPh0.vPos.x = sPh0.vPos.x * fWRec0;
-					sPh0.vPos.y = sPh0.vPos.y * fWRec0;
-
-					float fWRec1 = 1.0f / sPh1.vPos.w;
-					sPh1.vPos.x = sPh1.vPos.x * fWRec1;
-					sPh1.vPos.y = sPh1.vPos.y * fWRec1;
-				}
-
-				SVector2 v( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
-				v.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
-				v.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
-				float fL = SVector2::Length( v );
 				if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
 				{
+					{
+						float fWRec0 = 1.0f / sPh0.vPos.w;
+						sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+						sPh0.vPos.y = sPh0.vPos.y * fWRec0;
+
+						float fWRec1 = 1.0f / sPh1.vPos.w;
+						sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+						sPh1.vPos.y = sPh1.vPos.y * fWRec1;
+					}
+
+					SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+					vL.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
+					vL.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
+					float fL = SVector2::Length( vL );
+
 					sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
 					sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
 					sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
@@ -723,22 +733,23 @@ void CScene01::Render()
 
 			if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
 			{
-				{
-					float fWRec0 = 1.0f / sPh0.vPos.w;
-					sPh0.vPos.x = sPh0.vPos.x * fWRec0;
-					sPh0.vPos.y = sPh0.vPos.y * fWRec0;
-
-					float fWRec1 = 1.0f / sPh1.vPos.w;
-					sPh1.vPos.x = sPh1.vPos.x * fWRec1;
-					sPh1.vPos.y = sPh1.vPos.y * fWRec1;
-				}
-
-				SVector2 v( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
-				v.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
-				v.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
-				float fL = SVector2::Length( v );
 				if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
 				{
+					{
+						float fWRec0 = 1.0f / sPh0.vPos.w;
+						sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+						sPh0.vPos.y = sPh0.vPos.y * fWRec0;
+
+						float fWRec1 = 1.0f / sPh1.vPos.w;
+						sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+						sPh1.vPos.y = sPh1.vPos.y * fWRec1;
+					}
+
+					SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+					vL.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
+					vL.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
+					float fL = SVector2::Length( vL );
+
 					sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
 					sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
 					sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
@@ -787,7 +798,7 @@ void CScene01::Render()
 		for ( int iInstIndZ = 0; iInstIndZ < iInstCount; iInstIndZ++ )
 		{
 			SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
-			sVertexShaderBasic.fAlpha = 1.0f;
+			sVertexShaderBasic.fAlpha = 0.7f;
 			CGraphics::GetInstance().DrawLineList3D( m_pLineListSpaceShip, m_iLineListSpaceShipCount, sVertexShaderBasic );
 		}
 	}
@@ -801,8 +812,152 @@ void CScene01::Render()
 		SMatrix::Scale( matWorld, 100.0f );
 
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matWorld, cCamera.GetViewProjectionMatrix() );
-		sVertexShaderBasic.fAlpha = 0.5f;
+		sVertexShaderBasic.fAlpha = 0.7f;
 		CGraphics::GetInstance().DrawLineList3D( m_pVBCircle, m_pIBCircle, m_iIBCircleCount / 2, sVertexShaderBasic );
+	}
+
+	{
+		struct SVertexShaderGrid
+		{
+			SMatrix matWorldViewProj;
+			void Process( SVertexPhC& out, const SVertexPC& in ) const
+			{
+				SVector4 vPhSrc0( in.vPos, 1.0f );
+				SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
+				out.vColor = in.vColor;
+			}
+		} sVertexShaderGrid;
+
+		
+
+		SVector4 vColor = SVector4( 0.2f, 0.0f, 0.6f, (1.0f-m_fTimeMultiplierW) );
+		if ( vColor.w > 1.0f/255.0f )
+		{
+			float fSpacing = 200.0f;
+			int iHalfGridSize = 10/2;
+
+			SMatrix matScale;
+			SMatrix::Identity(matScale);
+			SMatrix::Scale( matScale, fSpacing );
+		
+			{
+				SVector3 vCenter = m_sShip.m_vPos / fSpacing;
+				SVector3 vCenterQ;
+				vCenterQ.x = vCenter.x;
+				vCenterQ.y = floorf( vCenter.y );
+				vCenterQ.z = floorf( vCenter.z );
+
+				SMatrix matWorld( matScale );
+				matWorld.m30 = vCenterQ.x*fSpacing;
+				matWorld.m31 = vCenterQ.y*fSpacing;
+				matWorld.m32 = vCenterQ.z*fSpacing;
+				SMatrix::Mul( matWorld, matWorld, cCamera.GetViewProjectionMatrix() );
+				sVertexShaderGrid.matWorldViewProj = matWorld;
+
+				float fi = vCenter.y - floorf(vCenter.y);
+				float fj = vCenter.z - floorf(vCenter.z);
+
+				for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
+				{
+					for ( int j = -iHalfGridSize; j <= iHalfGridSize; j++ )
+					{
+						SVector3 vOffset( 0.0f, (float)i, (float)j );
+
+						SVertexPC sVertex0;
+						SVertexPC sVertex1;
+						SVertexPC sVertex2;
+
+						sVertex0.vPos = SVector3( vOffset );
+						sVertex0.vColor = vColor;
+
+						sVertex1.vPos = sVertex0.vPos;
+						sVertex1.vColor = vColor;
+
+						sVertex2.vPos = sVertex0.vPos;
+						sVertex2.vColor = vColor;
+
+						sVertex0.vPos.x -= (float)iHalfGridSize;
+						sVertex2.vPos.x += (float)iHalfGridSize;
+
+						float di = (float)i - fi;
+						float dj = (float)j - fj;
+						float d = di*di+dj*dj;
+						float t = d / (iHalfGridSize*iHalfGridSize);
+						t = Clamp( t, 0.0f, 1.0f );
+						/*t -= 0.5f;
+						t = abs( t );
+						t *= 2.0f;*/
+						float fAlpha = 1.0f-t;
+
+						sVertex0.vColor.w *= 0.0f;
+						sVertex1.vColor.w *= fAlpha;
+						sVertex2.vColor.w *= 0.0f;
+
+						CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid );
+						CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid );
+					}
+				}
+			}
+
+			{
+				SVector3 vCenter = m_sShip.m_vPos / fSpacing;
+				SVector3 vCenterQ;
+				vCenterQ.x = floorf( vCenter.x );
+				vCenterQ.y = vCenter.y;
+				vCenterQ.z = floorf( vCenter.z );
+
+				SMatrix matWorld( matScale );
+				matWorld.m30 = vCenterQ.x*fSpacing;
+				matWorld.m31 = vCenterQ.y*fSpacing;
+				matWorld.m32 = vCenterQ.z*fSpacing;
+				SMatrix::Mul( matWorld, matWorld, cCamera.GetViewProjectionMatrix() );
+				sVertexShaderGrid.matWorldViewProj = matWorld;
+
+				float fi = vCenter.x - floorf(vCenter.x);
+				float fj = vCenter.z - floorf(vCenter.z);
+
+				for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
+				{
+					for ( int j = -iHalfGridSize; j <= iHalfGridSize; j++ )
+					{
+						SVector3 vOffset( (float)i, 0.0f, (float)j );
+
+						SVertexPC sVertex0;
+						SVertexPC sVertex1;
+						SVertexPC sVertex2;
+
+						sVertex0.vPos = SVector3( vOffset );
+						sVertex0.vColor = vColor;
+
+						sVertex1.vPos = sVertex0.vPos;
+						sVertex1.vColor = vColor;
+
+						sVertex2.vPos = sVertex0.vPos;
+						sVertex2.vColor = vColor;
+
+						sVertex0.vPos.y -= (float)iHalfGridSize;
+						sVertex2.vPos.y += (float)iHalfGridSize;
+
+						float di = (float)i - fi;
+						float dj = (float)j - fj;
+						float d = di*di+dj*dj;
+						float t = d / (iHalfGridSize*iHalfGridSize);
+						t = Clamp( t, 0.0f, 1.0f );
+						/*t -= 0.5f;
+						t = abs( t );
+						t *= 2.0f;*/
+						float fAlpha = 1.0f-t;
+
+						sVertex0.vColor.w *= 0.0f;
+						sVertex1.vColor.w *= fAlpha;
+						sVertex2.vColor.w *= 0.0f;
+
+						CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid );
+						CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid );
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -812,12 +967,12 @@ bool CScene01::On_KeyDown( uint32_t key )
 	{
 	case 0x26:
 	{
-		m_sShip.Accelerate( 1.0f );
+		//m_sShip.Accelerate( 1.0f );
 	}
 	break;
 	case 0x28:
 	{
-		m_sShip.Accelerate( -5.0f );
+		//m_sShip.Accelerate( -5.0f );
 	}
 	break;
 	}
