@@ -19,9 +19,6 @@
     <ClCompile Include="src\Engine\Engine.cpp">
       <Filter>src\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Graphics\Graphics.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
@@ -36,6 +33,15 @@
     </ClCompile>
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\winAudio.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\winmain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\winGraphics.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +68,12 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\Camera.h">
       <Filter>src\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\winAudio.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\winGraphics.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

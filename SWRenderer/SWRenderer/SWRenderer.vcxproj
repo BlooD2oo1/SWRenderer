@@ -86,7 +86,9 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\Graphics\Graphics.cpp" />
     <ClCompile Include="src\Graphics\Math.cpp" />
     <ClCompile Include="src\Graphics\Vector.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\winAudio.cpp" />
+    <ClCompile Include="src\winGraphics.cpp" />
+    <ClCompile Include="src\winmain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Common\Globals.h" />
@@ -97,6 +99,8 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Graphics\Graphics.h" />
     <ClInclude Include="src\Graphics\Math.h" />
     <ClInclude Include="src\Graphics\Vector.h" />
+    <ClInclude Include="src\winAudio.h" />
+    <ClInclude Include="src\winGraphics.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

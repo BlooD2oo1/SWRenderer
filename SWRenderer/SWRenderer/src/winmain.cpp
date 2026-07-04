@@ -1,10 +1,14 @@
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #include <stdlib.h>
+#include <atomic>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <windowsx.h>
+
+#include "winAudio.h"
+#include "winGraphics.h"
 
 #include "Common/Globals.h"
 #include "Common/Perf.h"
@@ -41,7 +45,7 @@ constexpr int iPixelSizeY = 5;
 // GLOBALS
 // ============================================================
 
-bool bRunning = true;
+std::atomic<bool> bRunning( true );
 
 bool bLockMouse = true;
 
@@ -245,6 +249,24 @@ void Present(HWND hwnd)
 	}
 }
 
+DWORD WINAPI AudioThread(LPVOID lpParam)
+{
+	if ( Audio_Init() == false )
+	{
+		return 1;
+	}
+
+	while (bRunning)
+	{
+		Audio_Update();
+		//Sleep(1);
+	}
+	
+	Audio_Shutdown();
+
+	return 0;
+}
+
 // ============================================================
 // MAIN
 // ============================================================
@@ -285,6 +307,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	CEngine::CreateInstance();
 	CEngine::GetInstance().Create(sFrameBuffer);
 
+	HANDLE hThread = CreateThread(NULL, 0, AudioThread, NULL, 0, NULL);
+	//SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
+
 #ifdef FRAME_CAP
 	// improve Sleep resolution for more accurate sleep durations
 	timeBeginPeriod(1);
@@ -316,6 +341,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		CPerf cPerfRender;
 		cPerfRender.BeginPerf();
 		CEngine::GetInstance().Render();
+		//Sleep( 10 );
 		fRenderTime = cPerfRender.EndPerf();
 
 		Present(hwnd);
@@ -352,6 +378,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			SetWindowText(hwnd, title);
 		}
 	}
+
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
 
 	CEngine::Destroy();
 
