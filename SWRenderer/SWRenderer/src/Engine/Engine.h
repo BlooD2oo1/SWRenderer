@@ -28,7 +28,8 @@ private:
 public:
 	void Create( SFrameBuffer& sFrameBuffer );
 	void Clear();
-	void Update( float fElapsedTimeMs );
+	void UpdateAudioThread();
+	void Update( float fElapsedTimeMs );	
 	void Render();
 
 	bool On_KeyDown( uint32_t key );

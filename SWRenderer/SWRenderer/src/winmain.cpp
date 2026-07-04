@@ -31,36 +31,9 @@ constexpr double TARGET_FPS = 60.0;
 constexpr double TARGET_FRAME_TIME = 1.0 / TARGET_FPS;
 #endif
 
-// ============================================================
-// CONFIG
-// ============================================================
-
-constexpr int WIDTH = 320;
-constexpr int HEIGHT = 200;
-
-constexpr int iPixelSizeX = 5;
-constexpr int iPixelSizeY = 5;
-
-// ============================================================
-// GLOBALS
-// ============================================================
-
 std::atomic<bool> bRunning( true );
 
 bool bLockMouse = true;
-
-double fRenderTime = 0.0;
-
-HBITMAP hBitmapFrameBuffer = nullptr;
-HDC hDCFrameBuffer = nullptr;
-uint32_t* pFramebuffer = nullptr;
-
-HBITMAP hBitmapPresent = nullptr;
-HDC hDCPresent = nullptr;
-
-// ============================================================
-// DPI AWARENESS
-// ============================================================
 
 void EnableDPIAwareness()
 {
@@ -80,10 +53,6 @@ void EnableDPIAwareness()
 		FreeLibrary(user32);
 	}
 }
-
-// ============================================================
-// WINDOW PROC
-// ============================================================
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -193,83 +162,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-// ============================================================
-// FRAMEBUFFER
-// ============================================================
-
-void CreateFramebuffer(HDC windowDC)
-{
-	BITMAPINFO bmi = {};
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = WIDTH;
-	bmi.bmiHeader.biHeight = -HEIGHT;  // top-down
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 32;
-	bmi.bmiHeader.biCompression = BI_RGB;
-
-	hDCFrameBuffer = CreateCompatibleDC(windowDC);
-
-	hBitmapFrameBuffer = CreateDIBSection(windowDC, &bmi, DIB_RGB_COLORS, (void**)&pFramebuffer, nullptr, 0);
-
-	SelectObject(hDCFrameBuffer, hBitmapFrameBuffer);
-}
-
-void CreatePresentBuffer(HDC windowDC)
-{
-	hDCPresent = CreateCompatibleDC(windowDC);
-
-	hBitmapPresent = CreateCompatibleBitmap(windowDC, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY);
-
-	SelectObject(hDCPresent, hBitmapPresent);
-}
-
-// ============================================================
-// PRESENT
-// ============================================================
-
-void Present(HWND hwnd)
-{
-	{
-		SetStretchBltMode(hDCPresent, COLORONCOLOR);  // nearest neighbour
-		StretchBlt(hDCPresent, 0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, hDCFrameBuffer, 0, 0, WIDTH, HEIGHT, SRCCOPY);
-	}
-
-	{
-		wchar_t msg[256];
-		swprintf(msg, 256, L" Render(%dx%d) - %.3f ms (%.2f fps)", WIDTH, HEIGHT, fRenderTime * 1000, 1.0 / fRenderTime);
-		SetBkMode(hDCPresent, TRANSPARENT);
-		SetTextColor(hDCPresent, RGB(255, 255, 255));
-		TextOut(hDCPresent, 0, 0, msg, (int)wcslen(msg));
-	}
-
-	{
-		HDC windowDC = GetDC(hwnd);
-		BitBlt(windowDC, 0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, hDCPresent, 0, 0, SRCCOPY);
-		ReleaseDC(hwnd, windowDC);
-	}
-}
-
-DWORD WINAPI AudioThread(LPVOID lpParam)
+void AudioThread()
 {
 	if ( Audio_Init() == false )
 	{
-		return 1;
+		return;
 	}
 
 	while (bRunning)
 	{
+		CEngine::GetInstance().UpdateAudioThread();
 		Audio_Update();
-		//Sleep(1);
 	}
 	
 	Audio_Shutdown();
-
-	return 0;
 }
-
-// ============================================================
-// MAIN
-// ============================================================
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
@@ -296,19 +203,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 	ShowWindow(hwnd, SW_SHOW);
 
-	HDC dc = GetDC(hwnd);
-	CreateFramebuffer(dc);
-	CreatePresentBuffer(dc);
-	ReleaseDC(hwnd, dc);
+	uint32_t* pFrameBuffer = Graphics_Init( hwnd );
 
-	MSG msg = {};
-
-	SFrameBuffer sFrameBuffer(pFramebuffer, WIDTH, HEIGHT);
+	SFrameBuffer sFrameBuffer(pFrameBuffer, WIDTH, HEIGHT);
 	CEngine::CreateInstance();
 	CEngine::GetInstance().Create(sFrameBuffer);
 
-	HANDLE hThread = CreateThread(NULL, 0, AudioThread, NULL, 0, NULL);
-	//SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
+	std::thread audioThread(AudioThread);
 
 #ifdef FRAME_CAP
 	// improve Sleep resolution for more accurate sleep durations
@@ -316,6 +217,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 #endif
 
 	float fElapsedTimeMs = 0.0f;
+	float fRenderTimeMs = 0.0f;
 	while (bRunning)
 	{
 		// high-resolution frame start timestamp (used for frame-capping)
@@ -326,10 +228,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		CPerf cPerfFrame;
 		cPerfFrame.BeginPerf();
 
+		{
+			wchar_t title[256];
+			swprintf(title, 256, L" SWRenderer - %dx%d %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, fElapsedTimeMs, 1000.0 / fElapsedTimeMs);
+			SetWindowText(hwnd, title);
+		}
+
 #ifdef VSYNC
 		DwmFlush();
 #endif
-
+		MSG msg = {};
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -342,9 +250,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		cPerfRender.BeginPerf();
 		CEngine::GetInstance().Render();
 		//Sleep( 10 );
-		fRenderTime = cPerfRender.EndPerf();
+		fRenderTimeMs = (float)( cPerfRender.EndPerf() * 1000.0 );
 
-		Present(hwnd);
+		Graphics_Present(hwnd, fRenderTimeMs);
 
 #ifdef FRAME_CAP
 		// frameTime is measured by CPerf; we'll use chrono for the wait so it's independent of the perf helper.
@@ -370,22 +278,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			}
 		}
 #endif
-		double frameTime = cPerfFrame.EndPerf();
-		fElapsedTimeMs = (float)( frameTime * 1000.0 );
-		{
-			wchar_t title[256];
-			swprintf(title, 256, L" SWRenderer - %dx%d - %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, frameTime * 1000.0, 1.0 / frameTime);
-			SetWindowText(hwnd, title);
-		}
+		fElapsedTimeMs = (float)( cPerfFrame.EndPerf() * 1000.0 );
 	}
 
-	WaitForSingleObject(hThread, INFINITE);
-	CloseHandle(hThread);
+	if (audioThread.joinable())
+	{
+		audioThread.join(); // Új: megvárja, amíg az AudioThread lefut
+	}
 
 	CEngine::Destroy();
 
-	DeleteObject(hBitmapFrameBuffer);
-	DeleteDC(hDCFrameBuffer);
+	Graphics_Shotdown();
 
 #ifdef FRAME_CAP
 	timeEndPeriod(1);

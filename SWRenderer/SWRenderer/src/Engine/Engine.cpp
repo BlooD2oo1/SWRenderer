@@ -30,6 +30,11 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	m_cScene01.Create();
 }
 
+void CEngine::UpdateAudioThread()
+{
+
+}
+
 void CEngine::Update( float fElapsedTimeMs )
 {
 	m_fElapsedTimeMs = fElapsedTimeMs;
