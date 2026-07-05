@@ -171,8 +171,10 @@ void AudioThread()
 
 	while (bRunning)
 	{
-		CEngine::GetInstance().UpdateAudioThread();
-		Audio_Update();
+		SAudioBuffer sAudioBuffer;
+		Audio_UpdateBegin( sAudioBuffer.pData, sAudioBuffer.iNumFrames, sAudioBuffer.iSampleRate );
+		CEngine::GetInstance().UpdateAudioThread( sAudioBuffer );
+		Audio_UpdateEnd( sAudioBuffer.iNumFrames );
 	}
 	
 	Audio_Shutdown();

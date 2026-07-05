@@ -43,6 +43,9 @@
     <ClCompile Include="src\winGraphics.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Audio.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.h">
@@ -74,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="src\winGraphics.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Audio.h">
+      <Filter>src\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

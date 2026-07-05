@@ -3,6 +3,7 @@
 #include <audioclient.h>
 #include <cmath>
 #include <cstdio>
+#include <stdint.h>
 
 // Helper macro/function to safely release COM interfaces
 template <class T> void SafeRelease(T** ppT) {
@@ -12,16 +13,8 @@ template <class T> void SafeRelease(T** ppT) {
 static const int SAMPLE_RATE = 48000;
 static constexpr float PI2   = 6.28318530717958647692f;
 
-// Global frequencies controlled by the main thread
-float gAudioFreqLeft  = 440.0f;
-float gAudioFreqRight = 442.0f;
-
 // Thread control flag
 bool bRunning = true;
-
-// Phase tracking variables
-static float gPhaseL = 0.0f;
-static float gPhaseR = 0.0f;
 
 // WASAPI specific interfaces and handles
 static IMMDeviceEnumerator* gEnumerator   = nullptr;
@@ -29,28 +22,6 @@ static IMMDevice* gDevice       = nullptr;
 static IAudioClient* gAudioClient  = nullptr;
 static IAudioRenderClient* gRenderClient = nullptr;
 static HANDLE               gAudioEvent   = nullptr;
-
-// Fills the floating-point buffer provided by WASAPI
-void FillBuffer(float* dst, DWORD numFrames)
-{
-    for (DWORD i = 0; i < numFrames; i++)
-    {
-        float left  = sinf(gPhaseL * PI2);
-        float right = sinf(gPhaseR * PI2);
-
-        // Modern Windows audio engine operates natively on 32-bit float (0.0f to 1.0f)
-        // No need for short conversion or multiplying by 32767.
-        dst[i * 2 + 0] = left  * 0.3f; // Left channel (30% volume)
-        dst[i * 2 + 1] = right * 0.3f; // Right channel (30% volume)
-
-        gPhaseL += gAudioFreqLeft / SAMPLE_RATE;
-        gPhaseR += gAudioFreqRight / SAMPLE_RATE;
-
-        // Wrap around the phase to maintain precision
-        if (gPhaseL >= 1.0f) gPhaseL -= 1.0f;
-        if (gPhaseR >= 1.0f) gPhaseR -= 1.0f;
-    }
-}
 
 bool Audio_Init()
 {
@@ -110,8 +81,10 @@ bool Audio_Init()
 
     BYTE* pData;
     hr = gRenderClient->GetBuffer(bufferFrameCount, &pData);
-    if (SUCCEEDED(hr)) {
-        FillBuffer((float*)pData, bufferFrameCount);
+    if (SUCCEEDED(hr))
+    {
+        //FillBuffer((float*)pData, bufferFrameCount);
+        ZeroMemory( pData, bufferFrameCount*2 );
         gRenderClient->ReleaseBuffer(bufferFrameCount, 0);
     }
 
@@ -120,8 +93,12 @@ bool Audio_Init()
     return SUCCEEDED(hr);
 }
 
-void Audio_Update()
+void Audio_UpdateBegin( float*& pDataOut, uint32_t& iNumFramesOut, uint32_t& iSampleRateOut )
 {
+    pDataOut = nullptr;
+    iNumFramesOut = 0;
+    iSampleRateOut = SAMPLE_RATE;
+
     // Wait until Windows signals that the audio engine needs more data.
     // This provides rock-solid hardware-linked timing without consuming CPU.
     WaitForSingleObject(gAudioEvent, INFINITE);
@@ -146,11 +123,20 @@ void Audio_Update()
         if (SUCCEEDED(hr))
         {
             // Synthesize the new samples directly into the buffer
-            FillBuffer((float*)pData, numFramesAvailable);
+            //FillBuffer((float*)pData, numFramesAvailable);
 
-            // Release the buffer back to the system to be queued for playback
-            gRenderClient->ReleaseBuffer(numFramesAvailable, 0);
+            pDataOut = (float*)pData;
+            iNumFramesOut = numFramesAvailable;
         }
+    }
+}
+
+void Audio_UpdateEnd( uint32_t iNumFrames )
+{
+    if ( iNumFrames )
+    {
+        // Release the buffer back to the system to be queued for playback
+        gRenderClient->ReleaseBuffer(iNumFrames, 0);
     }
 }
 

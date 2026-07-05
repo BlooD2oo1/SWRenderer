@@ -2,6 +2,7 @@
 
 #include "Common/Globals.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Audio.h"
 #include "Engine/Scene01.h"
 
 struct SMouseState
@@ -28,7 +29,7 @@ private:
 public:
 	void Create( SFrameBuffer& sFrameBuffer );
 	void Clear();
-	void UpdateAudioThread();
+	void UpdateAudioThread( SAudioBuffer& sAudioBuffer );
 	void Update( float fElapsedTimeMs );	
 	void Render();
 

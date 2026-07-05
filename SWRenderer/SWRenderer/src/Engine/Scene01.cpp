@@ -56,6 +56,13 @@ void SShip::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 		float fUp = -SVector2::Dot( vUpView2DNorm, vMouseDir2D );
 		float fRoll = -SVector2::Dot( vRightView2DNorm, vMouseDir2D );
 
+		
+		m_fSpeedForward *= expf( -fUp*fUp*1.0f );
+		{
+			float fW = CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs );
+			m_fSpeedForward = Lerp( 2.0f, m_fSpeedForward, fW );
+		}
+
 		{
 			SQuaternion q;
 			SQuaternion::FromAxisAngle( q, m_vRight, fUp*0.1f*fElapsedTimeMs );
@@ -655,8 +662,8 @@ void CScene01::Update()
 	m_sShip.GetMatrix( matShip );
 	m_cCameraShip.Update( fElapsedTimeMs, matShip );
 
-	gAudioFreqLeft  = 100.0f + ( 100.0f + m_sShip.m_fSpeedForward * 3.0f ) * m_fTimeMultiplier;
-	gAudioFreqRight = 105.0f + ( 100.0f + m_sShip.m_fSpeedForward * 3.1f ) * m_fTimeMultiplier;
+	gAudioFreq[0] = 60.0f * m_sShip.m_fSpeedForward * m_fTimeMultiplier;
+	gAudioFreq[1] = 60.0f * m_sShip.m_fSpeedForward * m_fTimeMultiplier;
 }
 
 void CScene01::Render()
@@ -837,7 +844,7 @@ void CScene01::Render()
 
 		
 
-		SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, (1.0f-m_fTimeMultiplierW) );
+		SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, (1.0f-m_fTimeMultiplierW)*0.5f );
 		if ( vColor.w > 1.0f/255.0f )
 		{
 			float fSpacing = 200.0f;
