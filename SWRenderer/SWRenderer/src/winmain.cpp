@@ -285,7 +285,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 	if (audioThread.joinable())
 	{
-		audioThread.join(); // Új: megvárja, amíg az AudioThread lefut
+		audioThread.join();
 	}
 
 	CEngine::Destroy();

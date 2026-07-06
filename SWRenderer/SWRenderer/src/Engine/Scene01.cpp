@@ -628,6 +628,8 @@ void CScene01::Create()
 	}
 }
 
+#define cCamera m_cCameraShip
+
 void CScene01::Update()
 {
 	if ( CEngine::GetInstance().GetMouseState().bRightButton )
@@ -662,14 +664,14 @@ void CScene01::Update()
 	m_sShip.GetMatrix( matShip );
 	m_cCameraShip.Update( fElapsedTimeMs, matShip );
 
-	gAudioFreq[0] = 60.0f * m_sShip.m_fSpeedForward * m_fTimeMultiplier;
-	gAudioFreq[1] = 60.0f * m_sShip.m_fSpeedForward * m_fTimeMultiplier;
+	CEngine::GetInstance().GetAudioData()->m_fShipSpeed = m_sShip.m_fSpeedForward * m_fTimeMultiplier;
+	CEngine::GetInstance().GetAudioData()->m_vShipPos = m_sShip.m_vPos;
+	CEngine::GetInstance().GetAudioData()->m_vCameraEye = cCamera.GetEye();
+	CEngine::GetInstance().GetAudioData()->m_vCameraLookAt = cCamera.GetLookAt();
 }
 
 void CScene01::Render()
 {
-#define cCamera m_cCameraShip
-
 	{
 		float fAlpha = m_fTimeMultiplierW*0.5f+0.5f;
 		const int iSteps = 3;

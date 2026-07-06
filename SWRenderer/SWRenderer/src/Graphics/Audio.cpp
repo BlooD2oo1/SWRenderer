@@ -1,9 +1,38 @@
 #include "Audio.h"
 #include "Common/Globals.h"
 
-// Global frequencies controlled by the main thread
-float gAudioFreq[]  = { 440.0f, 442.0f };
+CAudio*	CAudio::m_pThis = nullptr;
 
+CAudio::CAudio()
+{
+	for ( int i = 0; i < m_iAudioDataCount; i++ )
+	{
+		m_pAudioData[i].Clear();
+	}
+	m_iAudioDataInd_Process = 0;
+	m_iAudioDataInd_Upload = 1;
+	m_iAudioDataInd_Free = 2;
+}
+
+CAudio::~CAudio()
+{
+}
+
+SAudioData* CAudio::MainThread_GetAudioData()
+{
+	SAudioData* pAudioData = nullptr;
+	{
+		std::unique_lock<std::mutex> lock(m_mutexAudioData);
+		pAudioData = &m_pAudioData[m_iAudioDataInd_Upload];
+	}
+	return pAudioData;
+}
+
+void CAudio::MainThread_AudioDataDone()
+{
+	std::unique_lock<std::mutex> lock(m_mutexAudioData);
+	std::swap( m_iAudioDataInd_Free, m_iAudioDataInd_Upload );
+}
 
 std::vector< float > aFreq[2];
 std::vector< float > aPhase[2];
@@ -14,8 +43,18 @@ std::vector< float > aPhase2[2];
 int iC = 5;
 bool b = true;
 
-void CAudio::Update( SAudioBuffer& sAudioBuffer )
+void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 {
+	SAudioData* pAudioData = nullptr;
+	{
+		std::unique_lock<std::mutex> lock(m_mutexAudioData);
+		if ( m_pAudioData[m_iAudioDataInd_Free].m_iFrameInd > m_pAudioData[m_iAudioDataInd_Process].m_iFrameInd )
+		{
+			std::swap( m_iAudioDataInd_Free, m_iAudioDataInd_Process );
+		}
+		pAudioData = &m_pAudioData[m_iAudioDataInd_Process];
+	}
+
 	if (b)
 	{
 		b = false;
@@ -42,10 +81,10 @@ void CAudio::Update( SAudioBuffer& sAudioBuffer )
 			{
 				float fW = (float)i / (float)iC;
 				float& fPhase = aPhase[iChInd][i];
-				float fFreq = aFreq[iChInd][i]*gAudioFreq[iChInd];
+				float fFreq = aFreq[iChInd][i]*pAudioData->m_fShipSpeed*60.0f;
 
 				float& fPhase2 = aPhase2[iChInd][i];
-				float fFreq2 = aFreq2[iChInd][i]*gAudioFreq[iChInd];
+				float fFreq2 = aFreq2[iChInd][i]*pAudioData->m_fShipSpeed*60.0f;
 
 				fOut  += powf( sinf(fPhase * PI2), 3.0f ) * powf( sinf( fPhase2 * PI2 ), 5.0f ) * (1.0f - fW*0.8f );
 

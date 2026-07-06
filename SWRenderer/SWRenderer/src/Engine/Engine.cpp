@@ -3,8 +3,9 @@
 CEngine* CEngine::m_pThis = nullptr;
 
 CEngine::CEngine()
-
 {
+	CAudio::CreateInstance();
+	m_pAudioData = nullptr;
 	CGraphics::CreateInstance();
 	Clear();
 }
@@ -13,11 +14,12 @@ CEngine::~CEngine()
 {
 	Clear();
 	CGraphics::Destroy();
+	CAudio::Destroy();
 }
 
 void CEngine::Clear()
 {
-	m_iFrameCount = 0;
+	m_iFrameInd = 0;
 	m_cScene01.Clear();
 	CGraphics::GetInstance().Clear();
 }
@@ -32,11 +34,15 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
 {
-	CAudio::Update( sAudioBuffer );
+	CAudio::GetInstance().AudioThread_Update( sAudioBuffer );
 }
 
 void CEngine::Update( float fElapsedTimeMs )
 {
+	CAudio::GetInstance().MainThread_AudioDataDone();
+	m_pAudioData = CAudio::GetInstance().MainThread_GetAudioData();
+	m_pAudioData->m_iFrameInd = m_iFrameInd;
+
 	m_fElapsedTimeMs = fElapsedTimeMs;
 	m_cScene01.Update();
 }
@@ -55,7 +61,7 @@ void CEngine::Render()
 		SVector2 v0( (float)(GetFrameBuffer().iWidth>>1), (float)(GetFrameBuffer().iHeight>>1) );
 		SVector2 v1( v0 );
 
-		float a = (float)GetFrameCount()*0.0001f;
+		float a = (float)GetFrameInd()*0.0001f;
 		a = GetMouseState().x*0.002f;
 		float x = cosf( a + (float)fW*PI2 );
 		float y = sinf( a + (float)fW*PI2 );
@@ -79,7 +85,7 @@ void CEngine::Render()
 	//CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
 	//CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
 
-	m_iFrameCount++;
+	m_iFrameInd++;
 }
 
 bool CEngine::On_KeyDown( uint32_t key )

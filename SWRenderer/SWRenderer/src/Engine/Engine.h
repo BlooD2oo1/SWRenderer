@@ -41,15 +41,17 @@ public:
 	bool On_MouseWheel( int iDelta );
 
 	SMouseState&	GetMouseState() { return m_sMouseState; }
-	uint32_t		GetFrameCount() const { return m_iFrameCount; }
+	uint64_t		GetFrameInd() const { return m_iFrameInd; }
 	float			GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
+	SAudioData*		GetAudioData() { return m_pAudioData; }
 
 private:
 
 	SMouseState		m_sMouseState;
 
-	uint32_t		m_iFrameCount;
+	uint64_t		m_iFrameInd;
 	float			m_fElapsedTimeMs;
+	SAudioData*		m_pAudioData;
 
 	CScene01		m_cScene01;
 };
