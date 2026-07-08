@@ -108,6 +108,12 @@ bool CEngine::On_MouseMove( int deltax, int deltay )
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )
 {
+	SAudioEvent sAudioEvent;
+	sAudioEvent.type = SAudioEvent::ClickDown;
+	sAudioEvent.fVolume = 0.3f;
+	sAudioEvent.sClick.iButton = button;
+	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
 	switch ( button )
 	{
 	case 0:
@@ -126,6 +132,12 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 
 bool CEngine::On_MouseButtonUp( uint32_t button )
 {
+	SAudioEvent sAudioEvent;
+	sAudioEvent.type = SAudioEvent::ClickUp;
+	sAudioEvent.fVolume = 0.3f;
+	sAudioEvent.sClick.iButton = button;
+	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
 	switch ( button )
 	{
 	case 0:

@@ -3,6 +3,7 @@
 #include "Common/Globals.h"
 #include "Graphics/Vector.h"
 #include <mutex>
+#include "Common/EventQue.h"
 
 struct SAudioBuffer
 {
@@ -36,6 +37,35 @@ struct SAudioData
 	float			m_fShipSpeed;
 };
 
+struct SAudioEvent
+{
+	SAudioEvent() {}
+
+	enum EAudioEventType
+	{
+		ClickDown,
+		ClickUp,
+		MenuHover,
+		MenuSelect,
+		GunShot,
+	} type;
+
+	float fVolume;
+
+	union
+	{
+		struct
+		{
+			uint32_t iButton;
+		} sClick;
+		
+		struct
+		{
+			uint32_t iMenu;
+		} sMenu;
+	};
+};
+
 class CAudio
 {
 public:
@@ -49,14 +79,18 @@ private:
 	~CAudio();
 
 public:
+	void		MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent );
 	SAudioData* MainThread_GetAudioData();
 	void		MainThread_AudioDataDone();
 	void		AudioThread_Update( SAudioBuffer& sAudioBuffer );
 
+private:
 	std::mutex			m_mutexAudioData;
 	static const int	m_iAudioDataCount = 3;
 	SAudioData			m_pAudioData[m_iAudioDataCount];
 	int					m_iAudioDataInd_Process;
 	int					m_iAudioDataInd_Upload;
 	int					m_iAudioDataInd_Free;
+
+	CEventQueue<SAudioEvent, 1024> m_AudioQueue;
 };

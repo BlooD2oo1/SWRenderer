@@ -81,5 +81,8 @@
     <ClInclude Include="src\Graphics\Audio.h">
       <Filter>src\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\Common\EventQue.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

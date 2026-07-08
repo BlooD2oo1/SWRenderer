@@ -18,6 +18,11 @@ CAudio::~CAudio()
 {
 }
 
+void CAudio::MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent )
+{
+	m_AudioQueue.Push( sAudioEvent );
+}
+
 SAudioData* CAudio::MainThread_GetAudioData()
 {
 	SAudioData* pAudioData = nullptr;
@@ -72,6 +77,14 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		}
 	}
 
+	std::vector< SAudioEvent > aAudioEvents;
+	aAudioEvents.resize( m_AudioQueue.Capacity() );
+	int i = 0;
+	while (m_AudioQueue.Pop(aAudioEvents[i]))
+	{
+		i++;
+	}
+
 	for ( int iChInd = 0; iChInd < 2; iChInd++ )
 	{
 		for (uint32_t iTime = 0; iTime < sAudioBuffer.iNumFrames; iTime++)
@@ -97,6 +110,23 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			}
 			fOut /= (float)iC;
 			sAudioBuffer.pData[iTime * 2 + iChInd] = fOut  * 0.4f;
+
+			for ( int iEvent = 0; iEvent < i; iEvent++ )
+			{
+				SAudioEvent& sAudioEvent = aAudioEvents[iEvent];
+				if ( sAudioEvent.type == SAudioEvent::ClickDown )
+				{
+					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
+					fExp *= fExp;
+					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iTime * 0.1f ) * fExp;
+				}
+				if ( sAudioEvent.type == SAudioEvent::ClickUp )
+				{
+					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
+					fExp *= fExp;
+					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.3f) * sinf( (float)iTime * 0.13f ) * fExp;
+				}
+			}
 		}
 	}
 }
