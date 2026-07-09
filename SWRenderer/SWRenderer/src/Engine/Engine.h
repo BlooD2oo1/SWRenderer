@@ -43,7 +43,6 @@ public:
 	SMouseState&	GetMouseState() { return m_sMouseState; }
 	uint64_t		GetFrameInd() const { return m_iFrameInd; }
 	float			GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
-	SAudioData*		GetAudioData() { return m_pAudioData; }
 
 private:
 
@@ -51,7 +50,6 @@ private:
 
 	uint64_t		m_iFrameInd;
 	float			m_fElapsedTimeMs;
-	SAudioData*		m_pAudioData;
 
 	CScene01		m_cScene01;
 };

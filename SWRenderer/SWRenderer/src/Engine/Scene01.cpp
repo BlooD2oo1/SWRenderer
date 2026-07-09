@@ -664,10 +664,10 @@ void CScene01::Update()
 	m_sShip.GetMatrix( matShip );
 	m_cCameraShip.Update( fElapsedTimeMs, matShip );
 
-	CEngine::GetInstance().GetAudioData()->m_fShipSpeed = m_sShip.m_fSpeedForward * m_fTimeMultiplier;
-	CEngine::GetInstance().GetAudioData()->m_vShipPos = m_sShip.m_vPos;
-	CEngine::GetInstance().GetAudioData()->m_vCameraEye = cCamera.GetEye();
-	CEngine::GetInstance().GetAudioData()->m_vCameraLookAt = cCamera.GetLookAt();
+	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_fShipSpeed = m_sShip.m_fSpeedForward * m_fTimeMultiplier;
+	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_vShipPos = m_sShip.m_vPos;
+	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_vCameraEye = cCamera.GetEye();
+	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_vCameraLookAt = cCamera.GetLookAt();
 }
 
 void CScene01::Render()
@@ -849,7 +849,7 @@ void CScene01::Render()
 		SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, (1.0f-m_fTimeMultiplierW)*0.5f );
 		if ( vColor.w > 1.0f/255.0f )
 		{
-			float fSpacing = 200.0f;
+			float fSpacing = 1000.0f;
 			int iHalfGridSize = 10/2;
 
 			SMatrix matScale;

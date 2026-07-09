@@ -20,7 +20,7 @@ struct SAudioBuffer
 	uint32_t	iSampleRate = 0;
 };
 
-struct SAudioData
+struct SAudioFrameData
 {
 	void Clear()
 	{
@@ -79,18 +79,19 @@ private:
 	~CAudio();
 
 public:
-	void		MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent );
-	SAudioData* MainThread_GetAudioData();
-	void		MainThread_AudioDataDone();
-	void		AudioThread_Update( SAudioBuffer& sAudioBuffer );
+	void				MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent );
+
+	SAudioFrameData*	MainThread_GetAudioFrameData();
+	void				MainThread_AudioFrameDataDone();
+	void				AudioThread_Update( SAudioBuffer& sAudioBuffer );
 
 private:
-	std::mutex			m_mutexAudioData;
-	static const int	m_iAudioDataCount = 3;
-	SAudioData			m_pAudioData[m_iAudioDataCount];
-	int					m_iAudioDataInd_Process;
-	int					m_iAudioDataInd_Upload;
-	int					m_iAudioDataInd_Free;
+	std::mutex			m_mutexAudioFrameData;
+	static const int	m_iAudioFrameDataCount = 3;
+	SAudioFrameData		m_pAudioFrameData[m_iAudioFrameDataCount];
+	int					m_iAudioFrameDataInd_Process;
+	int					m_iAudioFrameDataInd_Upload;
+	int					m_iAudioFrameDataInd_Free;
 
 	CEventQueue<SAudioEvent, 1024> m_AudioQueue;
 };

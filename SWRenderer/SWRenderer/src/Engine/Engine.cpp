@@ -5,7 +5,6 @@ CEngine* CEngine::m_pThis = nullptr;
 CEngine::CEngine()
 {
 	CAudio::CreateInstance();
-	m_pAudioData = nullptr;
 	CGraphics::CreateInstance();
 	Clear();
 }
@@ -39,9 +38,8 @@ void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
 
 void CEngine::Update( float fElapsedTimeMs )
 {
-	CAudio::GetInstance().MainThread_AudioDataDone();
-	m_pAudioData = CAudio::GetInstance().MainThread_GetAudioData();
-	m_pAudioData->m_iFrameInd = m_iFrameInd;
+	CAudio::GetInstance().MainThread_AudioFrameDataDone();
+	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_iFrameInd = m_iFrameInd;
 
 	m_fElapsedTimeMs = fElapsedTimeMs;
 	m_cScene01.Update();
