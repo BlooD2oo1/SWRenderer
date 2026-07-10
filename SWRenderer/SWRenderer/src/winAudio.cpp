@@ -1,4 +1,5 @@
-﻿#include <windows.h>
+﻿#define NOMINMAX
+#include <windows.h>
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 #include <cmath>

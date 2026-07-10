@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common/Globals.h"
-#include "Graphics/Vector.h"
+#include "Common/Vector.h"
 #include <mutex>
 #include "Common/EventQue.h"
 
@@ -63,6 +63,12 @@ struct SAudioEvent
 		{
 			uint32_t iMenu;
 		} sMenu;
+		
+		struct
+		{
+			SVector3 vPos;
+
+		} sGunShot;
 	};
 };
 

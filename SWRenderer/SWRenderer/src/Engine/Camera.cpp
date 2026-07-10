@@ -1,5 +1,5 @@
 #include "Camera.h"
-#include "Graphics/Math.h"
+#include "Common/Math.h"
 
 CCameraFree::CCameraFree()
 {
@@ -149,7 +149,7 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 	{
 		float fW01 = CalcSmoothUpdateWeight( 1.003f, fElapsedTimeMs );
 		float fW02 = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
-		float fW03 = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
+		float fW03 = CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs );
 		m_vEyeSmooth0 = Lerp( vEye, m_vEyeSmooth0, fW01 );
 		m_vLookAtSmooth0 = Lerp( vLookAt, m_vLookAtSmooth0, fW02 );
 		m_vUpSmooth0 = Lerp( vUp, m_vUpSmooth0, fW03 );

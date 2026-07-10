@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Common/Globals.h"
-#include "Graphics/Graphics.h"
-#include "Graphics/Audio.h"
-#include "Engine/Scene01.h"
+#include "Engine/Graphics.h"
+#include "Engine/Audio.h"
+#include "Game/Scene01.h"
 
 struct SMouseState
 {

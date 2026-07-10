@@ -121,6 +121,12 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 					fExp *= fExp;
 					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.3f) * sinf( (float)iTime * 0.13f ) * fExp;
 				}
+				if ( sAudioEvent.type == SAudioEvent::GunShot )
+				{
+					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
+					fExp *= fExp;
+					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iTime * 0.08f ) * fExp;
+				}
 			}
 		}
 	}

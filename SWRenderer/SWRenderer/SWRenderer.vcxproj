@@ -80,13 +80,15 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Common\Math.cpp" />
+    <ClCompile Include="src\Common\Vector.cpp" />
+    <ClCompile Include="src\Engine\Audio.cpp" />
+    <ClCompile Include="src\Engine\Camera.cpp" />
     <ClCompile Include="src\Engine\Engine.cpp" />
-    <ClCompile Include="src\Engine\Scene01.cpp" />
-    <ClCompile Include="src\Graphics\Audio.cpp" />
-    <ClCompile Include="src\Graphics\Camera.cpp" />
-    <ClCompile Include="src\Graphics\Graphics.cpp" />
-    <ClCompile Include="src\Graphics\Math.cpp" />
-    <ClCompile Include="src\Graphics\Vector.cpp" />
+    <ClCompile Include="src\Engine\Graphics.cpp" />
+    <ClCompile Include="src\Game\Scene01.cpp" />
+    <ClCompile Include="src\Game\ShipControl.cpp" />
+    <ClCompile Include="src\Game\ShipMesh.cpp" />
     <ClCompile Include="src\winAudio.cpp" />
     <ClCompile Include="src\winGraphics.cpp" />
     <ClCompile Include="src\winmain.cpp" />
@@ -94,14 +96,16 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
   <ItemGroup>
     <ClInclude Include="src\Common\EventQue.h" />
     <ClInclude Include="src\Common\Globals.h" />
+    <ClInclude Include="src\Common\Math.h" />
     <ClInclude Include="src\Common\Perf.h" />
+    <ClInclude Include="src\Common\Vector.h" />
+    <ClInclude Include="src\Engine\Audio.h" />
+    <ClInclude Include="src\Engine\Camera.h" />
     <ClInclude Include="src\Engine\Engine.h" />
-    <ClInclude Include="src\Engine\Scene01.h" />
-    <ClInclude Include="src\Graphics\Audio.h" />
-    <ClInclude Include="src\Graphics\Camera.h" />
-    <ClInclude Include="src\Graphics\Graphics.h" />
-    <ClInclude Include="src\Graphics\Math.h" />
-    <ClInclude Include="src\Graphics\Vector.h" />
+    <ClInclude Include="src\Engine\Graphics.h" />
+    <ClInclude Include="src\Game\Scene01.h" />
+    <ClInclude Include="src\Game\ShipControl.h" />
+    <ClInclude Include="src\Game\ShipMesh.h" />
     <ClInclude Include="src\winAudio.h" />
     <ClInclude Include="src\winGraphics.h" />
   </ItemGroup>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common/Globals.h"
-#include "Vector.h"
+#include "Common/Vector.h"
 
 struct BGRA8
 {

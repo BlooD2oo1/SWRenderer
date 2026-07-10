@@ -11,28 +11,13 @@
     <Filter Include="src\Common">
       <UniqueIdentifier>{66b6af13-0e3f-4298-b879-19c427b64d93}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Graphics">
-      <UniqueIdentifier>{cd83af69-fe7c-4498-9936-9741005e68d1}</UniqueIdentifier>
+    <Filter Include="src\Game">
+      <UniqueIdentifier>{dae79c81-d153-42f9-9515-81e28ef2a55c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine\Engine.cpp">
       <Filter>src\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Graphics.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Vector.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine\Scene01.cpp">
-      <Filter>src\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Math.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Camera.cpp">
-      <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\winAudio.cpp">
       <Filter>src</Filter>
@@ -43,8 +28,29 @@
     <ClCompile Include="src\winGraphics.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Audio.cpp">
-      <Filter>src\Graphics</Filter>
+    <ClCompile Include="src\Game\Scene01.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Audio.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Camera.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Graphics.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\ShipControl.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Common\Math.cpp">
+      <Filter>src\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Common\Vector.cpp">
+      <Filter>src\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\ShipMesh.cpp">
+      <Filter>src\Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -57,32 +63,38 @@
     <ClInclude Include="src\Common\Perf.h">
       <Filter>src\Common</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Graphics.h">
-      <Filter>src\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\Vector.h">
-      <Filter>src\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine\Scene01.h">
-      <Filter>src\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\Math.h">
-      <Filter>src\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Graphics\Camera.h">
-      <Filter>src\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="src\winAudio.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\winGraphics.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Audio.h">
-      <Filter>src\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="src\Common\EventQue.h">
       <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Scene01.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Audio.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Camera.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Graphics.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\ShipControl.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Math.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Vector.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\ShipMesh.h">
+      <Filter>src\Game</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

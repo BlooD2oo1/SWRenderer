@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Graphics/Vector.h"
+#include "Common/Vector.h"
 
 class CCameraFree
 {

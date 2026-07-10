@@ -1,30 +1,10 @@
 #pragma once
 
-#include "Graphics/Vector.h"
-#include "Graphics/Camera.h"
-#include "Graphics/Graphics.h"
-
-struct SShip
-{
-	SShip();
-	void Init();
-	void Accelerate( float fValue );
-	void MoveUp( float fValue );
-	void MoveRight( float fValue );
-
-	void Update( float fElapsedTimeMs, const SMatrix& matView000 );
-
-	void GetMatrix( SMatrix& sOut );
-
-	SVector3	m_vPos;
-	SVector3	m_vDir;
-	SVector3	m_vUp;
-	SVector3	m_vRight;
-
-	float		m_fSpeedForward;
-	float		m_fSpeedUp;
-	float		m_fSpeedRight;
-};
+#include "Common/Vector.h"
+#include "Engine/Camera.h"
+#include "Engine/Graphics.h"
+#include "Game/ShipControl.h"
+#include "Game/ShipMesh.h"
 
 class CScene01
 {
@@ -53,9 +33,8 @@ private:
 	SVertexPC*		m_pBGStars;
 	uint32_t		m_iBGStarsCount;
 
-	SVertexPC*		m_pLineListSpaceShip;
-	uint32_t		m_iLineListSpaceShipCount;
-	SShip			m_sShip;
+	CShipControl	m_cShipControl;
+	CShipMesh		m_cShipMesh;
 	CCameraFree		m_cCamera;
 	CCameraShip		m_cCameraShip;
 
