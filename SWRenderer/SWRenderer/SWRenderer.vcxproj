@@ -94,7 +94,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\winmain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Common\EventQue.h" />
+    <ClInclude Include="src\Common\RingBuffer.h" />
     <ClInclude Include="src\Common\Globals.h" />
     <ClInclude Include="src\Common\Math.h" />
     <ClInclude Include="src\Common\Perf.h" />

@@ -69,7 +69,7 @@
     <ClInclude Include="src\winGraphics.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Common\EventQue.h">
+    <ClInclude Include="src\Common\RingBuffer.h">
       <Filter>src\Common</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\Scene01.h">

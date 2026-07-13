@@ -40,9 +40,10 @@ public:
 	bool On_MouseButtonUp( uint32_t button );
 	bool On_MouseWheel( int iDelta );
 
-	SMouseState&	GetMouseState() { return m_sMouseState; }
-	uint64_t		GetFrameInd() const { return m_iFrameInd; }
-	float			GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
+	SMouseState&		GetMouseState() { return m_sMouseState; }
+	uint64_t			GetFrameInd() const { return m_iFrameInd; }
+	float				GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
+	SAudioFrameData&	GetAudioFrameData() { return m_sAudioFrameData; }
 
 private:
 
@@ -50,6 +51,8 @@ private:
 
 	uint64_t		m_iFrameInd;
 	float			m_fElapsedTimeMs;
+
+	SAudioFrameData	m_sAudioFrameData;
 
 	CScene01		m_cScene01;
 };

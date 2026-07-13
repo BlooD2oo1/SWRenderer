@@ -5,33 +5,20 @@ CAudio*	CAudio::m_pThis = nullptr;
 
 CAudio::CAudio()
 {
-	for ( int i = 0; i < m_iAudioFrameDataCount; i++ )
-	{
-		m_pAudioFrameData[i].Clear();
-	}
-	m_iAudioFrameDataInd_Process = 0;
-	m_iAudioFrameDataInd_Upload = 1;
-	m_iAudioFrameDataInd_Free = 2;
 }
 
 CAudio::~CAudio()
 {
 }
 
+void CAudio::MainThread_PushAudioFrameData( const SAudioFrameData& sAudioFrameData )
+{
+	m_ringAudioFrameData.Push( sAudioFrameData );
+}
+
 void CAudio::MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent )
 {
-	m_AudioQueue.Push( sAudioEvent );
-}
-
-SAudioFrameData* CAudio::MainThread_GetAudioFrameData()
-{
-	return &m_pAudioFrameData[m_iAudioFrameDataInd_Upload];
-}
-
-void CAudio::MainThread_AudioFrameDataDone()
-{
-	std::unique_lock<std::mutex> lock(m_mutexAudioFrameData);
-	std::swap( m_iAudioFrameDataInd_Free, m_iAudioFrameDataInd_Upload );
+	m_ringAudioEvents.Push( sAudioEvent );
 }
 
 std::vector< float > aFreq[2];
@@ -45,15 +32,43 @@ bool b = true;
 
 void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 {
-	SAudioFrameData* pAudioFrameData = nullptr;
 	{
-		std::unique_lock<std::mutex> lock(m_mutexAudioFrameData);
-		if ( m_pAudioFrameData[m_iAudioFrameDataInd_Free].m_iFrameInd > m_pAudioFrameData[m_iAudioFrameDataInd_Process].m_iFrameInd )
+		SAudioFrameData sTemp;
+		while ( m_ringAudioFrameData.Pop( sTemp ) )
 		{
-			std::swap( m_iAudioFrameDataInd_Free, m_iAudioFrameDataInd_Process );
+			m_aAudioFrameData.push_back( sTemp );
 		}
-		pAudioFrameData = &m_pAudioFrameData[m_iAudioFrameDataInd_Process];
+
+		while ( m_aAudioFrameData.size() > 100 )
+		{
+			m_aAudioFrameData.pop_front();
+		}
 	}
+
+	{
+		SAudioEvent sTemp;
+		while ( m_ringAudioEvents.Pop( sTemp ) )
+		{
+			m_aAudioEvents.push_back( sTemp );
+		}
+		while ( m_aAudioEvents.size() > 2048 )
+		{
+			m_aAudioEvents.pop_front();
+		}
+	}
+
+	SAudioFrameData sAudioFrameData;
+	if ( m_aAudioFrameData.empty() == false )
+	{
+		sAudioFrameData = m_aAudioFrameData.front();
+	}
+	else
+	{
+		sAudioFrameData.Clear();
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////
 
 	if (b)
 	{
@@ -72,13 +87,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		}
 	}
 
-	std::vector< SAudioEvent > aAudioEvents;
-	aAudioEvents.resize( m_AudioQueue.Capacity() );
-	int i = 0;
-	while (m_AudioQueue.Pop(aAudioEvents[i]))
-	{
-		i++;
-	}
+	//////////////////////////////////////////////////////////////////////////
 
 	for ( int iChInd = 0; iChInd < 2; iChInd++ )
 	{
@@ -89,10 +98,10 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			{
 				float fW = (float)i / (float)iC;
 				float& fPhase = aPhase[iChInd][i];
-				float fFreq = aFreq[iChInd][i]*pAudioFrameData->m_fShipSpeed*60.0f;
+				float fFreq = aFreq[iChInd][i]*sAudioFrameData.m_fShipSpeed*60.0f;
 
 				float& fPhase2 = aPhase2[iChInd][i];
-				float fFreq2 = aFreq2[iChInd][i]*pAudioFrameData->m_fShipSpeed*60.0f;
+				float fFreq2 = aFreq2[iChInd][i]*sAudioFrameData.m_fShipSpeed*60.0f;
 
 				fOut  += powf( sinf(fPhase * PI2), 3.0f ) * powf( sinf( fPhase2 * PI2 ), 5.0f ) * (1.0f - fW*0.8f );
 
@@ -106,9 +115,9 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			fOut /= (float)iC;
 			sAudioBuffer.pData[iTime * 2 + iChInd] = fOut  * 0.4f;
 
-			for ( int iEvent = 0; iEvent < i; iEvent++ )
+			for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); iEvent++ )
 			{
-				SAudioEvent& sAudioEvent = aAudioEvents[iEvent];
+				SAudioEvent& sAudioEvent = m_aAudioEvents[iEvent];
 				if ( sAudioEvent.type == SAudioEvent::ClickDown )
 				{
 					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
@@ -130,4 +139,6 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			}
 		}
 	}
+
+	m_aAudioEvents.clear();
 }

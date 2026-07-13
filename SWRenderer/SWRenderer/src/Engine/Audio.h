@@ -1,9 +1,10 @@
 #pragma once
 
+#include <mutex>
+#include <deque>
 #include "Common/Globals.h"
 #include "Common/Vector.h"
-#include <mutex>
-#include "Common/EventQue.h"
+#include "Common/RingBuffer.h"
 
 struct SAudioBuffer
 {
@@ -85,19 +86,14 @@ private:
 	~CAudio();
 
 public:
+	void				MainThread_PushAudioFrameData( const SAudioFrameData& sAudioFrameData );
 	void				MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent );
 
-	SAudioFrameData*	MainThread_GetAudioFrameData();
-	void				MainThread_AudioFrameDataDone();
 	void				AudioThread_Update( SAudioBuffer& sAudioBuffer );
 
 private:
-	std::mutex			m_mutexAudioFrameData;
-	static const int	m_iAudioFrameDataCount = 3;
-	SAudioFrameData		m_pAudioFrameData[m_iAudioFrameDataCount];
-	int					m_iAudioFrameDataInd_Process;
-	int					m_iAudioFrameDataInd_Upload;
-	int					m_iAudioFrameDataInd_Free;
-
-	CEventQueue<SAudioEvent, 1024> m_AudioQueue;
+	CRingBuffer<SAudioFrameData, 32 >	m_ringAudioFrameData;
+	std::deque<SAudioFrameData>			m_aAudioFrameData;
+	CRingBuffer<SAudioEvent, 1024>		m_ringAudioEvents;
+	std::deque<SAudioEvent>				m_aAudioEvents;
 };

@@ -19,6 +19,7 @@ CEngine::~CEngine()
 void CEngine::Clear()
 {
 	m_iFrameInd = 0;
+	m_sAudioFrameData.Clear();
 	m_cScene01.Clear();
 	CGraphics::GetInstance().Clear();
 }
@@ -35,7 +36,7 @@ void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
 {
 	static double fTimeMs = 0.0;
 	fTimeMs += (double)sAudioBuffer.iNumFrames / (double)sAudioBuffer.iSampleRate * 1000.0;
-	LOG( "CEngine::UpdateAudioThread() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs );
+	LOG( "CEngine::UpdateAudioThread() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs/1000.0 );
 	CAudio::GetInstance().AudioThread_Update( sAudioBuffer );
 }
 
@@ -44,12 +45,13 @@ void CEngine::Update( float fElapsedTimeMs )
 	m_iFrameInd++;
 	static double fTimeMs = 0.0;
 	fTimeMs += fElapsedTimeMs;
-	LOG( "CEngine::Update() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs );
-	CAudio::GetInstance().MainThread_AudioFrameDataDone();
-	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_iFrameInd = m_iFrameInd;
+	LOG( "CEngine::Update() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs/1000.0 );
 
 	m_fElapsedTimeMs = fElapsedTimeMs;
 	m_cScene01.Update();
+
+	m_sAudioFrameData.m_iFrameInd = m_iFrameInd;
+	CAudio::GetInstance().MainThread_PushAudioFrameData( m_sAudioFrameData );
 }
 
 void CEngine::Render()

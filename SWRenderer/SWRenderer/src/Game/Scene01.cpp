@@ -166,10 +166,10 @@ void CScene01::Update()
 	const SMatrix& matShip = m_cShipControl.GetMatrix();
 	m_cCameraShip.Update( fElapsedTimeMs, matShip );
 
-	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_fShipSpeed = m_cShipControl.m_fSpeedForward * m_fTimeMultiplier;
-	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_vShipPos = m_cShipControl.m_vPos;
-	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_vCameraEye = cCamera.GetEye();
-	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_vCameraLookAt = cCamera.GetLookAt();
+	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = m_cShipControl.m_fSpeedForward * m_fTimeMultiplier;
+	CEngine::GetInstance().GetAudioFrameData().m_vShipPos = m_cShipControl.m_vPos;
+	CEngine::GetInstance().GetAudioFrameData().m_vCameraEye = cCamera.GetEye();
+	CEngine::GetInstance().GetAudioFrameData().m_vCameraLookAt = cCamera.GetLookAt();
 }
 
 void CScene01::Render()
