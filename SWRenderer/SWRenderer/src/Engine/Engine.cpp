@@ -33,11 +33,18 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
 {
+	static double fTimeMs = 0.0;
+	fTimeMs += (double)sAudioBuffer.iNumFrames / (double)sAudioBuffer.iSampleRate * 1000.0;
+	LOG( "CEngine::UpdateAudioThread() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs );
 	CAudio::GetInstance().AudioThread_Update( sAudioBuffer );
 }
 
 void CEngine::Update( float fElapsedTimeMs )
 {
+	m_iFrameInd++;
+	static double fTimeMs = 0.0;
+	fTimeMs += fElapsedTimeMs;
+	LOG( "CEngine::Update() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs );
 	CAudio::GetInstance().MainThread_AudioFrameDataDone();
 	CAudio::GetInstance().MainThread_GetAudioFrameData()->m_iFrameInd = m_iFrameInd;
 
@@ -82,8 +89,6 @@ void CEngine::Render()
 	//CGraphics::GetInstance().DrawLine( SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
 	//CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
 	//CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
-
-	m_iFrameInd++;
 }
 
 bool CEngine::On_KeyDown( uint32_t key )
