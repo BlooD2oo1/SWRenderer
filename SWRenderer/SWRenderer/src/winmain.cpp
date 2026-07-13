@@ -24,8 +24,6 @@
 // Frame cap: enable to cap to TARGET_FPS (uses a coarse Sleep + spin-wait for precision)
 #define FRAME_CAP
 #ifdef FRAME_CAP
-#include <chrono>
-#include <thread>
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 constexpr double TARGET_FPS = 60.0;
@@ -219,8 +217,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	timeBeginPeriod(1);
 #endif
 
-	float fElapsedTimeMs = 0.0f;
-	float fRenderTimeMs = 0.0f;
+	//float fElapsedTimeMs = 0.0f;
+	//float fRenderTimeMs = 0.0f;
+	uint64_t iElapsedTimeNs = 0;
+	uint64_t iRenderTimeNs = 0;
+
 	while (bRunning)
 	{
 		// high-resolution frame start timestamp (used for frame-capping)
@@ -233,7 +234,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 		{
 			wchar_t title[256];
-			swprintf(title, 256, L" SWRenderer - %dx%d %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, fElapsedTimeMs, 1000.0 / fElapsedTimeMs);
+			swprintf(title, 256, L" SWRenderer - %dx%d %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, (double)iElapsedTimeNs/1000000.0, 1000000000.0/(double)iElapsedTimeNs);
 			SetWindowText(hwnd, title);
 		}
 
@@ -247,15 +248,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			DispatchMessage(&msg);
 		}
 
-		CEngine::GetInstance().Update( fElapsedTimeMs );
+		CEngine::GetInstance().Update( (float)((double)(iElapsedTimeNs)/1000.0/1000.0) );
 
 		CPerf cPerfRender;
 		cPerfRender.BeginPerf();
 		CEngine::GetInstance().Render();
 		//Sleep( 10 );
-		fRenderTimeMs = (float)( cPerfRender.EndPerf() * 1000.0 );
+		iRenderTimeNs = cPerfRender.EndPerfNs();
 
-		Graphics_Present(hwnd, fRenderTimeMs);
+		Graphics_Present(hwnd, iRenderTimeNs);
 
 #ifdef FRAME_CAP
 		// frameTime is measured by CPerf; we'll use chrono for the wait so it's independent of the perf helper.
@@ -281,7 +282,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			}
 		}
 #endif
-		fElapsedTimeMs = (float)( cPerfFrame.EndPerf() * 1000.0 );
+		iElapsedTimeNs = cPerfFrame.EndPerfNs();
 	}
 
 	if (audioThread.joinable())

@@ -1,34 +1,22 @@
 #pragma once
 
+#include <chrono>
+
 class CPerf
 {
 public:
-	CPerf()
-	{
-		ZeroMemory( &m_liTimeStart, sizeof( LARGE_INTEGER ) );
-		ZeroMemory( &m_liTimeEnd, sizeof( LARGE_INTEGER ) );
-
-		LARGE_INTEGER liOneSec;
-		QueryPerformanceFrequency(&liOneSec);
-		m_fOneSec = (double)liOneSec.QuadPart;
-	}
-	~CPerf()
-	{
-	}
+	using Clock = std::chrono::steady_clock;
 
 	void BeginPerf()
 	{
-		QueryPerformanceCounter(&m_liTimeStart);
+		m_TimeStart = Clock::now();
 	}
 
-	double EndPerf()
+	uint64_t EndPerfNs()
 	{
-		QueryPerformanceCounter(&m_liTimeEnd);
-		return (double)(m_liTimeEnd.QuadPart - m_liTimeStart.QuadPart) / m_fOneSec;
+		return std::chrono::duration_cast<std::chrono::nanoseconds>( Clock::now() - m_TimeStart ).count();
 	}
 
 private:
-	double			m_fOneSec;
-	LARGE_INTEGER	m_liTimeStart;
-	LARGE_INTEGER	m_liTimeEnd;
+	Clock::time_point m_TimeStart;
 };
