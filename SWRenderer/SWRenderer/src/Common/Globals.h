@@ -7,12 +7,19 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <chrono>
 
 #include "Common/Math.h"
 
 #define SAFE_DELETE(p)       { if(p) { delete	(p);   (p)=nullptr; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=nullptr; } }
 
+inline uint64_t GetGlobalTimeStampNs()
+{
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(
+		std::chrono::steady_clock::now().time_since_epoch()
+	).count();
+}
 
 #ifdef _DEBUG
 #define NOMINMAX

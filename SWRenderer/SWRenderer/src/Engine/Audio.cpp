@@ -5,6 +5,9 @@ CAudio*	CAudio::m_pThis = nullptr;
 
 CAudio::CAudio()
 {
+	m_iFrameInd = 0;
+	m_iTimeStampNs = 0;
+	m_iTimeStampPrevNs = 0;
 }
 
 CAudio::~CAudio()
@@ -32,44 +35,6 @@ bool b = true;
 
 void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 {
-	{
-		SAudioFrameData sTemp;
-		while ( m_ringAudioFrameData.Pop( sTemp ) )
-		{
-			m_aAudioFrameData.push_back( sTemp );
-		}
-
-		while ( m_aAudioFrameData.size() > 100 )
-		{
-			m_aAudioFrameData.pop_front();
-		}
-	}
-
-	{
-		SAudioEvent sTemp;
-		while ( m_ringAudioEvents.Pop( sTemp ) )
-		{
-			m_aAudioEvents.push_back( sTemp );
-		}
-		while ( m_aAudioEvents.size() > 2048 )
-		{
-			m_aAudioEvents.pop_front();
-		}
-	}
-
-	SAudioFrameData sAudioFrameData;
-	if ( m_aAudioFrameData.empty() == false )
-	{
-		sAudioFrameData = m_aAudioFrameData.front();
-	}
-	else
-	{
-		sAudioFrameData.Clear();
-	}
-
-
-	//////////////////////////////////////////////////////////////////////////
-
 	if (b)
 	{
 		b = false;
@@ -83,6 +48,68 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 				aFreq2[iChInd].push_back( 0.01f + fW*0.1f*((float)rand()/(float)RAND_MAX) );
 				aPhase2[iChInd].push_back( 0.0f );
+			}
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
+	m_iFrameInd++;
+	if ( m_iTimeStampNs == 0 )
+	{
+		m_iTimeStampNs = GetGlobalTimeStampNs();
+		m_iTimeStampPrevNs = m_iTimeStampNs-1000;
+	}
+	else
+	{
+		m_iTimeStampPrevNs = m_iTimeStampNs;
+		m_iTimeStampNs = GetGlobalTimeStampNs();
+	}
+
+	const uint64_t iDelayNs = (uint64_t)( 1000.0 / 30.0 * 1000.0 * 1000.0 );
+	
+	const uint64_t iRealTimeNs = m_iTimeStampNs - iDelayNs;
+
+	//////////////////////////////////////////////////////////////////////////
+
+	{
+		SAudioFrameData sTemp;
+		while ( m_ringAudioFrameData.Pop( sTemp ) )
+		{
+			m_aAudioFrameData.push_back( sTemp );
+		}
+
+		while ( m_aAudioFrameData.size() > 20 )
+		{
+			m_aAudioFrameData.pop_front();
+		}
+	}
+
+	{
+		SAudioEvent sTemp;
+		while ( m_ringAudioEvents.Pop( sTemp ) )
+		{
+			m_aAudioEvents.push_back( sTemp );
+		}
+		while ( m_aAudioEvents.size() > 36 )
+		{
+			m_aAudioEvents.pop_front();
+		}
+	}
+
+	SAudioFrameData sAudioFrameData;
+	sAudioFrameData.Clear();
+	if ( !m_aAudioFrameData.empty() )
+	{
+		for ( int i = 0; i < m_aAudioFrameData.size()-1; i++ )
+		{
+			SAudioFrameData& sAudioFrameData0 = m_aAudioFrameData[i];
+			SAudioFrameData& sAudioFrameData1 = m_aAudioFrameData[i + 1];
+			if ( sAudioFrameData0.m_iTimeStampNs <= iRealTimeNs && iRealTimeNs < sAudioFrameData1.m_iTimeStampNs )
+			{
+				float fW = (float)(iRealTimeNs - sAudioFrameData0.m_iTimeStampNs) / (float)(sAudioFrameData1.m_iTimeStampNs - sAudioFrameData0.m_iTimeStampNs);
+				sAudioFrameData = sAudioFrameData0;
+				break;
 			}
 		}
 	}

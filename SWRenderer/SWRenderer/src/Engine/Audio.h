@@ -25,13 +25,13 @@ struct SAudioFrameData
 {
 	void Clear()
 	{
-		m_iFrameInd = 0;
+		m_iTimeStampNs = 0;
 		m_vCameraEye = SVector3( -1.0f, 0.0f, 0.0f );
 		m_vCameraLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vShipPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_fShipSpeed = 0.0f;
 	}
-	uint64_t		m_iFrameInd;
+	uint64_t		m_iTimeStampNs;
 	SVector3		m_vCameraEye;
 	SVector3		m_vCameraLookAt;
 	SVector3		m_vShipPos;
@@ -52,6 +52,7 @@ struct SAudioEvent
 	} type;
 
 	float fVolume;
+	uint64_t iTimeStampNs;
 
 	union
 	{
@@ -92,6 +93,11 @@ public:
 	void				AudioThread_Update( SAudioBuffer& sAudioBuffer );
 
 private:
+
+	uint64_t		m_iFrameInd;
+	uint64_t		m_iTimeStampNs;
+	uint64_t		m_iTimeStampPrevNs;
+
 	CRingBuffer<SAudioFrameData, 32 >	m_ringAudioFrameData;
 	std::deque<SAudioFrameData>			m_aAudioFrameData;
 	CRingBuffer<SAudioEvent, 1024>		m_ringAudioEvents;

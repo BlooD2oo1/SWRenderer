@@ -1,4 +1,5 @@
 #include "ShipControl.h"
+#include "Engine/Engine.h"
 #include "Engine/Audio.h"
 
 CShipControl::CShipControl()
@@ -212,6 +213,7 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
+			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 			sAudioEvent.fVolume = 0.3f;
 			sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
 			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );

@@ -19,6 +19,9 @@ CEngine::~CEngine()
 void CEngine::Clear()
 {
 	m_iFrameInd = 0;
+	m_iTimeStampNs = 0;
+	m_iTimeStampPrevNs = 0;
+	m_fElapsedTimeMs = 0.0f;
 	m_sAudioFrameData.Clear();
 	m_cScene01.Clear();
 	CGraphics::GetInstance().Clear();
@@ -40,17 +43,29 @@ void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
 	CAudio::GetInstance().AudioThread_Update( sAudioBuffer );
 }
 
-void CEngine::Update( float fElapsedTimeMs )
+void CEngine::Update()
 {
 	m_iFrameInd++;
+	if ( m_iTimeStampNs == 0 )
+	{
+		m_iTimeStampNs = GetGlobalTimeStampNs();
+		m_iTimeStampPrevNs = m_iTimeStampNs-1000;
+	}
+	else
+	{
+		m_iTimeStampPrevNs = m_iTimeStampNs;
+		m_iTimeStampNs = GetGlobalTimeStampNs();
+	}
+
+	m_fElapsedTimeMs = (float)( (double)(m_iTimeStampNs - m_iTimeStampPrevNs) / 1000.0/1000.0 );
+
 	static double fTimeMs = 0.0;
-	fTimeMs += fElapsedTimeMs;
+	fTimeMs += m_fElapsedTimeMs;
 	LOG( "CEngine::Update() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs/1000.0 );
 
-	m_fElapsedTimeMs = fElapsedTimeMs;
 	m_cScene01.Update();
 
-	m_sAudioFrameData.m_iFrameInd = m_iFrameInd;
+	m_sAudioFrameData.m_iTimeStampNs = m_iTimeStampNs;
 	CAudio::GetInstance().MainThread_PushAudioFrameData( m_sAudioFrameData );
 }
 
@@ -115,6 +130,7 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 {
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::ClickDown;
+	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
 	sAudioEvent.fVolume = 0.3f;
 	sAudioEvent.sClick.iButton = button;
 	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
@@ -139,6 +155,7 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 {
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::ClickUp;
+	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
 	sAudioEvent.fVolume = 0.3f;
 	sAudioEvent.sClick.iButton = button;
 	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );

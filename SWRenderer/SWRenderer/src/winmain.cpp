@@ -248,7 +248,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			DispatchMessage(&msg);
 		}
 
-		CEngine::GetInstance().Update( (float)((double)(iElapsedTimeNs)/1000.0/1000.0) );
+		CEngine::GetInstance().Update();
 
 		CPerf cPerfRender;
 		cPerfRender.BeginPerf();

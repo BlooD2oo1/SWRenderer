@@ -30,7 +30,7 @@ public:
 	void Create( SFrameBuffer& sFrameBuffer );
 	void Clear();
 	void UpdateAudioThread( SAudioBuffer& sAudioBuffer );
-	void Update( float fElapsedTimeMs );	
+	void Update();	
 	void Render();
 
 	bool On_KeyDown( uint32_t key );
@@ -42,15 +42,19 @@ public:
 
 	SMouseState&		GetMouseState() { return m_sMouseState; }
 	uint64_t			GetFrameInd() const { return m_iFrameInd; }
+	uint64_t			GetTimeStampNs() const { return m_iTimeStampNs; }
+	uint64_t			GetTimeStampPrevNs() const { return m_iTimeStampPrevNs; }
 	float				GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
 	SAudioFrameData&	GetAudioFrameData() { return m_sAudioFrameData; }
 
 private:
 
-	SMouseState		m_sMouseState;
-
 	uint64_t		m_iFrameInd;
+	uint64_t		m_iTimeStampNs;
+	uint64_t		m_iTimeStampPrevNs;
 	float			m_fElapsedTimeMs;
+
+	SMouseState		m_sMouseState;
 
 	SAudioFrameData	m_sAudioFrameData;
 
