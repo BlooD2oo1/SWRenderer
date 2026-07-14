@@ -112,9 +112,9 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 	//////////////////////////////////////////////////////////////////////////
 
-	for ( int iChInd = 0; iChInd < 2; iChInd++ )
+	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
 	{
-		for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
+		for ( int iChInd = 0; iChInd < 2; iChInd++ )
 		{
 			float fOut = 0.0f;
 			for ( int i = 0; i < iC; i++ )
@@ -128,8 +128,8 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 				fOut  += powf( sinf(fPhase * PI2), 3.0f ) * powf( sinf( fPhase2 * PI2 ), 5.0f ) * (1.0f - fW*0.8f );
 
-				fPhase += fFreq / sAudioBuffer.iSampleRate;
-				fPhase2 += fFreq2 / sAudioBuffer.iSampleRate;
+				fPhase += fFreq / (float)sAudioBuffer.iSampleRate;
+				fPhase2 += fFreq2 / (float)sAudioBuffer.iSampleRate;
 
 				// Wrap around the phase to maintain precision
 				if (fPhase >= 1.0f) fPhase -= 1.0f;
@@ -138,7 +138,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			fOut /= (float)iC;
 			sAudioBuffer.pData[iFrameInd * 2 + iChInd] = fOut  * 0.4f;
 
-			uint64_t iFrameIndTimeNs = iFrameInd * 1000 * 1000 * 1000 / sAudioBuffer.iSampleRate;
+			uint64_t iFrameIndTimeNs = (uint64_t)iFrameInd * 1000 * 1000 * 1000 / sAudioBuffer.iSampleRate;
 			uint64_t iRealTimeFrameNs = iRealTimeNs + iFrameIndTimeNs;
 			for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); )
 			{
@@ -166,29 +166,39 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 					iEvent++;
 				}
 
-				float fTimeW = (float)(iRealTimeFrameNs - sAudioEvent.iTimeStampNs) / (float)sAudioEvent.iLifeTimeNs;
-				float fExpMaster = 1.0f - abs( powf( fTimeW, 0.1f ) - 0.5f ) * 2.0f;
+				
 
-				if ( sAudioEvent.type == SAudioEvent::ClickDown )
+				//double fTimeNs = (double)(iRealTimeFrameNs - sAudioEvent.iTimeStampNs);
+				//float fTimeSec = (float)( fTimeNs * 1e-9 );
+				//float fTimeW = (float)( fTimeNs / (double)sAudioEvent.iLifeTimeNs );
+				//float fExpMaster = 1.0f - abs( powf( fTimeW, 0.1f ) - 0.5f ) * 2.0f;
+
+				//calculate fExpmaster from sAudioEvent.iSampleCounter:
+				const double dLifeTimeSamples = (double)sAudioEvent.iLifeTimeNs * sAudioBuffer.iSampleRate / 1e9;
+				float fTimeW = (float)((double)sAudioEvent.iSampleCounter / dLifeTimeSamples);
+				float fExpMaster = 1.0f - fabsf( powf( fTimeW, 0.3f ) - 0.5f ) * 2.0f;
+
+				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( sAudioEvent.fPhase * PI2 ) * fExpMaster;
+
+				if ( iChInd == 1 )
 				{
-					float fExp = 1.0f - abs( (float)iFrameInd / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
-					fExp *= fExp;
-					fExp *= fExpMaster;
-					sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iFrameInd * 0.1f ) * fExp;
-				}
-				if ( sAudioEvent.type == SAudioEvent::ClickUp )
-				{
-					float fExp = 1.0f - abs( (float)iFrameInd / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
-					fExp *= fExp;
-					fExp *= fExpMaster;
-					sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.3f) * sinf( (float)iFrameInd * 0.13f ) * fExp;
-				}
-				if ( sAudioEvent.type == SAudioEvent::GunShot )
-				{
-					float fExp = 1.0f - abs( (float)iFrameInd / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
-					fExp *= fExp;
-					fExp *= fExpMaster;
-					sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iFrameInd * 0.2f ) * fExp;
+					sAudioEvent.iSampleCounter++;
+
+					if ( sAudioEvent.type == SAudioEvent::ClickDown )
+					{
+						sAudioEvent.fPhase += Lerp( 1000.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+					}
+					if ( sAudioEvent.type == SAudioEvent::ClickUp )
+					{
+						sAudioEvent.fPhase += Lerp( 700.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+					}
+					if ( sAudioEvent.type == SAudioEvent::GunShot )
+					{
+						sAudioEvent.fPhase += Lerp( 44.0f, 1000.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+					}
+
+					
+					if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
 				}
 			}
 		}

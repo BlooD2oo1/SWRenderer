@@ -130,9 +130,11 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 {
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::ClickDown;
-	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
-	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 1000; // 1 second
 	sAudioEvent.fVolume = 0.3f;
+	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
+	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 200;
+	sAudioEvent.iSampleCounter = 0;
+	sAudioEvent.fPhase = 0.0f;	
 	sAudioEvent.sClick.iButton = button;
 	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
@@ -156,9 +158,11 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 {
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::ClickUp;
-	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
-	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 100; // 1 second
 	sAudioEvent.fVolume = 0.3f;
+	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
+	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
+	sAudioEvent.iSampleCounter = 0;
+	sAudioEvent.fPhase = 0.0f;
 	sAudioEvent.sClick.iButton = button;
 	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 

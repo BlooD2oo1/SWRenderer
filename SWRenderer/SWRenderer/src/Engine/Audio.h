@@ -63,6 +63,8 @@ struct SAudioEvent
 	float fVolume;
 	uint64_t iTimeStampNs;
 	uint64_t iLifeTimeNs;
+	uint32_t iSampleCounter;
+	float fPhase;
 
 	union
 	{
