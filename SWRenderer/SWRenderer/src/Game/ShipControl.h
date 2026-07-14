@@ -42,6 +42,7 @@ struct CShipControl
 
 	bool		m_bShoot;
 	float		m_fShootTimer;
+	uint64_t	m_iShootTimeStampNs;
 
 	std::vector< SBullet >		m_aBullets;
 };

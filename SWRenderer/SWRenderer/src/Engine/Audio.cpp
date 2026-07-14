@@ -91,10 +91,6 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		{
 			m_aAudioEvents.push_back( sTemp );
 		}
-		while ( m_aAudioEvents.size() > 36 )
-		{
-			m_aAudioEvents.pop_front();
-		}
 	}
 
 	SAudioFrameData sAudioFrameData;
@@ -108,7 +104,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			if ( sAudioFrameData0.m_iTimeStampNs <= iRealTimeNs && iRealTimeNs < sAudioFrameData1.m_iTimeStampNs )
 			{
 				float fW = (float)(iRealTimeNs - sAudioFrameData0.m_iTimeStampNs) / (float)(sAudioFrameData1.m_iTimeStampNs - sAudioFrameData0.m_iTimeStampNs);
-				sAudioFrameData = sAudioFrameData0;
+				sAudioFrameData.Lerp( sAudioFrameData0, sAudioFrameData1, fW );
 				break;
 			}
 		}
@@ -118,7 +114,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 	for ( int iChInd = 0; iChInd < 2; iChInd++ )
 	{
-		for (uint32_t iTime = 0; iTime < sAudioBuffer.iNumFrames; iTime++)
+		for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
 		{
 			float fOut = 0.0f;
 			for ( int i = 0; i < iC; i++ )
@@ -140,32 +136,61 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 				if (fPhase2 >= 1.0f) fPhase2 -= 1.0f;
 			}
 			fOut /= (float)iC;
-			sAudioBuffer.pData[iTime * 2 + iChInd] = fOut  * 0.4f;
+			sAudioBuffer.pData[iFrameInd * 2 + iChInd] = fOut  * 0.4f;
 
-			for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); iEvent++ )
+			uint64_t iFrameIndTimeNs = iFrameInd * 1000 * 1000 * 1000 / sAudioBuffer.iSampleRate;
+			uint64_t iRealTimeFrameNs = iRealTimeNs + iFrameIndTimeNs;
+			for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); )
 			{
 				SAudioEvent& sAudioEvent = m_aAudioEvents[iEvent];
+				if ( sAudioEvent.iTimeStampNs > iRealTimeFrameNs )
+				{
+					iEvent++;
+					continue;										
+				}
+				if ( sAudioEvent.iTimeStampNs + sAudioEvent.iLifeTimeNs < iRealTimeNs )
+				{
+					if ( iEvent < m_aAudioEvents.size() - 1 )
+					{
+						m_aAudioEvents[iEvent] = m_aAudioEvents.back();
+						m_aAudioEvents.pop_back();
+					}
+					else
+					{
+						m_aAudioEvents.pop_back();
+						break;
+					}
+				}
+				else
+				{
+					iEvent++;
+				}
+
+				float fTimeW = (float)(iRealTimeFrameNs - sAudioEvent.iTimeStampNs) / (float)sAudioEvent.iLifeTimeNs;
+				float fExpMaster = 1.0f - abs( powf( fTimeW, 0.1f ) - 0.5f ) * 2.0f;
+
 				if ( sAudioEvent.type == SAudioEvent::ClickDown )
 				{
-					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
+					float fExp = 1.0f - abs( (float)iFrameInd / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
 					fExp *= fExp;
-					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iTime * 0.1f ) * fExp;
+					fExp *= fExpMaster;
+					sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iFrameInd * 0.1f ) * fExp;
 				}
 				if ( sAudioEvent.type == SAudioEvent::ClickUp )
 				{
-					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
+					float fExp = 1.0f - abs( (float)iFrameInd / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
 					fExp *= fExp;
-					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.3f) * sinf( (float)iTime * 0.13f ) * fExp;
+					fExp *= fExpMaster;
+					sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.3f) * sinf( (float)iFrameInd * 0.13f ) * fExp;
 				}
 				if ( sAudioEvent.type == SAudioEvent::GunShot )
 				{
-					float fExp = 1.0f - abs( (float)iTime / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
+					float fExp = 1.0f - abs( (float)iFrameInd / (float)sAudioBuffer.iNumFrames - 0.5f ) * 2.0f;
 					fExp *= fExp;
-					sAudioBuffer.pData[iTime * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iTime * 0.08f ) * fExp;
+					fExp *= fExpMaster;
+					sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( (float)iFrameInd * 0.2f ) * fExp;
 				}
 			}
 		}
 	}
-
-	m_aAudioEvents.clear();
 }

@@ -25,6 +25,7 @@ void CShipControl::Clear()
 
 	m_bShoot = false;
 	m_fShootTimer = 0.0f;
+	m_iShootTimeStampNs = 0;
 	m_aBullets.clear();
 }
 
@@ -59,6 +60,7 @@ void CShipControl::SetShoot( bool bShoot )
 {
 	m_bShoot = bShoot;
 	m_fShootTimer = 0.0f;
+	m_iShootTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 }
 
 void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
@@ -188,9 +190,11 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 		SMatrix::TransformCoord( vGunPosWorld, vGunPos, m_matShip );
 		SMatrix::TransformCoord( vGunPosWorlPrev, vGunPos, matShipPrev );
 
+		const uint64_t iShootTimeStampPrevNs = m_iShootTimeStampNs;
 		const float fShootTimerPrev = m_fShootTimer;
 		m_fShootTimer += fElapsedTimeMs;
-		const float fShootFreqHz = 20.0f;
+		LOG( "Shoot timer: %f", m_fShootTimer );
+		const float fShootFreqHz = 40.0f;
 		float fShootPeriodMs = 1000.0f / fShootFreqHz;
 		for ( float t = (float)(int)( fShootTimerPrev / fShootPeriodMs + 1 ) * fShootPeriodMs; t < m_fShootTimer; t += fShootPeriodMs )
 		{		
@@ -213,8 +217,9 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
-			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-			sAudioEvent.fVolume = 0.3f;
+			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampPrevNs() + (uint64_t)(t * 1000.0f * 1000.0f);
+			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 50; // 1 second
+			sAudioEvent.fVolume = 0.5f;
 			sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
 			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 		}		
