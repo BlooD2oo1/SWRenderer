@@ -126,6 +126,8 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::ClickDown;
 	sAudioEvent.fVolume = 0.3f;
+	sAudioEvent.eWaveShaper = SAudioEvent::Sine;
+	sAudioEvent.fWaveShaperParam = 0.0f;
 	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
 	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 200;
 	sAudioEvent.iSampleCounter = 0;
@@ -154,6 +156,8 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::ClickUp;
 	sAudioEvent.fVolume = 0.3f;
+	sAudioEvent.eWaveShaper = SAudioEvent::Sine;
+	sAudioEvent.fWaveShaperParam = 0.0f;
 	sAudioEvent.iTimeStampNs = m_iTimeStampNs;
 	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
 	sAudioEvent.iSampleCounter = 0;

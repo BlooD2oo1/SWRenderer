@@ -60,7 +60,20 @@ struct SAudioEvent
 		GunShot,
 	} type;
 
+	enum EWaveShaper
+	{
+		Sine,
+		SineSine,
+		Power,
+		Tan,
+		Atan,
+		CubicSat,
+	};
+
+
 	float fVolume;
+	EWaveShaper eWaveShaper;
+	float fWaveShaperParam;
 	uint64_t iTimeStampNs;
 	uint64_t iLifeTimeNs;
 	uint32_t iSampleCounter;

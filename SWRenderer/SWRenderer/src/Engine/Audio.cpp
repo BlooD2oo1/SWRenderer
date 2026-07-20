@@ -169,11 +169,32 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			float fTimeW = (float)((double)sAudioEvent.iSampleCounter / dLifeTimeSamples);
 			if ( fTimeW > 1.0f ) continue;
 
-			float fExpMaster = 1.0f - fabsf( powf( fTimeW, 1.2f ) - 0.5f ) * 2.0f;
+			float fExpMaster = 1.0f - fabsf( powf( fTimeW, 0.2f ) - 0.5f ) * 2.0f;
 
 			for ( int iChInd = 0; iChInd < 2; iChInd++ )
 			{
-				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( sAudioEvent.fPhase * PI2 ) * fExpMaster;
+				float x = sinf( sAudioEvent.fPhase * PI2 );
+
+				switch ( sAudioEvent.eWaveShaper )
+				{
+				case SAudioEvent::SineSine:
+					x = sinf( x * sAudioEvent.fWaveShaperParam );
+					break;
+				case SAudioEvent::Power:
+					x = copysignf( powf( fabsf( x ), sAudioEvent.fWaveShaperParam ), x );
+					break;
+				case SAudioEvent::Tan:
+					x = tanhf( x * sAudioEvent.fWaveShaperParam );
+					break;
+				case SAudioEvent::Atan:
+					x = atanf( x * sAudioEvent.fWaveShaperParam ) / atanf( sAudioEvent.fWaveShaperParam );
+					break;
+				case SAudioEvent::CubicSat:
+					x = (x - x * x * x * 0.333333f) * 1.5f;
+					break;
+				}
+
+				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * x * fExpMaster;
 			}
 
 			sAudioEvent.iSampleCounter++;
@@ -188,7 +209,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			}
 			if ( sAudioEvent.type == SAudioEvent::GunShot )
 			{
-				sAudioEvent.fPhase += Lerp( 50.0f, 880.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+				sAudioEvent.fPhase += Lerp( 50.0f, 1480.0f, fTimeW*fTimeW ) / (float)sAudioBuffer.iSampleRate;
 			}
 
 					

@@ -190,15 +190,9 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 
 		const float fShootFreqHz = 60.0f * fTimeMultiplier;
 		const uint64_t iShootPeriodNs = (uint64_t)(1.0f / fShootFreqHz * 1000.0f * 1000.0f * 1000.0f);
-
-		//const uint64_t iShootTimeStampNs = CEngine::GetInstance().GetTimeStampNs() - m_iShootStartTimeStampNs;
-		//const uint64_t iShootTimeStampPrevNs = CEngine::GetInstance().GetTimeStampPrevNs() - m_iShootStartTimeStampNs;
-
+		
 		for ( uint64_t iTNs = m_iLastBulletTimeStampNs+iShootPeriodNs; iTNs < CEngine::GetInstance().GetTimeStampNs(); iTNs += iShootPeriodNs )
 		{		
-
-			//float fFrameW = (t - fShootTimerPrev) / (m_fShootTimer - fShootTimerPrev);
-			//float fFrameW = (float)(iTNs - iShootTimeStampPrevNs) / (float)(iShootTimeStampNs - iShootTimeStampPrevNs);
 			float fFrameW = (float)(iTNs - m_iLastBulletTimeStampNs) / (float)(CEngine::GetInstance().GetTimeStampNs() - m_iLastBulletTimeStampNs);
 
 			m_iLastBulletTimeStampNs = iTNs;
@@ -220,6 +214,8 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
 			sAudioEvent.fVolume = 0.5f;
+			sAudioEvent.eWaveShaper = SAudioEvent::CubicSat;
+			sAudioEvent.fWaveShaperParam = 5.0f;
 			sAudioEvent.iTimeStampNs = m_iLastBulletTimeStampNs;
 			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
 			sAudioEvent.iSampleCounter = 0;
