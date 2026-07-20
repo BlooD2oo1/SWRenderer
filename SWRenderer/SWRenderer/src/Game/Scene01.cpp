@@ -161,7 +161,7 @@ void CScene01::Update()
 
 	m_cCamera.Update( fElapsedTimeMs );
 	
-	m_cShipControl.Update( fElapsedTimeMs, m_cCameraShip.GetViewMatrix() );
+	m_cShipControl.Update( fElapsedTimeMs, m_fTimeMultiplier, m_cCameraShip.GetViewMatrix() );
 
 	const SMatrix& matShip = m_cShipControl.GetMatrix();
 	m_cCameraShip.Update( fElapsedTimeMs, matShip );

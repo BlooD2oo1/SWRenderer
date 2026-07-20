@@ -24,8 +24,7 @@ void CShipControl::Clear()
 	SMatrix::Identity( m_matShip );
 
 	m_bShoot = false;
-	m_fShootTimer = 0.0f;
-	m_iShootTimeStampNs = 0;
+	m_iLastBulletTimeStampNs = 0;
 	m_aBullets.clear();
 }
 
@@ -59,11 +58,10 @@ void CShipControl::MouseMove( SVector2 vMouseDir )
 void CShipControl::SetShoot( bool bShoot )
 {
 	m_bShoot = bShoot;
-	m_fShootTimer = 0.0f;
-	m_iShootTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+	m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 }
 
-void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
+void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SMatrix& matView000 )
 {
 	SVector3 vPosPrev = m_vPos;
 	SVector3 vDirPrev = m_vDir;
@@ -190,15 +188,20 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 		SMatrix::TransformCoord( vGunPosWorld, vGunPos, m_matShip );
 		SMatrix::TransformCoord( vGunPosWorlPrev, vGunPos, matShipPrev );
 
-		const float fShootTimerPrev = m_fShootTimer;
-		m_fShootTimer += fElapsedTimeMs;
+		const float fShootFreqHz = 60.0f * fTimeMultiplier;
+		const uint64_t iShootPeriodNs = (uint64_t)(1.0f / fShootFreqHz * 1000.0f * 1000.0f * 1000.0f);
 
-		const float fShootFreqHz = 23.0f;
-		float fShootPeriodMs = 1000.0f / fShootFreqHz;
-		for ( float t = (float)(int)( fShootTimerPrev / fShootPeriodMs + 1 ) * fShootPeriodMs; t < m_fShootTimer; t += fShootPeriodMs )
+		//const uint64_t iShootTimeStampNs = CEngine::GetInstance().GetTimeStampNs() - m_iShootStartTimeStampNs;
+		//const uint64_t iShootTimeStampPrevNs = CEngine::GetInstance().GetTimeStampPrevNs() - m_iShootStartTimeStampNs;
+
+		for ( uint64_t iTNs = m_iLastBulletTimeStampNs+iShootPeriodNs; iTNs < CEngine::GetInstance().GetTimeStampNs(); iTNs += iShootPeriodNs )
 		{		
 
-			float fFrameW = (t - fShootTimerPrev) / (m_fShootTimer - fShootTimerPrev);
+			//float fFrameW = (t - fShootTimerPrev) / (m_fShootTimer - fShootTimerPrev);
+			//float fFrameW = (float)(iTNs - iShootTimeStampPrevNs) / (float)(iShootTimeStampNs - iShootTimeStampPrevNs);
+			float fFrameW = (float)(iTNs - m_iLastBulletTimeStampNs) / (float)(CEngine::GetInstance().GetTimeStampNs() - m_iLastBulletTimeStampNs);
+
+			m_iLastBulletTimeStampNs = iTNs;
 
 			SBullet sBullet;
 			sBullet.m_vPos = Lerp( vGunPosWorlPrev, vGunPosWorld, fFrameW );
@@ -209,7 +212,7 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 			sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.0001f;
 
 			SVector3::Normalize( sBullet.m_vDir, sBullet.m_vDir );
-			sBullet.m_fSpeed = (m_fSpeedForward + 0.000f) * fElapsedTimeMs;
+			sBullet.m_fSpeed = (m_fSpeedForward + 10.000f);
 			sBullet.m_fTime = 4000.0f;
 			sBullet.m_fTimer = 0.0f;
 			m_aBullets.push_back( sBullet );
@@ -217,7 +220,7 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
 			sAudioEvent.fVolume = 0.5f;
-			sAudioEvent.iTimeStampNs = m_iShootTimeStampNs + (uint64_t)(t * 1000.0f * 1000.0f);
+			sAudioEvent.iTimeStampNs = m_iLastBulletTimeStampNs;
 			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
 			sAudioEvent.iSampleCounter = 0;
 			sAudioEvent.fPhase = 0.0f;			
@@ -226,17 +229,19 @@ void CShipControl::Update( float fElapsedTimeMs, const SMatrix& matView000 )
 		}		
 	}
 
-	for ( int iBulletInd = 0; iBulletInd < m_aBullets.size(); ++iBulletInd )
+	for ( size_t iBulletInd = 0; iBulletInd < m_aBullets.size(); )
 	{
 		SBullet& sBullet = m_aBullets[iBulletInd];
-		sBullet.m_vPos += sBullet.m_vDir * sBullet.m_fSpeed * fElapsedTimeMs;
 		sBullet.m_fTimer += fElapsedTimeMs;
 		if ( sBullet.m_fTimer > sBullet.m_fTime )
 		{
 			m_aBullets[iBulletInd] = m_aBullets.back();
 			m_aBullets.pop_back();
-			--iBulletInd;
+			continue;
 		}
+		sBullet.m_vPos += sBullet.m_vDir * sBullet.m_fSpeed * fElapsedTimeMs;
+
+		++iBulletInd;
 	}
 }
 

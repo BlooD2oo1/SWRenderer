@@ -37,9 +37,6 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
 {
-	static double fTimeMs = 0.0;
-	fTimeMs += (double)sAudioBuffer.iNumFrames / (double)sAudioBuffer.iSampleRate * 1000.0;
-	LOG( "CEngine::UpdateAudioThread() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs/1000.0 );
 	CAudio::GetInstance().AudioThread_Update( sAudioBuffer );
 }
 
@@ -59,10 +56,8 @@ void CEngine::Update()
 
 	m_fElapsedTimeMs = (float)( (double)(m_iTimeStampNs - m_iTimeStampPrevNs) / 1000.0/1000.0 );
 
-	static double fTimeMs = 0.0;
-	fTimeMs += m_fElapsedTimeMs;
-	LOG( "CEngine::Update() - Frame %llu, %.4f sec\n", m_iFrameInd, fTimeMs/1000.0 );
-
+	LOG( "ENGINE %.4f sec\n", m_iTimeStampNs / 1000.0 / 1000.0 / 1000.0 );
+	
 	m_cScene01.Update();
 
 	m_sAudioFrameData.m_iTimeStampNs = m_iTimeStampNs;

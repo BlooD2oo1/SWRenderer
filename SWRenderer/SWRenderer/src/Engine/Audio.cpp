@@ -6,8 +6,8 @@ CAudio*	CAudio::m_pThis = nullptr;
 CAudio::CAudio()
 {
 	m_iFrameInd = 0;
-	m_iTimeStampNs = 0;
-	m_iTimeStampPrevNs = 0;
+	m_iSampleCounter = 0;
+	m_iStartTimeStampNs = 0;
 }
 
 CAudio::~CAudio()
@@ -54,21 +54,21 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 	//////////////////////////////////////////////////////////////////////////
 
+	const uint64_t iDelayNs = (uint64_t)(60.0f * 1000.0f * 1000.0f);
+
 	m_iFrameInd++;
-	if ( m_iTimeStampNs == 0 )
+	if ( m_iStartTimeStampNs == 0 )
 	{
-		m_iTimeStampNs = GetGlobalTimeStampNs();
-		m_iTimeStampPrevNs = m_iTimeStampNs-1000;
-	}
-	else
-	{
-		m_iTimeStampPrevNs = m_iTimeStampNs;
-		m_iTimeStampNs = GetGlobalTimeStampNs();
+		m_iStartTimeStampNs = GetGlobalTimeStampNs();
 	}
 
-	const uint64_t iDelayNs = (uint64_t)( 1000.0 / 30.0 * 1000.0 * 1000.0 );
-	
-	const uint64_t iRealTimeNs = m_iTimeStampNs - iDelayNs;
+	m_iSampleCounter += sAudioBuffer.iNumFrames;
+
+	uint64_t iTimeStampNs = m_iStartTimeStampNs + (uint64_t)((double)m_iSampleCounter * 1e9 / (double)sAudioBuffer.iSampleRate);
+		
+	const uint64_t iDelayedTimeStampNs = iTimeStampNs - iDelayNs;
+
+	LOG( "AUDIO  %.4f sec ( delayed )\n", (double)(iDelayedTimeStampNs) / 1000.0 / 1000.0 / 1000.0 );
 
 	//////////////////////////////////////////////////////////////////////////
 
@@ -101,15 +101,37 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		{
 			SAudioFrameData& sAudioFrameData0 = m_aAudioFrameData[i];
 			SAudioFrameData& sAudioFrameData1 = m_aAudioFrameData[i + 1];
-			if ( sAudioFrameData0.m_iTimeStampNs <= iRealTimeNs && iRealTimeNs < sAudioFrameData1.m_iTimeStampNs )
+			if ( sAudioFrameData0.m_iTimeStampNs <= iDelayedTimeStampNs && iDelayedTimeStampNs < sAudioFrameData1.m_iTimeStampNs )
 			{
-				float fW = (float)(iRealTimeNs - sAudioFrameData0.m_iTimeStampNs) / (float)(sAudioFrameData1.m_iTimeStampNs - sAudioFrameData0.m_iTimeStampNs);
+				float fW = (float)(iDelayedTimeStampNs - sAudioFrameData0.m_iTimeStampNs) / (float)(sAudioFrameData1.m_iTimeStampNs - sAudioFrameData0.m_iTimeStampNs);
 				sAudioFrameData.Lerp( sAudioFrameData0, sAudioFrameData1, fW );
 				break;
 			}
 		}
 	}
 
+	{
+		uint64_t iRealTimeBufferStartNs = iDelayedTimeStampNs;
+		uint64_t iRealTimeBufferEndNs = iDelayedTimeStampNs + (uint64_t)((double)sAudioBuffer.iNumFrames * 1000.0 * 1000.0 * 1000.0 / (double)sAudioBuffer.iSampleRate);
+		for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); )
+		{
+			SAudioEvent& sAudioEvent = m_aAudioEvents[iEvent];
+			if ( sAudioEvent.iTimeStampNs > iRealTimeBufferStartNs )
+			{
+				++iEvent;
+				continue;										
+			}
+			if ( sAudioEvent.iTimeStampNs + sAudioEvent.iLifeTimeNs < iRealTimeBufferEndNs )
+			{
+				m_aAudioEvents[iEvent] = m_aAudioEvents.back();
+				m_aAudioEvents.pop_back();
+			}
+			else
+			{
+				++iEvent;
+			}
+		}
+	}
 	//////////////////////////////////////////////////////////////////////////
 
 	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
@@ -137,70 +159,40 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			}
 			fOut /= (float)iC;
 			sAudioBuffer.pData[iFrameInd * 2 + iChInd] = fOut  * 0.4f;
+		}
 
-			uint64_t iFrameIndTimeNs = (uint64_t)iFrameInd * 1000 * 1000 * 1000 / sAudioBuffer.iSampleRate;
-			uint64_t iRealTimeFrameNs = iRealTimeNs + iFrameIndTimeNs;
-			for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); )
+		for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); iEvent++ )
+		{
+			SAudioEvent& sAudioEvent = m_aAudioEvents[iEvent];
+
+			const double dLifeTimeSamples = (double)sAudioEvent.iLifeTimeNs * (double)sAudioBuffer.iSampleRate / 1000.0 / 1000.0 / 1000.0;
+			float fTimeW = (float)((double)sAudioEvent.iSampleCounter / dLifeTimeSamples);
+			if ( fTimeW > 1.0f ) continue;
+
+			float fExpMaster = 1.0f - fabsf( powf( fTimeW, 1.2f ) - 0.5f ) * 2.0f;
+
+			for ( int iChInd = 0; iChInd < 2; iChInd++ )
 			{
-				SAudioEvent& sAudioEvent = m_aAudioEvents[iEvent];
-				if ( sAudioEvent.iTimeStampNs > iRealTimeFrameNs )
-				{
-					iEvent++;
-					continue;										
-				}
-				if ( sAudioEvent.iTimeStampNs + sAudioEvent.iLifeTimeNs < iRealTimeNs )
-				{
-					if ( iEvent < m_aAudioEvents.size() - 1 )
-					{
-						m_aAudioEvents[iEvent] = m_aAudioEvents.back();
-						m_aAudioEvents.pop_back();
-					}
-					else
-					{
-						m_aAudioEvents.pop_back();
-						break;
-					}
-				}
-				else
-				{
-					iEvent++;
-				}
-
-				
-
-				//double fTimeNs = (double)(iRealTimeFrameNs - sAudioEvent.iTimeStampNs);
-				//float fTimeSec = (float)( fTimeNs * 1e-9 );
-				//float fTimeW = (float)( fTimeNs / (double)sAudioEvent.iLifeTimeNs );
-				//float fExpMaster = 1.0f - abs( powf( fTimeW, 0.1f ) - 0.5f ) * 2.0f;
-
-				//calculate fExpmaster from sAudioEvent.iSampleCounter:
-				const double dLifeTimeSamples = (double)sAudioEvent.iLifeTimeNs * sAudioBuffer.iSampleRate / 1e9;
-				float fTimeW = (float)((double)sAudioEvent.iSampleCounter / dLifeTimeSamples);
-				float fExpMaster = 1.0f - fabsf( powf( fTimeW, 0.3f ) - 0.5f ) * 2.0f;
-
 				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * sinf( sAudioEvent.fPhase * PI2 ) * fExpMaster;
+			}
 
-				if ( iChInd == 1 )
-				{
-					sAudioEvent.iSampleCounter++;
+			sAudioEvent.iSampleCounter++;
 
-					if ( sAudioEvent.type == SAudioEvent::ClickDown )
-					{
-						sAudioEvent.fPhase += Lerp( 1000.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
-					}
-					if ( sAudioEvent.type == SAudioEvent::ClickUp )
-					{
-						sAudioEvent.fPhase += Lerp( 700.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
-					}
-					if ( sAudioEvent.type == SAudioEvent::GunShot )
-					{
-						sAudioEvent.fPhase += Lerp( 44.0f, 1000.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
-					}
+			if ( sAudioEvent.type == SAudioEvent::ClickDown )
+			{
+				sAudioEvent.fPhase += Lerp( 1000.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+			}
+			if ( sAudioEvent.type == SAudioEvent::ClickUp )
+			{
+				sAudioEvent.fPhase += Lerp( 700.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+			}
+			if ( sAudioEvent.type == SAudioEvent::GunShot )
+			{
+				sAudioEvent.fPhase += Lerp( 50.0f, 880.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
+			}
 
 					
-					if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
-				}
-			}
+			if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
 		}
 	}
 }

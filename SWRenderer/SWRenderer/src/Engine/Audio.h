@@ -107,8 +107,8 @@ public:
 private:
 
 	uint64_t		m_iFrameInd;
-	uint64_t		m_iTimeStampNs;
-	uint64_t		m_iTimeStampPrevNs;
+	uint64_t		m_iStartTimeStampNs;
+	uint64_t		m_iSampleCounter;
 
 	CRingBuffer<SAudioFrameData, 32 >	m_ringAudioFrameData;
 	std::deque<SAudioFrameData>			m_aAudioFrameData;

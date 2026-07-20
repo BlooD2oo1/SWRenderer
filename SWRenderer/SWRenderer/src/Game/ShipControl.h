@@ -24,7 +24,7 @@ struct CShipControl
 
 	void SetShoot( bool bShoot );
 
-	void Update( float fElapsedTimeMs, const SMatrix& matView000 );
+	void Update( float fElapsedTimeMs, float fTimeMultiplier, const SMatrix& matView000 );
 
 	const SMatrix& GetMatrix() const { return m_matShip; }
 
@@ -41,8 +41,7 @@ struct CShipControl
 	SVector2	m_vMouseDir;
 
 	bool		m_bShoot;
-	float		m_fShootTimer;
-	uint64_t	m_iShootTimeStampNs;
+	uint64_t	m_iLastBulletTimeStampNs;
 
 	std::vector< SBullet >		m_aBullets;
 };
