@@ -91,7 +91,78 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			m_fSpeedForward = Lerp( 2.0f, m_fSpeedForward, fW );
 		}
 
+		SVector3 vCamUp( matView000.m01, matView000.m11, matView000.m21 );
+		SVector3 vCamRight( matView000.m00, matView000.m10, matView000.m20 );
+		SVector3 vCursorDir3D = vCamUp * -m_vMouseDir.y + vCamRight * m_vMouseDir.x;
+		SVector3 vRotAxis;
+		SVector3::Cross( vRotAxis, m_vDir, vCursorDir3D );
+
+
 		{
+			SQuaternion q;
+			SQuaternion::FromAxisAngle( q, vRotAxis, SVector2::Length( m_vMouseDir ) );
+			SMatrix matRot;
+			SQuaternion::ToMatrix( matRot, q );
+
+			SVector4 vTemp;
+			SVector4 vDir4( m_vDir, 1.0f );		
+			SMatrix::Mul( vTemp, vDir4, matRot );
+			m_vDir.x = vTemp.x;
+			m_vDir.y = vTemp.y;
+			m_vDir.z = vTemp.z;
+
+			SVector4 vUp4( m_vUp, 1.0f );
+			SMatrix::Mul( vTemp, vUp4, matRot );
+			m_vUp.x = vTemp.x;
+			m_vUp.y = vTemp.y;
+			m_vUp.z = vTemp.z;
+
+			SVector4 vRight4( m_vRight, 1.0f );
+			SMatrix::Mul( vTemp, vRight4, matRot );
+			m_vRight.x = vTemp.x;
+			m_vRight.y = vTemp.y;
+			m_vRight.z = vTemp.z;
+
+			SVector3::Cross( m_vRight, m_vDir, m_vUp );
+			SVector3::Cross( m_vUp, m_vRight, m_vDir );
+			SVector3::Normalize( m_vDir, m_vDir );
+			SVector3::Normalize( m_vUp, m_vUp );
+			SVector3::Normalize( m_vRight, m_vRight );
+		}
+
+		{
+			SQuaternion q;
+			SQuaternion::FromAxisAngle( q, m_vDir, fRoll*0.1f );
+			SMatrix matRot;
+			SQuaternion::ToMatrix( matRot, q );
+
+			SVector4 vTemp;
+			SVector4 vDir4( m_vDir, 1.0f );		
+			SMatrix::Mul( vTemp, vDir4, matRot );
+			m_vDir.x = vTemp.x;
+			m_vDir.y = vTemp.y;
+			m_vDir.z = vTemp.z;
+
+			SVector4 vUp4( m_vUp, 1.0f );
+			SMatrix::Mul( vTemp, vUp4, matRot );
+			m_vUp.x = vTemp.x;
+			m_vUp.y = vTemp.y;
+			m_vUp.z = vTemp.z;
+
+			SVector4 vRight4( m_vRight, 1.0f );
+			SMatrix::Mul( vTemp, vRight4, matRot );
+			m_vRight.x = vTemp.x;
+			m_vRight.y = vTemp.y;
+			m_vRight.z = vTemp.z;
+
+			SVector3::Cross( m_vRight, m_vDir, m_vUp );
+			SVector3::Cross( m_vUp, m_vRight, m_vDir );
+			SVector3::Normalize( m_vDir, m_vDir );
+			SVector3::Normalize( m_vUp, m_vUp );
+			SVector3::Normalize( m_vRight, m_vRight );
+		}
+
+		/*{
 			SQuaternion q;
 			SQuaternion::FromAxisAngle( q, m_vRight, fUp*0.1f );
 			SMatrix matRot;
@@ -153,7 +224,7 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			SVector3::Normalize( m_vDir, m_vDir );
 			SVector3::Normalize( m_vUp, m_vUp );
 			SVector3::Normalize( m_vRight, m_vRight );
-		}
+		}*/
 
 		/*SMatrix matView000Inv;
 		SMatrix::Transpose( matView000Inv, matView000 );
@@ -201,9 +272,9 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			sBullet.m_vPos = Lerp( vGunPosWorlPrev, vGunPosWorld, fFrameW );
 			sBullet.m_vDir = Lerp( vGunDirWorlPrev, vGunDirWorld, fFrameW );
 
-			sBullet.m_vDir.x += (rand() % 1000 - 500) * 0.0001f;
-			sBullet.m_vDir.y += (rand() % 1000 - 500) * 0.0001f;
-			sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.0001f;
+			sBullet.m_vDir.x += (rand() % 1000 - 500) * 0.00001f;
+			sBullet.m_vDir.y += (rand() % 1000 - 500) * 0.00001f;
+			sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.00001f;
 
 			SVector3::Normalize( sBullet.m_vDir, sBullet.m_vDir );
 			sBullet.m_fSpeed = (m_fSpeedForward + 10.000f);
@@ -214,8 +285,6 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
 			sAudioEvent.fVolume = 0.5f;
-			sAudioEvent.eWaveShaper = SAudioEvent::CubicSat;
-			sAudioEvent.fWaveShaperParam = 5.0f;
 			sAudioEvent.iTimeStampNs = m_iLastBulletTimeStampNs;
 			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
 			sAudioEvent.iSampleCounter = 0;

@@ -1,6 +1,31 @@
 #include "Audio.h"
 #include "Common/Globals.h"
 
+static float WaveShaper_Sin( float x, float fParam )
+{
+	return sinf( x * fParam );
+}
+
+static float WaveShaper_Power( float x, float fParam )
+{
+	return copysignf( powf( fabsf( x ), fParam ), x );
+}
+
+static float WaveShaper_Tan( float x, float fParam )
+{
+	return tanhf( x * fParam );
+}
+
+static float WaveShaper_Atan( float x, float fParam )
+{
+	return atanf( x * fParam ) / atanf( fParam );
+}
+
+static float WaveShaper_CubicSat( float x )
+{
+	return (x - x * x * x * 0.333333f) * 1.5f;
+}
+
 CAudio*	CAudio::m_pThis = nullptr;
 
 CAudio::CAudio()
@@ -175,25 +200,18 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			{
 				float x = sinf( sAudioEvent.fPhase * PI2 );
 
-				switch ( sAudioEvent.eWaveShaper )
+				switch( sAudioEvent.type )
 				{
-				case SAudioEvent::SineSine:
-					x = sinf( x * sAudioEvent.fWaveShaperParam );
+					case SAudioEvent::ClickDown:
+					x = WaveShaper_CubicSat( x );
 					break;
-				case SAudioEvent::Power:
-					x = copysignf( powf( fabsf( x ), sAudioEvent.fWaveShaperParam ), x );
+					case SAudioEvent::ClickUp:
+					x = WaveShaper_CubicSat( x );
 					break;
-				case SAudioEvent::Tan:
-					x = tanhf( x * sAudioEvent.fWaveShaperParam );
-					break;
-				case SAudioEvent::Atan:
-					x = atanf( x * sAudioEvent.fWaveShaperParam ) / atanf( sAudioEvent.fWaveShaperParam );
-					break;
-				case SAudioEvent::CubicSat:
-					x = (x - x * x * x * 0.333333f) * 1.5f;
+					case SAudioEvent::GunShot:
+					x = WaveShaper_CubicSat( x );
 					break;
 				}
-
 				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * x * fExpMaster;
 			}
 
@@ -209,7 +227,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			}
 			if ( sAudioEvent.type == SAudioEvent::GunShot )
 			{
-				sAudioEvent.fPhase += Lerp( 50.0f, 1480.0f, fTimeW*fTimeW ) / (float)sAudioBuffer.iSampleRate;
+				sAudioEvent.fPhase += Lerp( 200.0f, 1480.0f, fTimeW*fTimeW ) / (float)sAudioBuffer.iSampleRate;
 			}
 
 					

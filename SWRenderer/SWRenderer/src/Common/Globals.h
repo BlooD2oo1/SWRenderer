@@ -35,4 +35,6 @@ inline void LOG(const char* fmt, ...)
 
 	OutputDebugStringA(buf);
 }
+#else
+#define LOG(fmt, ...)
 #endif
