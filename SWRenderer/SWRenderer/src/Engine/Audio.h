@@ -114,4 +114,7 @@ private:
 	std::deque<SAudioFrameData>			m_aAudioFrameData;
 	CRingBuffer<SAudioEvent, 1024>		m_ringAudioEvents;
 	std::vector<SAudioEvent>			m_aAudioEvents;
+
+	float*								m_pEchoBuffer;
+	uint32_t							m_iEchoBufferSize;
 };

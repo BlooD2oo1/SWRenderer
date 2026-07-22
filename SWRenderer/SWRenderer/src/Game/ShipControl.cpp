@@ -98,7 +98,7 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 		SVector3::Cross( vRotAxis, m_vDir, vCursorDir3D );
 
 
-		{
+		/*{
 			SQuaternion q;
 			SQuaternion::FromAxisAngle( q, vRotAxis, SVector2::Length( m_vMouseDir ) );
 			SMatrix matRot;
@@ -160,9 +160,9 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			SVector3::Normalize( m_vDir, m_vDir );
 			SVector3::Normalize( m_vUp, m_vUp );
 			SVector3::Normalize( m_vRight, m_vRight );
-		}
+		}*/
 
-		/*{
+		{
 			SQuaternion q;
 			SQuaternion::FromAxisAngle( q, m_vRight, fUp*0.1f );
 			SMatrix matRot;
@@ -224,7 +224,7 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			SVector3::Normalize( m_vDir, m_vDir );
 			SVector3::Normalize( m_vUp, m_vUp );
 			SVector3::Normalize( m_vRight, m_vRight );
-		}*/
+		}
 
 		/*SMatrix matView000Inv;
 		SMatrix::Transpose( matView000Inv, matView000 );

@@ -33,10 +33,13 @@ CAudio::CAudio()
 	m_iFrameInd = 0;
 	m_iSampleCounter = 0;
 	m_iStartTimeStampNs = 0;
+	m_pEchoBuffer = nullptr;
+	m_iEchoBufferSize = 0;
 }
 
 CAudio::~CAudio()
 {
+	SAFE_DELETE_ARRAY( m_pEchoBuffer );
 }
 
 void CAudio::MainThread_PushAudioFrameData( const SAudioFrameData& sAudioFrameData )
@@ -75,6 +78,16 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 				aPhase2[iChInd].push_back( 0.0f );
 			}
 		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
+	if ( m_iEchoBufferSize < sAudioBuffer.iNumFrames * 2 )
+	{
+		SAFE_DELETE_ARRAY( m_pEchoBuffer );
+		m_pEchoBuffer = new float[sAudioBuffer.iNumFrames * 2];
+		memset( m_pEchoBuffer, 0, sizeof(float) * sAudioBuffer.iNumFrames * 2 );
+		m_iEchoBufferSize = sAudioBuffer.iNumFrames * 2;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -232,6 +245,16 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 					
 			if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
+	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
+	{
+		for ( int iChInd = 0; iChInd < 2; iChInd++ )
+		{
+
 		}
 	}
 }
