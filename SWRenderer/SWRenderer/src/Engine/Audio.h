@@ -30,6 +30,8 @@ struct SAudioFrameData
 		m_vCameraLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vShipPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_fShipSpeed = 0.0f;
+		m_fMusic_Action = 0.0f;
+		m_fMusic_Climax = 0.0f;
 	}
 	void Lerp( const SAudioFrameData& s0, const SAudioFrameData& s1, float fW )
 	{
@@ -39,12 +41,17 @@ struct SAudioFrameData
 		m_vCameraLookAt = ::Lerp( s0.m_vCameraLookAt, s1.m_vCameraLookAt, fW );
 		m_vShipPos = ::Lerp( s0.m_vShipPos, s1.m_vShipPos, fW );
 		m_fShipSpeed = ::Lerp( s0.m_fShipSpeed, s1.m_fShipSpeed, fW );
+		m_fMusic_Action = ::Lerp( s0.m_fMusic_Action, s1.m_fMusic_Action, fW );
+		m_fMusic_Climax = ::Lerp( s0.m_fMusic_Climax, s1.m_fMusic_Climax, fW );
 	}
 	uint64_t		m_iTimeStampNs;
 	SVector3		m_vCameraEye;
 	SVector3		m_vCameraLookAt;
 	SVector3		m_vShipPos;
 	float			m_fShipSpeed;
+
+	float			m_fMusic_Action;
+	float			m_fMusic_Climax;
 };
 
 struct SAudioEvent
@@ -106,7 +113,7 @@ public:
 
 private:
 
-	void				Music( SAudioBuffer& sAudioBuffer );
+	void				Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax );
 
 	uint64_t		m_iFrameInd;
 	uint64_t		m_iStartTimeStampNs;

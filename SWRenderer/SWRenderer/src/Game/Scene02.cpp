@@ -46,6 +46,9 @@ void CScene02::Create()
 	}
 }
 
+static float fAction = 0.0f;
+static float fClimax = 0.0f;
+
 void CScene02::Update()
 {
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
@@ -88,6 +91,14 @@ void CScene02::Update()
 		
 		m_sCamera.UpdateMatrices();
 	}
+
+	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = 0.0f;
+	CEngine::GetInstance().GetAudioFrameData().m_vShipPos = m_sShipControl.m_vPos;
+	CEngine::GetInstance().GetAudioFrameData().m_vCameraEye = m_sCamera.m_vEyeSmooth;
+	CEngine::GetInstance().GetAudioFrameData().m_vCameraLookAt = m_sCamera.m_vLookAtSmooth;
+
+	CEngine::GetInstance().GetAudioFrameData().m_fMusic_Action = fAction;
+	CEngine::GetInstance().GetAudioFrameData().m_fMusic_Climax = fClimax;
 }
 
 void CScene02::Render()
@@ -356,24 +367,32 @@ bool CScene02::On_KeyUp( uint32_t key )
 		// VK_UP
 	case 0x26:
 	{
+		fAction += 0.1f;
+		fAction = Clamp( fAction, 0.0f, 1.0f );
 		m_sShipControl.m_fAccVel = 0.0f;
 	}
 	break;
 	// VK_DOWN
 	case 0x28:
 	{
+		fAction -= 0.1f;
+		fAction = Clamp( fAction, 0.0f, 1.0f );
 		m_sShipControl.m_fAccVel = 0.0f;
 	}
 	break;
 	// VK_LEFT
 	case 0x25:
 	{
+		fClimax += 0.1f;
+		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 		m_sShipControl.m_fYawVelAcc = 0.0f;
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
+		fClimax -= 0.1f;
+		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 		m_sShipControl.m_fYawVelAcc = 0.0f;
 	}
 	break;

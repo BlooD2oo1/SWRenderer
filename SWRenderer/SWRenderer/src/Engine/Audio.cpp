@@ -258,10 +258,9 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		}
 	}
 
-	Music( sAudioBuffer );
+	Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
 }
-
-static float Synth_GetArp( float timeStr )
+static float Synth_GetArp( float timeStr, float fAction, float fClimax )
 {
 	float ta = fmodf(timeStr, 0.125f);
 	float envA = ta * 40.0f * expf(-ta * 40.0f) * 2.71828f;
@@ -272,12 +271,17 @@ static float Synth_GetArp( float timeStr )
 	int arpStep = (int)(timeStr * 8.0f) % 16;
 	float fA = arpFreqs[arpStep];
 
-	// 2-operator FM synthesis
-	float arpOsc = sinf(PI2 * fA * ta + sinf(PI2 * fA * 1.5f * ta) * 2.0f * envA);
-	return WaveShaper_Atan(arpOsc, 4.0f) * envA * 0.15f;
+	// FM modulation depth driven by action and climax
+	float fmDepth = 1.0f + fClimax * 0.8f + fAction * 1.2f;
+
+	// 2-operator FM synthesis for the arpeggio
+	float arpOsc = sinf(PI2 * fA * ta + sinf(PI2 * fA * 1.5f * ta) * fmDepth * envA);
+
+	float vol = 0.05f + fClimax * 0.03f + fAction * 0.02f;
+	return WaveShaper_Atan(arpOsc, 4.0f) * envA * vol;
 }
 
-void CAudio::Music( SAudioBuffer& sAudioBuffer )
+void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 {
 	// Calculate how many samples make up exactly 32 seconds
 	const uint32_t loopLenSamples = 32 * sAudioBuffer.iSampleRate;
@@ -288,62 +292,100 @@ void CAudio::Music( SAudioBuffer& sAudioBuffer )
 		uint64_t currentSample = m_iSampleCounter - sAudioBuffer.iNumFrames + iFrameInd;
 		uint32_t loopSample = (uint32_t)(currentSample % loopLenSamples);
 
-		// 2. Calculate time in seconds, which is now strictly between 0.0f and 31.999f
+		// 2. Calculate time in seconds, strictly between 0.0f and 31.999f
 		float t = (float)loopSample / (float)sAudioBuffer.iSampleRate;
 
 		// 0.0 - 1.0 phase of the whole loop
 		float loopPhase = t / 32.0f; 
 
 		// --- KICK DRUM ---
-		float tk = fmodf(t, 0.5f);
+		float tk = fmodf(t, 0.5f); 
 		float envK = tk * 50.0f * expf(-tk * 50.0f) * 2.71828f; 
-		float kick = sinf(PI2 * (40.0f * tk - 5.0f * expf(-tk * 30.0f))) * envK;
-		kick = WaveShaper_Power(kick, 0.5f) * 0.9f;
+
+		float kickPunch = 40.0f + fAction * 20.0f;
+		float kick = sinf(PI2 * (kickPunch * tk - 5.0f * expf(-tk * 30.0f))) * envK;
+
+		float kickDistortion = 0.6f - fAction * 0.05f; 
+		float kickVol = 0.45f + fClimax * 0.05f + fAction * 0.05f;
+		kick = WaveShaper_Power(kick, kickDistortion) * kickVol;
 
 		// --- BASSLINE ---
 		float tb = fmodf(t, 0.25f);
 		float envB = tb * 30.0f * expf(-tb * 30.0f) * 2.71828f;
+
 		const float bassFreqs[16] = { 65.41f, 65.41f, 77.78f, 65.41f, 87.31f, 65.41f, 77.78f, 98.00f,
 			65.41f, 65.41f, 77.78f, 65.41f, 130.81f,65.41f, 77.78f, 49.00f };
+
 		int bassStep = (int)(t * 4.0f) % 16;
 		float fB = bassFreqs[bassStep];
 		if (loopPhase > 0.5f) fB *= 0.5f; 
-		float bass = sinf(PI2 * fB * tb) * envB;
-		bass = WaveShaper_CubicSat(bass * 2.5f) * 0.6f;
 
-		// --- PAD / CHORDS ---
+		bool isOffBeat = (bassStep % 2 != 0);
+		float intensity = (fAction > fClimax) ? fAction : fClimax;
+		float stepActivityMultiplier = 1.0f;
+		if (isOffBeat)
+		{
+			stepActivityMultiplier = 0.2f + 0.8f * intensity;
+		}
+
+		// Gentle FM growl for bass
+		float bassFmEnv = tb * 20.0f * expf(-tb * 20.0f);
+		float bassMod = sinf(PI2 * fB * 2.0f * tb) * fAction * 1.5f * bassFmEnv;
+		float bass = sinf(PI2 * fB * tb + bassMod) * envB;
+
+		float bassDrive = 1.1f + fClimax * 0.3f + fAction * 0.4f; 
+		float bassVol = (0.3f + fClimax * 0.05f) * stepActivityMultiplier;
+		bass = WaveShaper_CubicSat(bass * bassDrive) * bassVol;
+
+		// --- PAD / CHORDS (Stronger, prominent feature, blooms towards high climax) ---
 		float padMod = sinf(PI2 * 0.5f * t); 
-		float pad1 = sinf(PI2 * 130.81f * t) + sinf(PI2 * 196.00f * t) + sinf(PI2 * 311.13f * t + padMod);
-		float pad2 = sinf(PI2 * 103.83f * t) + sinf(PI2 * 155.56f * t) + sinf(PI2 * 261.63f * t + padMod);
+		// Richer unison/detune oscillators for a powerful, cinematic chord body
+		float pad1 = sinf(PI2 * 130.81f * t) + sinf(PI2 * 196.00f * t) + sinf(PI2 * 311.13f * t + padMod) 
+			+ sinf(PI2 * 131.20f * t); // slightly detuned for thickness
+		float pad2 = sinf(PI2 * 103.83f * t) + sinf(PI2 * 155.56f * t) + sinf(PI2 * 261.63f * t + padMod)
+			+ sinf(PI2 * 104.10f * t); // slightly detuned for thickness
+
 		float padMix = (sinf(PI2 * t / 16.0f) * 0.5f + 0.5f); 
-		float pad = (pad1 * (1.0f - padMix) + pad2 * padMix) * 0.05f;
+		float pad = (pad1 * (1.0f - padMix) + pad2 * padMix) * 0.04f;
+
+		// Warmer saturation profile to give the pad a bold, defining character
 		pad = WaveShaper_Tan(pad, 2.0f);
 		float padEnv = 0.5f - 0.5f * cosf(PI2 * loopPhase); 
-		pad *= padEnv;
 
-		// --- ARPEGGIO (Seamless loop delay) ---
-		float arpL = Synth_GetArp(t);
+		// Strong scaling based on fClimax (powers up heavily near 1.0) with mild action sidechain pump
+		float climaxCurve = fClimax * fClimax; 
+		float pumpEffect = 1.0f - (fAction * 0.4f * expf(-tk * 15.0f));
+		float padVolMultiplier = 0.2f + 1.3f * climaxCurve; // Becomes a dominant lead element at high climax
+		pad *= padEnv * padVolMultiplier * pumpEffect;
 
-		// Right channel delay logic: if time goes below 0, wrap it back to the end of the 32s loop!
+		// --- ARPEGGIO ---
+		float arpL = Synth_GetArp(t, fAction, fClimax);
+
 		float tR = t - 0.375f;
 		if (tR < 0.0f) tR += 32.0f;
-		float arpR = Synth_GetArp(tR); 
+		float arpR = Synth_GetArp(tR, fAction, fClimax); 
 
 		// --- HI-HAT ---
-		// We can now use the integer loopSample directly for perfectly looping noise seed!
 		uint32_t seed = loopSample * 1664525 + 1013904223; 
 		float noise = (float)seed * 4.6566129e-10f - 1.0f; 
 		float th = fmodf(t, 0.125f);
 		bool accent = ((int)(t * 8.0f) % 4) == 2; 
-		float envH = expf(-th * (accent ? 40.0f : 80.0f));
-		float hat = WaveShaper_CubicSat(noise * envH * 0.08f);
+
+		float decayBase = accent ? 40.0f : 80.0f;
+		float decay = decayBase - fAction * (decayBase * 0.2f);
+		float envH = expf(-th * decay);
+		float hatVol = 0.035f + fClimax * 0.015f + fAction * 0.01f;
+		float hat = WaveShaper_CubicSat(noise * envH) * hatVol;
 
 		// --- MIXING & MASTERING ---
+		// Combined sum of all layers
 		float mixL = kick + bass + pad + arpL + hat;
 		float mixR = kick + bass + pad + arpR + hat * 0.7f;
 
-		mixL = WaveShaper_Tan(mixL, 1.2f) * 0.6f;
-		mixR = WaveShaper_Tan(mixR, 1.2f) * 0.6f;
+		// Master limiting stage optimized to handle the richer, louder pad without digital clipping
+		float masterDrive = 1.0f + fAction * 0.1f;
+		mixL = WaveShaper_Tan(mixL * masterDrive, 1.2f) * 0.2f;
+		mixR = WaveShaper_Tan(mixR * masterDrive, 1.2f) * 0.2f;
 
 		sAudioBuffer.pData[iFrameInd * 2 + 0] += mixL;
 		sAudioBuffer.pData[iFrameInd * 2 + 1] += mixR;
