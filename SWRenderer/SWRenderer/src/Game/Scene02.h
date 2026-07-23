@@ -65,9 +65,15 @@ struct SShipControl
 
 		m_vPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vDir = SVector3( 1.0f, 0.0f, 0.0f );
+		m_vDirPrev = m_vDir;
 		m_vUp = SVector3( 0.0f, 0.0f, 1.0f );
 		m_vRight = SVector3( 0.0f, 1.0f, 0.0f );
 		SMatrix::Identity( m_matShip );
+		SMatrix::Identity( m_matShipPrev );
+
+		m_aBullets.clear();
+		m_bShoot = false;
+		m_iLastBulletTimeStampNs = 0;
 	}
 
 	void UpdateMatrices()
@@ -76,6 +82,10 @@ struct SShipControl
 		SQuaternion qRot;
 		SQuaternion::FromEulerXYZ( qRot, 0.0f, m_fRoll, m_fYaw );
 		SQuaternion::ToMatrix( m_matShip, qRot );
+
+		m_vDir.x = m_matShip.m00;	m_vDir.y = m_matShip.m01;	m_vDir.z = m_matShip.m02;
+		m_vRight.x = m_matShip.m10;	m_vRight.y = m_matShip.m11;	m_vRight.z = m_matShip.m12;
+		m_vUp.x = m_matShip.m20;	m_vUp.y = m_matShip.m21;	m_vUp.z = m_matShip.m22;
 
 		/*m_matShip.m00 = m_vDir.x;	m_matShip.m01 = m_vDir.y;	m_matShip.m02 = m_vDir.z;	m_matShip.m03 = 0.0f;
 		m_matShip.m10 = m_vRight.x;	m_matShip.m11 = m_vRight.y;	m_matShip.m12 = m_vRight.z;	m_matShip.m13 = 0.0f;
@@ -95,9 +105,23 @@ struct SShipControl
 
 	SVector3	m_vPos;
 	SVector3	m_vDir;
+	SVector3	m_vDirPrev;
 	SVector3	m_vUp;
 	SVector3	m_vRight;
 	SMatrix		m_matShip;
+	SMatrix		m_matShipPrev;
+
+	struct SBullet
+	{
+		SVector3	m_vPos;
+		SVector3	m_vDir;
+		float		m_fSpeed;
+		float		m_fTimer;
+		float		m_fTime;
+	};
+	std::vector< SBullet >		m_aBullets;
+	bool		m_bShoot;
+	uint64_t	m_iLastBulletTimeStampNs;
 };
 
 class CScene02

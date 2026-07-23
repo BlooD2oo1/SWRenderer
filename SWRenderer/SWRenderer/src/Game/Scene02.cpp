@@ -55,6 +55,9 @@ void CScene02::Update()
 	{
 		// Update ship:
 
+		m_sShipControl.m_vDirPrev = m_sShipControl.m_vDir;
+		m_sShipControl.m_matShipPrev = m_sShipControl.m_matShip;
+
 		m_sShipControl.m_fYawVel += m_sShipControl.m_fYawVelAcc * 0.00005f * fElapsedTimeMs;
 		m_sShipControl.m_fYawVel = Clamp( m_sShipControl.m_fYawVel, -0.005f, 0.005f );
 		float fYawW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
@@ -76,6 +79,68 @@ void CScene02::Update()
 
 		m_sShipControl.UpdateMatrices();
 
+		if ( m_sShipControl.m_bShoot )
+		{
+			SVector3 vGunPos = SVector3( 0.0f, 0.0f, 0.0f );
+
+			SVector3 vGunPosWorld;
+			SVector3 vGunPosWorlPrev;
+
+			SVector3 vGunDirWorld( m_sShipControl.m_vDir );
+			SVector3 vGunDirWorlPrev( m_sShipControl.m_vDirPrev );
+
+			SMatrix::TransformCoord( vGunPosWorld, vGunPos, m_sShipControl.m_matShip );
+			SMatrix::TransformCoord( vGunPosWorlPrev, vGunPos, m_sShipControl.m_matShipPrev );
+
+			const float fShootFreqHz = 60.0f;
+			const uint64_t iShootPeriodNs = (uint64_t)(1.0f / fShootFreqHz * 1000.0f * 1000.0f * 1000.0f);
+
+			for ( uint64_t iTNs = m_sShipControl.m_iLastBulletTimeStampNs+iShootPeriodNs; iTNs < CEngine::GetInstance().GetTimeStampNs(); iTNs += iShootPeriodNs )
+			{		
+				float fFrameW = (float)(iTNs - m_sShipControl.m_iLastBulletTimeStampNs) / (float)(CEngine::GetInstance().GetTimeStampNs() - m_sShipControl.m_iLastBulletTimeStampNs);
+
+				m_sShipControl.m_iLastBulletTimeStampNs = iTNs;
+
+				SShipControl::SBullet sBullet;
+				sBullet.m_vPos = Lerp( vGunPosWorlPrev, vGunPosWorld, fFrameW );
+				sBullet.m_vDir = Lerp( vGunDirWorlPrev, vGunDirWorld, fFrameW );
+
+				sBullet.m_vDir.x += (rand() % 1000 - 500) * 0.00001f;
+				sBullet.m_vDir.y += (rand() % 1000 - 500) * 0.00001f;
+				sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.00001f;
+
+				SVector3::Normalize( sBullet.m_vDir, sBullet.m_vDir );
+				sBullet.m_fSpeed = 0.1f;
+				sBullet.m_fTime = 4000.0f;
+				sBullet.m_fTimer = 0.0f;
+				m_sShipControl.m_aBullets.push_back( sBullet );
+
+				SAudioEvent sAudioEvent;
+				sAudioEvent.type = SAudioEvent::GunShot;
+				sAudioEvent.fVolume = 0.4f;
+				sAudioEvent.iTimeStampNs = m_sShipControl.m_iLastBulletTimeStampNs;
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
+				sAudioEvent.iSampleCounter = 0;
+				sAudioEvent.fPhase = 0.0f;			
+				sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
+				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+			}		
+		}
+
+		for ( size_t iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); )
+		{
+			SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
+			sBullet.m_fTimer += fElapsedTimeMs;
+			if ( sBullet.m_fTimer > sBullet.m_fTime )
+			{
+				m_sShipControl.m_aBullets[iBulletInd] = m_sShipControl.m_aBullets.back();
+				m_sShipControl.m_aBullets.pop_back();
+				continue;
+			}
+			sBullet.m_vPos += sBullet.m_vDir * sBullet.m_fSpeed * fElapsedTimeMs;
+
+			++iBulletInd;
+		}
 	}
 
 	{
@@ -184,6 +249,60 @@ void CScene02::Render()
 		sVertexShaderBasic.fAlpha = 0.7f;
 		CGraphics::GetInstance().DrawLineList3D( m_cShipMesh.GetLineList(), m_cShipMesh.GetLineListCount(), sVertexShaderBasic );
 	}
+
+	for ( int iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); iBulletInd++ )
+	{
+		const SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
+		SVertexPh sPh0;
+		SVertexPh sPh1;
+		{
+			SVector4 vPhSrc( sBullet.m_vPos, 1.0f );
+			SMatrix::Mul( sPh0.vPos, vPhSrc, m_sCamera.m_matViewProj );
+			SMatrix::Mul( sPh1.vPos, vPhSrc, m_sCamera.m_matViewProjPrev );
+		}
+
+		if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
+		{
+			if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
+			{
+				{
+					float fWRec0 = 1.0f / sPh0.vPos.w;
+					sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+					sPh0.vPos.y = sPh0.vPos.y * fWRec0;
+
+					float fWRec1 = 1.0f / sPh1.vPos.w;
+					sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+					sPh1.vPos.y = sPh1.vPos.y * fWRec1;
+				}
+
+				SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+				vL.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
+				vL.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
+				float fL = SVector2::Length( vL );
+
+				sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
+				sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
+				sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+				sPh0.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+
+				sPh1.vPos.x = sPh1.vPos.x * 0.5f + 0.5f;
+				sPh1.vPos.y = -(sPh1.vPos.y) * 0.5f + 0.5f;
+				sPh1.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+				sPh1.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+
+				float fAlpha = 1.0f - sBullet.m_fTimer / sBullet.m_fTime;
+				if ( fL > 1.5f )
+				{
+					CGraphics::GetInstance().DrawLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), BGRA8( 0.0f, fAlpha, 1.0f, fAlpha ) );
+				}
+				else
+				{
+					CGraphics::GetInstance().DrawPixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, BGRA8( 0.0f, fAlpha, 1.0f, fAlpha ) );
+				}
+			}
+		}
+	}
+
 
 	SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, 0.5f );
 	if ( vColor.w > 1.0f/255.0f )
@@ -356,6 +475,13 @@ bool CScene02::On_KeyDown( uint32_t key )
 		m_sShipControl.m_fYawVelAcc = -1.0f;
 	}
 	break;
+	// VK_SPACE
+	case 0x20:
+	{
+		m_sShipControl.m_bShoot = true;
+		m_sShipControl.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+	}
+	break;
 	}
 	return false;
 }
@@ -394,6 +520,13 @@ bool CScene02::On_KeyUp( uint32_t key )
 		fClimax -= 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 		m_sShipControl.m_fYawVelAcc = 0.0f;
+	}
+	break;
+	// VK_SPACE
+	case 0x20:
+	{
+		m_sShipControl.m_bShoot = false;
+		m_sShipControl.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 	}
 	break;
 	}
