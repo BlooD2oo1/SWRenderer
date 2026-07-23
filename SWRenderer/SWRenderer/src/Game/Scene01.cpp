@@ -181,7 +181,7 @@ void CScene01::Render()
 		{
 			float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 1000.0f;
 			float fStarBoxSizeInv = 1.0f / fStarBoxSize;
-			for ( int i = 0; i < m_iStarsCount/(float)((iSteps+1)-j); i++ )
+			for ( uint32_t i = 0; i < m_iStarsCount/((iSteps+1)-j); i++ )
 			{
 				SVertexPh sPh0;
 				SVertexPh sPh1;

@@ -10,10 +10,10 @@ struct SCamera
 {
 	void Clear()
 	{
-		m_fFOVY = 40.0f / 180.0f * PI;
+		m_fFOVY = 45.0f / 180.0f * PI;
 		m_fAspect = 1.0f;
 		m_fNear = 0.1f;
-		m_fFar = 1000.0f;
+		m_fFar = 10000.0f;
 		m_vEye = SVector3( 0.0f, 0.0f, 200.0f );
 		m_vEyeSmooth = m_vEye;
 		m_vLookAt = SVector3( 0.0f, 0.0f, 0.0f );
@@ -27,6 +27,7 @@ struct SCamera
 
 	void UpdateMatrices()
 	{
+		m_matViewProjPrev = m_matViewProj;
 		SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUp );
 		SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 		SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
@@ -122,6 +123,9 @@ private:
 
 	SCamera			m_sCamera;
 	SShipControl	m_sShipControl;
-	CShipMesh		m_cShipMesh;	
+	CShipMesh		m_cShipMesh;
+
+	SVertexPC*		m_pStars;
+	uint32_t		m_iStarsCount;
 	
 };
