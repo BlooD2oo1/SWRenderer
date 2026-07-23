@@ -52,6 +52,9 @@
     <ClCompile Include="src\Game\ShipMesh.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\Scene02.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine\Engine.h">
@@ -94,6 +97,9 @@
       <Filter>src\Common</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\ShipMesh.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Scene02.h">
       <Filter>src\Game</Filter>
     </ClInclude>
   </ItemGroup>

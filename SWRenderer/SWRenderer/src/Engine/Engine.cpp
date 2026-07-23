@@ -23,7 +23,7 @@ void CEngine::Clear()
 	m_iTimeStampPrevNs = 0;
 	m_fElapsedTimeMs = 0.0f;
 	m_sAudioFrameData.Clear();
-	m_cScene01.Clear();
+	m_cScene.Clear();
 	CGraphics::GetInstance().Clear();
 }
 
@@ -32,7 +32,7 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	Clear();
 
 	CGraphics::GetInstance().Create( sFrameBuffer );
-	m_cScene01.Create();
+	m_cScene.Create();
 }
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
@@ -58,7 +58,7 @@ void CEngine::Update()
 
 	LOG( "ENGINE %.4f sec\n", m_iTimeStampNs / 1000.0 / 1000.0 / 1000.0 );
 	
-	m_cScene01.Update();
+	m_cScene.Update();
 
 	m_sAudioFrameData.m_iTimeStampNs = m_iTimeStampNs;
 	CAudio::GetInstance().MainThread_PushAudioFrameData( m_sAudioFrameData );
@@ -69,7 +69,7 @@ void CEngine::Render()
 	// clear framebuffer
 	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 0 ) );
 
-	m_cScene01.Render();
+	m_cScene.Render();
 
 	/*const uint16_t iLineCount = 16;
 	for ( int i = 0; i < iLineCount; i++ )
@@ -105,12 +105,12 @@ void CEngine::Render()
 
 bool CEngine::On_KeyDown( uint32_t key )
 {
-    return m_cScene01.On_KeyDown( key );
+    return m_cScene.On_KeyDown( key );
 }
 
 bool CEngine::On_KeyUp( uint32_t key )
 {
-	return m_cScene01.On_KeyUp( key );
+	return m_cScene.On_KeyUp( key );
 }
 
 bool CEngine::On_MouseMove( int deltax, int deltay )
@@ -119,7 +119,7 @@ bool CEngine::On_MouseMove( int deltax, int deltay )
 	m_sMouseState.y += deltay;
 	m_sMouseState.x = Clamp( m_sMouseState.x, 0, CGraphics::GetInstance().GetFrameBuffer().iWidth-1 );
 	m_sMouseState.y = Clamp( m_sMouseState.y, 0, CGraphics::GetInstance().GetFrameBuffer().iHeight-1 );
-    return m_cScene01.On_MouseMove( deltax, deltay );
+    return m_cScene.On_MouseMove( deltax, deltay );
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )
 {
@@ -146,7 +146,7 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 	break;
 	}
 
-	return m_cScene01.On_MouseButtonDown( button );
+	return m_cScene.On_MouseButtonDown( button );
 }
 
 bool CEngine::On_MouseButtonUp( uint32_t button )
@@ -174,10 +174,10 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 	break;
 	}
 
-	return m_cScene01.On_MouseButtonUp( button );
+	return m_cScene.On_MouseButtonUp( button );
 }
 
 bool CEngine::On_MouseWheel( int iDelta )
 {
-	return m_cScene01.On_MouseWheel( iDelta );
+	return m_cScene.On_MouseWheel( iDelta );
 }

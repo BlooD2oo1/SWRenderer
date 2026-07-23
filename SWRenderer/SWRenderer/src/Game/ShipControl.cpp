@@ -248,7 +248,7 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 
 	if ( m_bShoot )
 	{
-		SVector3 vGunPos = SVector3( 1.0f, 0.0f, 0.1f );
+		SVector3 vGunPos = SVector3( 0.0f, 0.0f, 0.1f );
 
 		SVector3 vGunPosWorld;
 		SVector3 vGunPosWorlPrev;

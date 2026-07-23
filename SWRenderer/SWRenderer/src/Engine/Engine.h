@@ -4,6 +4,7 @@
 #include "Engine/Graphics.h"
 #include "Engine/Audio.h"
 #include "Game/Scene01.h"
+#include "Game/Scene02.h"
 
 struct SMouseState
 {
@@ -58,5 +59,5 @@ private:
 
 	SAudioFrameData	m_sAudioFrameData;
 
-	CScene01		m_cScene01;
+	CScene02		m_cScene;
 };

@@ -87,6 +87,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\Engine\Engine.cpp" />
     <ClCompile Include="src\Engine\Graphics.cpp" />
     <ClCompile Include="src\Game\Scene01.cpp" />
+    <ClCompile Include="src\Game\Scene02.cpp" />
     <ClCompile Include="src\Game\ShipControl.cpp" />
     <ClCompile Include="src\Game\ShipMesh.cpp" />
     <ClCompile Include="src\winAudio.cpp" />
@@ -104,6 +105,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Engine\Engine.h" />
     <ClInclude Include="src\Engine\Graphics.h" />
     <ClInclude Include="src\Game\Scene01.h" />
+    <ClInclude Include="src\Game\Scene02.h" />
     <ClInclude Include="src\Game\ShipControl.h" />
     <ClInclude Include="src\Game\ShipMesh.h" />
     <ClInclude Include="src\winAudio.h" />
