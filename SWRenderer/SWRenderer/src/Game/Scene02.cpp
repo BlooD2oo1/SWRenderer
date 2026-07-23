@@ -58,12 +58,12 @@ void CScene02::Update()
 		m_sShipControl.m_fYawVel = Lerp( 0.0f, m_sShipControl.m_fYawVel, fYawW );
 
 		m_sShipControl.m_fYaw += m_sShipControl.m_fYawVel * fElapsedTimeMs;
-		m_sShipControl.m_fAcc += m_sShipControl.m_fAccVel * 0.0000005f * fElapsedTimeMs;
+		m_sShipControl.m_fAcc += m_sShipControl.m_fAccVel * 0.00005f * fElapsedTimeMs;
 
-		float fMovDecW = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
+		float fMovDecW = CalcSmoothUpdateWeight( 1.0001f, fElapsedTimeMs );
 		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, fMovDecW );
 
-		float fAccW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
+		float fAccW = CalcSmoothUpdateWeight( 1.1f, fElapsedTimeMs );
 		m_sShipControl.m_fAcc = Lerp( 0.0f, m_sShipControl.m_fAcc, fAccW );
 
 		SVector3 vShipDir( cosf( m_sShipControl.m_fYaw ), sinf( m_sShipControl.m_fYaw ), 0.0f );
@@ -77,13 +77,14 @@ void CScene02::Update()
 
 	{
 		// Update camera:
-		float fW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
+		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
+		float fWSlow = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
 		SVector3 vP( m_sShipControl.m_vPos );
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += 200.0f;
-		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fW );
-		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fW );
+		m_sCamera.m_vEye.z += 150.0f;
+		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
+		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 		
 		m_sCamera.UpdateMatrices();
 	}
@@ -96,9 +97,9 @@ void CScene02::Render()
 		const int iSteps = 3;
 		for ( int j =0; j < iSteps; j++ )
 		{
-			float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 100.0f;
+			float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 1000.0f;
 			float fStarBoxSizeInv = 1.0f / fStarBoxSize;
-			for ( uint32_t i = 0; i < m_iStarsCount/((iSteps+1)-j); i++ )
+			for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 			{
 				SVertexPh sPh0;
 				SVertexPh sPh1;
@@ -171,6 +172,148 @@ void CScene02::Render()
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, m_sShipControl.m_matShip, m_sCamera.m_matViewProj );
 		sVertexShaderBasic.fAlpha = 0.7f;
 		CGraphics::GetInstance().DrawLineList3D( m_cShipMesh.GetLineList(), m_cShipMesh.GetLineListCount(), sVertexShaderBasic );
+	}
+
+	SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, 0.5f );
+	if ( vColor.w > 1.0f/255.0f )
+	{
+		struct SVertexShaderGrid
+		{
+			SMatrix matWorldViewProj;
+			void Process( SVertexPhC& out, const SVertexPC& in ) const
+			{
+				SVector4 vPhSrc0( in.vPos, 1.0f );
+				SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
+				out.vColor = in.vColor;
+			}
+		} sVertexShaderGrid;
+
+		float fSpacing = 30.0f;
+		int iHalfGridSize = 10/2;
+
+		SMatrix matScale;
+		SMatrix::Identity(matScale);
+		SMatrix::Scale( matScale, fSpacing );
+
+		{
+			SVector3 vCenter = m_sShipControl.m_vPos / fSpacing;
+			SVector3 vCenterQ;
+			vCenterQ.x = vCenter.x;
+			vCenterQ.y = floorf( vCenter.y );
+			vCenterQ.z = floorf( vCenter.z );
+
+			SMatrix matWorld( matScale );
+			matWorld.m30 = vCenterQ.x*fSpacing;
+			matWorld.m31 = vCenterQ.y*fSpacing;
+			matWorld.m32 = vCenterQ.z*fSpacing;
+			SMatrix::Mul( matWorld, matWorld, m_sCamera.m_matViewProj );
+			sVertexShaderGrid.matWorldViewProj = matWorld;
+
+			float fi = vCenter.y - floorf(vCenter.y);
+			float fj = vCenter.z - floorf(vCenter.z);
+
+			for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
+			{
+				//for ( int j = -iHalfGridSize; j <= iHalfGridSize; j++ )
+				int j = 0;
+				{
+					SVector3 vOffset( 0.0f, (float)i, (float)j );
+
+					SVertexPC sVertex0;
+					SVertexPC sVertex1;
+					SVertexPC sVertex2;
+
+					sVertex0.vPos = SVector3( vOffset );
+					sVertex0.vColor = vColor;
+
+					sVertex1.vPos = sVertex0.vPos;
+					sVertex1.vColor = vColor;
+
+					sVertex2.vPos = sVertex0.vPos;
+					sVertex2.vColor = vColor;
+
+					sVertex0.vPos.x -= (float)iHalfGridSize;
+					sVertex2.vPos.x += (float)iHalfGridSize;
+
+					float di = (float)i - fi;
+					float dj = (float)j - fj;
+					float d = di*di+dj*dj;
+					float t = d / (iHalfGridSize*iHalfGridSize);
+					t = Clamp( t, 0.0f, 1.0f );
+					/*t -= 0.5f;
+					t = abs( t );
+					t *= 2.0f;*/
+					float fAlpha = 1.0f-t;
+
+					sVertex0.vColor.w *= 0.0f;
+					sVertex1.vColor.w *= fAlpha;
+					sVertex2.vColor.w *= 0.0f;
+
+					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid );
+					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid );
+				}
+			}
+		}
+
+		{
+			SVector3 vCenter = m_sShipControl.m_vPos / fSpacing;
+			SVector3 vCenterQ;
+			vCenterQ.x = floorf( vCenter.x );
+			vCenterQ.y = vCenter.y;
+			vCenterQ.z = floorf( vCenter.z );
+
+			SMatrix matWorld( matScale );
+			matWorld.m30 = vCenterQ.x*fSpacing;
+			matWorld.m31 = vCenterQ.y*fSpacing;
+			matWorld.m32 = vCenterQ.z*fSpacing;
+			SMatrix::Mul( matWorld, matWorld, m_sCamera.m_matViewProj );
+			sVertexShaderGrid.matWorldViewProj = matWorld;
+
+			float fi = vCenter.x - floorf(vCenter.x);
+			float fj = vCenter.z - floorf(vCenter.z);
+
+			for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
+			{
+				//for ( int j = -iHalfGridSize; j <= iHalfGridSize; j++ )
+				int j = 0;
+				{
+					SVector3 vOffset( (float)i, 0.0f, (float)j );
+
+					SVertexPC sVertex0;
+					SVertexPC sVertex1;
+					SVertexPC sVertex2;
+
+					sVertex0.vPos = SVector3( vOffset );
+					sVertex0.vColor = vColor;
+
+					sVertex1.vPos = sVertex0.vPos;
+					sVertex1.vColor = vColor;
+
+					sVertex2.vPos = sVertex0.vPos;
+					sVertex2.vColor = vColor;
+
+					sVertex0.vPos.y -= (float)iHalfGridSize;
+					sVertex2.vPos.y += (float)iHalfGridSize;
+
+					float di = (float)i - fi;
+					float dj = (float)j - fj;
+					float d = di*di+dj*dj;
+					float t = d / (iHalfGridSize*iHalfGridSize);
+					t = Clamp( t, 0.0f, 1.0f );
+					/*t -= 0.5f;
+					t = abs( t );
+					t *= 2.0f;*/
+					float fAlpha = 1.0f-t;
+
+					sVertex0.vColor.w *= 0.0f;
+					sVertex1.vColor.w *= fAlpha;
+					sVertex2.vColor.w *= 0.0f;
+
+					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid );
+					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid );
+				}
+			}
+		}
 	}
 }
 
