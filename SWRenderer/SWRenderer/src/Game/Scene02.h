@@ -14,7 +14,7 @@ struct SCamera
 		m_fAspect = 1.0f;
 		m_fNear = 0.1f;
 		m_fFar = 1000.0f;
-		m_vEye = SVector3( 0.0f, 0.0f, 300.0f );
+		m_vEye = SVector3( 0.0f, 0.0f, 200.0f );
 		m_vEyeSmooth = m_vEye;
 		m_vLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vLookAtSmooth = m_vLookAt;
@@ -55,11 +55,12 @@ struct SShipControl
 	{
 		m_fYaw = 0.0f;
 		m_fYawVel = 0.0f;
+		m_fYawVelAcc = 0.0f;
 		m_fRoll = 0.0f;
 		m_fRollVel = 0.0f;
-		m_fSpeed = 0.01f;
-		m_fSpeedVel = 0.0f;
-		m_fSpeedDirAngle = 0.0f;
+		m_fAcc = 0.0f;
+		m_fAccVel = 0.0f;
+		m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 
 		m_vPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vDir = SVector3( 1.0f, 0.0f, 0.0f );
@@ -83,11 +84,13 @@ struct SShipControl
 
 	float		m_fYaw;
 	float		m_fYawVel;
+	float		m_fYawVelAcc;
 	float		m_fRoll;
 	float		m_fRollVel;
-	float		m_fSpeed;
-	float		m_fSpeedVel;
-	float		m_fSpeedDirAngle;
+	float		m_fAcc;
+	float		m_fAccVel;
+	SVector3	m_vMov;
+
 
 	SVector3	m_vPos;
 	SVector3	m_vDir;

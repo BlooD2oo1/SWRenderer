@@ -34,12 +34,21 @@ void CScene02::Update()
 	{
 		// Update ship:
 
-		m_sShipControl.m_fYaw += m_sShipControl.m_fYawVel * fElapsedTimeMs;
-		m_sShipControl.m_fSpeed += m_sShipControl.m_fSpeedVel * fElapsedTimeMs;
+		m_sShipControl.m_fYawVel += m_sShipControl.m_fYawVelAcc * 0.00005f * fElapsedTimeMs;
+		m_sShipControl.m_fYawVel = Clamp( m_sShipControl.m_fYawVel, -0.005f, 0.005f );
+		float fYawW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
+		m_sShipControl.m_fYawVel = Lerp( 0.0f, m_sShipControl.m_fYawVel, fYawW );
 
-		SVector3 vMoveDir( cosf( m_sShipControl.m_fSpeedDirAngle ), sinf( m_sShipControl.m_fSpeedDirAngle ), 0.0f );
-		vMoveDir *= m_sShipControl.m_fSpeed;
-		m_sShipControl.m_vPos += vMoveDir * fElapsedTimeMs;
+		m_sShipControl.m_fYaw += m_sShipControl.m_fYawVel * fElapsedTimeMs;
+		m_sShipControl.m_fAcc += m_sShipControl.m_fAccVel * 0.0000005f * fElapsedTimeMs;
+
+		float fAccW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
+		m_sShipControl.m_fAcc = Lerp( 0.0f, m_sShipControl.m_fAcc, fAccW );
+
+		SVector3 vShipDir( cosf( m_sShipControl.m_fYaw ), sinf( m_sShipControl.m_fYaw ), 0.0f );
+
+		m_sShipControl.m_vMov += vShipDir * m_sShipControl.m_fAcc * fElapsedTimeMs;
+		m_sShipControl.m_vPos += m_sShipControl.m_vMov * fElapsedTimeMs;
 
 		m_sShipControl.UpdateMatrices();
 
@@ -80,25 +89,25 @@ bool CScene02::On_KeyDown( uint32_t key )
 	// VK_UP
 	case 0x26:
 	{
-		m_sShipControl.m_fSpeedVel = 0.001f;
+		m_sShipControl.m_fAccVel = 1.0f;
 	}
 	break;
 	// VK_DOWN
 	case 0x28:
 	{
-		m_sShipControl.m_fSpeedVel = -0.001f;
+		m_sShipControl.m_fAccVel = -1.0f;
 	}
 	break;
 	// VK_LEFT
 	case 0x25:
 	{
-		m_sShipControl.m_fYawVel = -0.001f;
+		m_sShipControl.m_fYawVelAcc = 1.0f;
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
-		m_sShipControl.m_fYawVel = 0.001f;
+		m_sShipControl.m_fYawVelAcc = -1.0f;
 	}
 	break;
 	}
@@ -112,25 +121,25 @@ bool CScene02::On_KeyUp( uint32_t key )
 		// VK_UP
 	case 0x26:
 	{
-		m_sShipControl.m_fSpeedVel = 0.0f;
+		m_sShipControl.m_fAccVel = 0.0f;
 	}
 	break;
 	// VK_DOWN
 	case 0x28:
 	{
-		m_sShipControl.m_fSpeedVel = 0.0f;
+		m_sShipControl.m_fAccVel = 0.0f;
 	}
 	break;
 	// VK_LEFT
 	case 0x25:
 	{
-		m_sShipControl.m_fYawVel = 0.0f;
+		m_sShipControl.m_fYawVelAcc = 0.0f;
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
-		m_sShipControl.m_fYawVel = 0.0f;
+		m_sShipControl.m_fYawVelAcc = 0.0f;
 	}
 	break;
 	}
