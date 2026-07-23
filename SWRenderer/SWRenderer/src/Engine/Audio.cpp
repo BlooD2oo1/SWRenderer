@@ -252,68 +252,89 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
 	{
-		// 1. Calculate exact time in seconds 
-		// (since m_iSampleCounter was already incremented at the beginning of the function)
+		for ( int iChInd = 0; iChInd < 2; iChInd++ )
+		{
+
+		}
+	}
+
+	Music( sAudioBuffer );
+}
+
+static float Synth_GetArp( float timeStr )
+{
+	float ta = fmodf(timeStr, 0.125f);
+	float envA = ta * 40.0f * expf(-ta * 40.0f) * 2.71828f;
+	const float arpFreqs[16] = { 523.25f, 392.00f, 622.25f, 523.25f, 
+		783.99f, 622.25f, 523.25f, 466.16f,
+		523.25f, 783.99f, 622.25f, 880.00f,
+		783.99f, 622.25f, 523.25f, 392.00f };
+	int arpStep = (int)(timeStr * 8.0f) % 16;
+	float fA = arpFreqs[arpStep];
+
+	// 2-operator FM synthesis
+	float arpOsc = sinf(PI2 * fA * ta + sinf(PI2 * fA * 1.5f * ta) * 2.0f * envA);
+	return WaveShaper_Atan(arpOsc, 4.0f) * envA * 0.15f;
+}
+
+void CAudio::Music( SAudioBuffer& sAudioBuffer )
+{
+	// Calculate how many samples make up exactly 32 seconds
+	const uint32_t loopLenSamples = 32 * sAudioBuffer.iSampleRate;
+
+	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
+	{
+		// 1. Get the current absolute sample, then wrap it around the 32 sec loop length
 		uint64_t currentSample = m_iSampleCounter - sAudioBuffer.iNumFrames + iFrameInd;
-		double t = (double)currentSample / (double)sAudioBuffer.iSampleRate;
+		uint32_t loopSample = (uint32_t)(currentSample % loopLenSamples);
 
-		// 32-second global loop phase (0.0 - 1.0)
-		float loopPhase = (float)(fmod(t, 32.0) / 32.0);
+		// 2. Calculate time in seconds, which is now strictly between 0.0f and 31.999f
+		float t = (float)loopSample / (float)sAudioBuffer.iSampleRate;
 
-		// --- KICK DRUM (On every quarter note, 120 BPM = 0.5 sec) ---
-		float tk = fmodf((float)t, 0.5f);
-		// ADSR-like envelope formula, starting smoothly from zero without pops: t * e^(-t)
+		// 0.0 - 1.0 phase of the whole loop
+		float loopPhase = t / 32.0f; 
+
+		// --- KICK DRUM ---
+		float tk = fmodf(t, 0.5f);
 		float envK = tk * 50.0f * expf(-tk * 50.0f) * 2.71828f; 
-		// FM Kick with integrated phase for the sweep
 		float kick = sinf(PI2 * (40.0f * tk - 5.0f * expf(-tk * 30.0f))) * envK;
-		kick = WaveShaper_Power(kick, 0.5f) * 0.9f; // Punchy distortion
+		kick = WaveShaper_Power(kick, 0.5f) * 0.9f;
 
-		// --- BASSLINE (16th note groove) ---
-		float tb = fmodf((float)t, 0.25f);
+		// --- BASSLINE ---
+		float tb = fmodf(t, 0.25f);
 		float envB = tb * 30.0f * expf(-tb * 30.0f) * 2.71828f;
 		const float bassFreqs[16] = { 65.41f, 65.41f, 77.78f, 65.41f, 87.31f, 65.41f, 77.78f, 98.00f,
 			65.41f, 65.41f, 77.78f, 65.41f, 130.81f,65.41f, 77.78f, 49.00f };
-		int bassStep = (int)(t * 4.0) % 16;
+		int bassStep = (int)(t * 4.0f) % 16;
 		float fB = bassFreqs[bassStep];
-		if (loopPhase > 0.5f) fB *= 0.5f; // Octave drop in the second half of the loop (after 16 sec)
+		if (loopPhase > 0.5f) fB *= 0.5f; 
 		float bass = sinf(PI2 * fB * tb) * envB;
 		bass = WaveShaper_CubicSat(bass * 2.5f) * 0.6f;
 
-		// --- PAD / CHORDS (Slowly floating synthesizer) ---
-		float padMod = sinf(PI2 * 0.5f * (float)t); // Slow vibrato / FM on the oscillators
-		float pad1 = sinf(PI2 * 130.81f * (float)t) + sinf(PI2 * 196.00f * (float)t) + sinf(PI2 * 311.13f * (float)t + padMod);
-		float pad2 = sinf(PI2 * 103.83f * (float)t) + sinf(PI2 * 155.56f * (float)t) + sinf(PI2 * 261.63f * (float)t + padMod);
-		float padMix = (sinf(PI2 * (float)t / 16.0f) * 0.5f + 0.5f); // 16-second crossfade between the two chords
+		// --- PAD / CHORDS ---
+		float padMod = sinf(PI2 * 0.5f * t); 
+		float pad1 = sinf(PI2 * 130.81f * t) + sinf(PI2 * 196.00f * t) + sinf(PI2 * 311.13f * t + padMod);
+		float pad2 = sinf(PI2 * 103.83f * t) + sinf(PI2 * 155.56f * t) + sinf(PI2 * 261.63f * t + padMod);
+		float padMix = (sinf(PI2 * t / 16.0f) * 0.5f + 0.5f); 
 		float pad = (pad1 * (1.0f - padMix) + pad2 * padMix) * 0.05f;
 		pad = WaveShaper_Tan(pad, 2.0f);
-		float padEnv = 0.5f - 0.5f * cosf(PI2 * loopPhase); // Smooth fade in and out during the cycle
+		float padEnv = 0.5f - 0.5f * cosf(PI2 * loopPhase); 
 		pad *= padEnv;
 
-		// --- ARPEGGIO (With ping-pong delay, using a lambda function) ---
-		auto GetArp = [](double timeStr) -> float {
-			if (timeStr < 0.0) return 0.0f; // <--- bugfix
+		// --- ARPEGGIO (Seamless loop delay) ---
+		float arpL = Synth_GetArp(t);
 
-			float ta = fmodf((float)timeStr, 0.125f);
-			float envA = ta * 40.0f * expf(-ta * 40.0f) * 2.71828f;
-			const float arpFreqs[16] = { 523.25f, 392.00f, 622.25f, 523.25f, 
-				783.99f, 622.25f, 523.25f, 466.16f,
-				523.25f, 783.99f, 622.25f, 880.00f,
-				783.99f, 622.25f, 523.25f, 392.00f };
-			int arpStep = (int)(timeStr * 8.0) % 16;
-			float fA = arpFreqs[arpStep];
+		// Right channel delay logic: if time goes below 0, wrap it back to the end of the 32s loop!
+		float tR = t - 0.375f;
+		if (tR < 0.0f) tR += 32.0f;
+		float arpR = Synth_GetArp(tR); 
 
-			// 2-operator FM synthesis
-			float arpOsc = sinf(PI2 * fA * ta + sinf(PI2 * fA * 1.5f * ta) * 2.0f * envA);
-			return WaveShaper_Atan(arpOsc, 4.0f) * envA * 0.15f;
-			};
-		float arpL = GetArp(t);
-		float arpR = GetArp(t - 0.375); // Mathematical delay of 3/16 notes on the right channel!
-
-		// --- HI-HAT (From pseudo-random noise) ---
-		uint32_t seed = (uint32_t)(t * 44100.0) * 1664525 + 1013904223; // Simple LCG hash for noise generation
-		float noise = (float)seed * 4.6566129e-10f - 1.0f; // Scaled between -1 and 1
-		float th = fmodf((float)t, 0.125f);
-		bool accent = ((int)(t * 8.0) % 4) == 2; // Off-beat open hi-hat
+		// --- HI-HAT ---
+		// We can now use the integer loopSample directly for perfectly looping noise seed!
+		uint32_t seed = loopSample * 1664525 + 1013904223; 
+		float noise = (float)seed * 4.6566129e-10f - 1.0f; 
+		float th = fmodf(t, 0.125f);
+		bool accent = ((int)(t * 8.0f) % 4) == 2; 
 		float envH = expf(-th * (accent ? 40.0f : 80.0f));
 		float hat = WaveShaper_CubicSat(noise * envH * 0.08f);
 
@@ -321,22 +342,10 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		float mixL = kick + bass + pad + arpL + hat;
 		float mixR = kick + bass + pad + arpR + hat * 0.7f;
 
-		// Using WaveShaper_Tan on the Master bus as a limiter and for subtle saturation (warming)
-		mixL = WaveShaper_Tan(mixL, 1.2f) * 0.1f;
-		mixR = WaveShaper_Tan(mixR, 1.2f) * 0.1f;
+		mixL = WaveShaper_Tan(mixL, 1.2f) * 0.6f;
+		mixR = WaveShaper_Tan(mixR, 1.2f) * 0.6f;
 
-		// ADD the mix to the existing output (the += operator is important to keep events / gunshots)
 		sAudioBuffer.pData[iFrameInd * 2 + 0] += mixL;
 		sAudioBuffer.pData[iFrameInd * 2 + 1] += mixR;
 	}
-
-	//////////////////////////////////////////////////////////////////////////
-
-	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
-	{
-		for ( int iChInd = 0; iChInd < 2; iChInd++ )
-		{
-
-		}
-	}
-	}
+}

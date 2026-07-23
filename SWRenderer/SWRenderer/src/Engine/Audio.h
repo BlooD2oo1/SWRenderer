@@ -106,6 +106,8 @@ public:
 
 private:
 
+	void				Music( SAudioBuffer& sAudioBuffer );
+
 	uint64_t		m_iFrameInd;
 	uint64_t		m_iStartTimeStampNs;
 	uint64_t		m_iSampleCounter;
