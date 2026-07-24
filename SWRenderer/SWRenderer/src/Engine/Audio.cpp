@@ -361,6 +361,7 @@ static const int g_PatternLead[16] = {
 
 void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 {
+	LOG( "MUSIC  %.4f sec ( action=%.2f, climax=%.2f )\n", (double)(m_iSampleCounter) / 1000.0 / 1000.0 / 1000.0, fAction, fClimax );
 	const float fBPM = 80.0f; // Tempo
 	const float fSecondsPerBeat = 60.0f / fBPM;
 	const float fSecondsPer16th = fSecondsPerBeat / 4.0f;
@@ -449,6 +450,7 @@ void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 		float fLead = 0.0f;
 		{
 			int iLeadNoteIdx = g_PatternLead[iCurrent16th];
+			//float fSecondVolume = iCurrent16th % 2 == 0 ? fAction+0.5f : 1.0f;
 			if ( iLeadNoteIdx >= 0 )
 			{
 				float fEnv = expf( -fStepTime * 18.0f );
@@ -459,7 +461,7 @@ void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 				float fLeadOsc1 = Osc_Pulse( fFreq * t, fGlobalPwm );
 				float fLeadOsc2 = Osc_Pulse( ( fFreq * 1.003f ) * t, 0.125f );
 
-				fLead = ( fLeadOsc1 + fLeadOsc2 * 0.5f ) * fEnv * 0.15f;
+				fLead = ( fLeadOsc1 + fLeadOsc2 * 0.5f ) * fEnv * 0.15f;// * fSecondVolume;
 			}
 		}
 

@@ -171,10 +171,11 @@ void CScene02::Update()
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 		float fWSlow = CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs );
-		SVector3 vP( m_sShipControl.m_vPos + m_sShipControl.m_vMov*250.0f );
+		SVector3 vP( m_sShipControl.m_vPos + m_sShipControl.m_vMov*300.0f );
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += 100.0f;
+		// lerp with m_sShipControl.m_vMov exp:
+		m_sCamera.m_vEye.z += Lerp( 500.0f, 100.0f, expf( -SVector3::Length( m_sShipControl.m_vMov ) * 1.5f ) );
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 		
@@ -343,7 +344,7 @@ void CScene02::Render()
 			}
 		} sVertexShaderGrid;
 
-		float fSpacing = 30.0f;
+		float fSpacing = 60.0f;
 		int iHalfGridSize = 10/2;
 
 		SMatrix matScale;
@@ -480,24 +481,36 @@ bool CScene02::On_KeyDown( uint32_t key )
 	case 0x26:
 	{
 		m_sShipControl.m_fSpeed_ctrl = 1.0f;
+
+		fAction += 0.1f;
+		fAction = Clamp( fAction, 0.0f, 1.0f );
 	}
 	break;
 	// VK_DOWN
 	case 0x28:
 	{
 		m_sShipControl.m_fSpeed_ctrl = -1.0f;
+
+		fAction -= 0.1f;
+		fAction = Clamp( fAction, 0.0f, 1.0f );
 	}
 	break;
 	// VK_LEFT
 	case 0x25:
 	{
 		m_sShipControl.m_fYaw_ctrl = 1.0f;
+
+		fClimax += 0.1f;
+		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
 		m_sShipControl.m_fYaw_ctrl = -1.0f;
+
+		fClimax -= 0.1f;
+		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 	}
 	break;
 	// VK_SPACE
@@ -521,32 +534,24 @@ bool CScene02::On_KeyUp( uint32_t key )
 		// VK_UP
 	case 0x26:
 	{
-		fAction += 0.1f;
-		fAction = Clamp( fAction, 0.0f, 1.0f );
 		m_sShipControl.m_fSpeed_ctrl = 0.0f;
 	}
 	break;
 	// VK_DOWN
 	case 0x28:
 	{
-		fAction -= 0.1f;
-		fAction = Clamp( fAction, 0.0f, 1.0f );
 		m_sShipControl.m_fSpeed_ctrl = 0.0f;
 	}
 	break;
 	// VK_LEFT
 	case 0x25:
 	{
-		fClimax += 0.1f;
-		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
-		fClimax -= 0.1f;
-		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
 	}
 	break;
