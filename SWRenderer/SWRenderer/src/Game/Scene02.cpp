@@ -58,23 +58,22 @@ void CScene02::Update()
 		m_sShipControl.m_vDirPrev = m_sShipControl.m_vDir;
 		m_sShipControl.m_matShipPrev = m_sShipControl.m_matShip;
 
-		m_sShipControl.m_fYawVel += m_sShipControl.m_fYawVelAcc * 0.00005f * fElapsedTimeMs;
-		m_sShipControl.m_fYawVel = Clamp( m_sShipControl.m_fYawVel, -0.005f, 0.005f );
-		float fYawW = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
-		m_sShipControl.m_fYawVel = Lerp( 0.0f, m_sShipControl.m_fYawVel, fYawW );
+		m_sShipControl.m_fYawSpeed += m_sShipControl.m_fYaw_ctrl * 0.00005f * fElapsedTimeMs;
+		m_sShipControl.m_fYawSpeed = Clamp( m_sShipControl.m_fYawSpeed, -0.005f, 0.005f );
+		m_sShipControl.m_fYawSpeed = Lerp( 0.0f, m_sShipControl.m_fYawSpeed, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
+		m_sShipControl.m_fYaw += m_sShipControl.m_fYawSpeed * fElapsedTimeMs;
 
-		m_sShipControl.m_fYaw += m_sShipControl.m_fYawVel * fElapsedTimeMs;
-		m_sShipControl.m_fAcc += m_sShipControl.m_fAccVel * 0.00005f * fElapsedTimeMs;
-
-		float fMovDecW = CalcSmoothUpdateWeight( 1.0001f, fElapsedTimeMs );
-		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, fMovDecW );
-
-		float fAccW = CalcSmoothUpdateWeight( 1.1f, fElapsedTimeMs );
-		m_sShipControl.m_fAcc = Lerp( 0.0f, m_sShipControl.m_fAcc, fAccW );
+		m_sShipControl.m_fRoll += m_sShipControl.m_fYawSpeed * 0.6f * fElapsedTimeMs;
+		m_sShipControl.m_fRoll = Lerp( 0.0f, m_sShipControl.m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
+		
+		m_sShipControl.m_fSpeed += m_sShipControl.m_fSpeed_ctrl * 0.000002f * fElapsedTimeMs;
+		m_sShipControl.m_fSpeed = Lerp( 0.0f, m_sShipControl.m_fSpeed, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
+		
+		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 
 		SVector3 vShipDir( cosf( m_sShipControl.m_fYaw ), sinf( m_sShipControl.m_fYaw ), 0.0f );
 
-		m_sShipControl.m_vMov += vShipDir * m_sShipControl.m_fAcc * fElapsedTimeMs;
+		m_sShipControl.m_vMov += vShipDir * m_sShipControl.m_fSpeed * fElapsedTimeMs;
 		m_sShipControl.m_vPos += m_sShipControl.m_vMov * fElapsedTimeMs;
 
 		m_sShipControl.UpdateMatrices();
@@ -119,7 +118,7 @@ void CScene02::Update()
 				sAudioEvent.type = SAudioEvent::GunShot;
 				sAudioEvent.fVolume = 0.4f;
 				sAudioEvent.iTimeStampNs = m_sShipControl.m_iLastBulletTimeStampNs;
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 550;
 				sAudioEvent.iSampleCounter = 0;
 				sAudioEvent.fPhase = 0.0f;			
 				sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
@@ -150,14 +149,14 @@ void CScene02::Update()
 		SVector3 vP( m_sShipControl.m_vPos );
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += 150.0f;
+		m_sCamera.m_vEye.z += 140.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 		
 		m_sCamera.UpdateMatrices();
 	}
 
-	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = 0.0f;
+	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = m_sShipControl.m_fSpeed*100000.0f;//SVector3::Length( m_sShipControl.m_vMov )*100.0f;
 	CEngine::GetInstance().GetAudioFrameData().m_vShipPos = m_sShipControl.m_vPos;
 	CEngine::GetInstance().GetAudioFrameData().m_vCameraEye = m_sCamera.m_vEyeSmooth;
 	CEngine::GetInstance().GetAudioFrameData().m_vCameraLookAt = m_sCamera.m_vLookAtSmooth;
@@ -454,25 +453,25 @@ bool CScene02::On_KeyDown( uint32_t key )
 	// VK_UP
 	case 0x26:
 	{
-		m_sShipControl.m_fAccVel = 1.0f;
+		m_sShipControl.m_fSpeed_ctrl = 1.0f;
 	}
 	break;
 	// VK_DOWN
 	case 0x28:
 	{
-		m_sShipControl.m_fAccVel = -1.0f;
+		m_sShipControl.m_fSpeed_ctrl = -1.0f;
 	}
 	break;
 	// VK_LEFT
 	case 0x25:
 	{
-		m_sShipControl.m_fYawVelAcc = 1.0f;
+		m_sShipControl.m_fYaw_ctrl = 1.0f;
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
-		m_sShipControl.m_fYawVelAcc = -1.0f;
+		m_sShipControl.m_fYaw_ctrl = -1.0f;
 	}
 	break;
 	// VK_SPACE
@@ -495,7 +494,7 @@ bool CScene02::On_KeyUp( uint32_t key )
 	{
 		fAction += 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
-		m_sShipControl.m_fAccVel = 0.0f;
+		m_sShipControl.m_fSpeed_ctrl = 0.0f;
 	}
 	break;
 	// VK_DOWN
@@ -503,7 +502,7 @@ bool CScene02::On_KeyUp( uint32_t key )
 	{
 		fAction -= 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
-		m_sShipControl.m_fAccVel = 0.0f;
+		m_sShipControl.m_fSpeed_ctrl = 0.0f;
 	}
 	break;
 	// VK_LEFT
@@ -511,7 +510,7 @@ bool CScene02::On_KeyUp( uint32_t key )
 	{
 		fClimax += 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
-		m_sShipControl.m_fYawVelAcc = 0.0f;
+		m_sShipControl.m_fYaw_ctrl = 0.0f;
 	}
 	break;
 	// VK_RIGHT
@@ -519,7 +518,7 @@ bool CScene02::On_KeyUp( uint32_t key )
 	{
 		fClimax -= 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
-		m_sShipControl.m_fYawVelAcc = 0.0f;
+		m_sShipControl.m_fYaw_ctrl = 0.0f;
 	}
 	break;
 	// VK_SPACE

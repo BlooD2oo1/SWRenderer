@@ -87,8 +87,8 @@ void CCameraFree::Update( float fElapsedTimeMs )
 	m_vEyeSmooth = Lerp( m_vEye, m_vEyeSmooth, fW );
 	m_vLookAtSmooth = Lerp( m_vLookAt, m_vLookAtSmooth, fW );
 	
-	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUp );
-	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
+	SMatrix::BuildLHViewMatrix( m_matView, m_vEyeSmooth, m_vLookAtSmooth, m_vUp );
+	SMatrix::BuildLHProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
 
 	m_matView000 = m_matView;
@@ -171,8 +171,8 @@ void CCameraShip::Update( float fElapsedTimeMs, const SMatrix& matShip )
 		SVector3::Normalize( m_vUpSmooth1, m_vUpSmooth1 );
 	}
 
-	SMatrix::BuildViewMatrix( m_matView, m_vEyeSmooth1, m_vLookAtSmooth1, m_vUpSmooth1 );
-	SMatrix::BuildProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
+	SMatrix::BuildLHViewMatrix( m_matView, m_vEyeSmooth1, m_vLookAtSmooth1, m_vUpSmooth1 );
+	SMatrix::BuildLHProjectionMatrix( m_matProj, m_fFOVY, m_fAspect, m_fNear, m_fFar );
 	SMatrix::Mul( m_matViewProj, m_matView, m_matProj );
 
 	m_matView000 = m_matView;

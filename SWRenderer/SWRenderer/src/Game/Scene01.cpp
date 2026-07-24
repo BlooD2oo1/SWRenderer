@@ -377,7 +377,7 @@ void CScene01::Render()
 	{
 		SMatrix matWorld;
 		SMatrix::Identity( matWorld );
-		SMatrix::BuildViewMatrix( matWorld, m_pCirclePos[i], cCamera.GetEye() + ( cCamera.GetLookAt() - cCamera.GetEye() )*100.0f, SVector3( 0.0f, 0.0f, 1.0f ) );
+		SMatrix::BuildLHViewMatrix( matWorld, m_pCirclePos[i], cCamera.GetEye() + ( cCamera.GetLookAt() - cCamera.GetEye() )*100.0f, SVector3( 0.0f, 0.0f, 1.0f ) );
 		SMatrix::Inverse( matWorld, matWorld );
 		SMatrix::Scale( matWorld, 100.0f );
 

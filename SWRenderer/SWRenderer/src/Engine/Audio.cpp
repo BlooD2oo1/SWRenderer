@@ -30,6 +30,12 @@ static float WaveShaper_CubicSat( float x )
 // DSP & CHIPTUNE OSCILLATORS
 // ============================================================================
 
+static float MidiToFreq( int iMidiNote )
+{
+	if ( iMidiNote <= 0 ) return 0.0f;
+	return 440.0f * powf( 2.0f, ( (float)iMidiNote - 69.0f ) / 12.0f );
+}
+
 // Variable width Pulse / Square wave (Classic 8-bit sound: 12.5%, 25%, 50% PWM)
 static float Osc_Pulse( float fPhase, float fPwm = 0.5f )
 {
@@ -46,7 +52,7 @@ static float Osc_Triangle( float fPhase )
 	return 4.0f * fabsf( fP - 0.5f ) - 1.0f;
 }
 
-// 8-bit Pseudo-Random Noise generator (LFSR style for chiptune drums)
+// 8-bit Pseudo-Random Noise generator (LFSR style for chiptune drums & sfx)
 static float Osc_8BitNoise( uint32_t& uSeed )
 {
 	uSeed = uSeed * 1664525u + 1013904223u;
@@ -89,36 +95,8 @@ void CAudio::MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent )
 	m_ringAudioEvents.Push( sAudioEvent );
 }
 
-std::vector< float > aFreq[2];
-std::vector< float > aPhase[2];
-
-std::vector< float > aFreq2[2];
-std::vector< float > aPhase2[2];
-
-int iC = 5;
-bool b = true;
-
 void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 {
-	if (b)
-	{
-		b = false;
-		for ( int iChInd = 0; iChInd < 2; iChInd++ )
-		{
-			for ( int i = 0; i < iC; i++ )
-			{
-				float fW = (float)i / (float)iC;
-				aFreq[iChInd].push_back( 0.8f + fW*fW*14.0f*((float)rand()/(float)RAND_MAX) );
-				aPhase[iChInd].push_back( 0.0f );
-
-				aFreq2[iChInd].push_back( 0.01f + fW*0.1f*((float)rand()/(float)RAND_MAX) );
-				aPhase2[iChInd].push_back( 0.0f );
-			}
-		}
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-
 	if ( m_iEchoBufferSize < sAudioBuffer.iNumFrames * 2 )
 	{
 		SAFE_DELETE_ARRAY( m_pEchoBuffer );
@@ -140,7 +118,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 	m_iSampleCounter += sAudioBuffer.iNumFrames;
 
 	uint64_t iTimeStampNs = m_iStartTimeStampNs + (uint64_t)((double)m_iSampleCounter * 1e9 / (double)sAudioBuffer.iSampleRate);
-		
+
 	const uint64_t iDelayedTimeStampNs = iTimeStampNs - iDelayNs;
 
 	LOG( "AUDIO  %.4f sec ( delayed )\n", (double)(iDelayedTimeStampNs) / 1000.0 / 1000.0 / 1000.0 );
@@ -207,34 +185,69 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			}
 		}
 	}
+
 	//////////////////////////////////////////////////////////////////////////
+	// AMBIENT ENGINE SOUND GENERATION (RETRO SPACESHIP THRUSTER & TURBINE)
+	//////////////////////////////////////////////////////////////////////////
+
+	// Persistent engine synthesis states
+	static float s_fEnginePhaseSub = 0.0f;
+	static float s_fEnginePhaseTurbineL = 0.0f;
+	static float s_fEnginePhaseTurbineR = 0.0f;
+	static float s_fEngineLFO = 0.0f;
+	static uint32_t s_uEngineNoiseSeed = 1337u;
+
+	const float fSpeed = sAudioFrameData.m_fShipSpeed;
+
+	// Dynamic pitch targets based on ship velocity
+	const float fSubFreq     = 35.0f + fSpeed * 45.0f;      // Deep sub-thrust rumble (35Hz -> 80Hz)
+	const float fTurbineFreq = 110.0f + fSpeed * 520.0f;    // Sci-Fi plasma turbine whine (110Hz -> 630Hz)
+	const float fLFOFreq     = 8.0f + fSpeed * 14.0f;       // Engine throb / LFO rate
+
+	const float fDt = 1.0f / (float)sAudioBuffer.iSampleRate;
 
 	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
 	{
-		for ( int iChInd = 0; iChInd < 2; iChInd++ )
-		{
-			float fOut = 0.0f;
-			for ( int i = 0; i < iC; i++ )
-			{
-				float fW = (float)i / (float)iC;
-				float& fPhase = aPhase[iChInd][i];
-				float fFreq = aFreq[iChInd][i]*sAudioFrameData.m_fShipSpeed*60.0f;
+		// Advance oscillator phases
+		s_fEnginePhaseSub += fSubFreq * fDt;
+		if ( s_fEnginePhaseSub >= 1.0f ) s_fEnginePhaseSub -= 1.0f;
 
-				float& fPhase2 = aPhase2[iChInd][i];
-				float fFreq2 = aFreq2[iChInd][i]*sAudioFrameData.m_fShipSpeed*60.0f;
+		s_fEnginePhaseTurbineL += fTurbineFreq * fDt;
+		if ( s_fEnginePhaseTurbineL >= 1.0f ) s_fEnginePhaseTurbineL -= 1.0f;
 
-				fOut  += powf( sinf(fPhase * PI2), 3.0f ) * powf( sinf( fPhase2 * PI2 ), 5.0f ) * (1.0f - fW*0.8f );
+		// Stereo detune for wider spatial reactor field
+		s_fEnginePhaseTurbineR += ( fTurbineFreq * 1.006f ) * fDt;
+		if ( s_fEnginePhaseTurbineR >= 1.0f ) s_fEnginePhaseTurbineR -= 1.0f;
 
-				fPhase += fFreq / (float)sAudioBuffer.iSampleRate;
-				fPhase2 += fFreq2 / (float)sAudioBuffer.iSampleRate;
+		s_fEngineLFO += fLFOFreq * fDt;
+		if ( s_fEngineLFO >= 1.0f ) s_fEngineLFO -= 1.0f;
 
-				// Wrap around the phase to maintain precision
-				if (fPhase >= 1.0f) fPhase -= 1.0f;
-				if (fPhase2 >= 1.0f) fPhase2 -= 1.0f;
-			}
-			fOut /= (float)iC;
-			sAudioBuffer.pData[iFrameInd * 2 + iChInd] = fOut  * 0.4f;
-		}
+		// 1. Sub-Bass Rumble (Modulated triangle wave + 8-bit noise texture)
+		float fLfoVal = 0.7f + 0.3f * sinf( s_fEngineLFO * PI2 );
+		float fNoiseVal = Osc_8BitNoise( s_uEngineNoiseSeed );
+		float fSubRumble = Osc_Triangle( s_fEnginePhaseSub ) * ( 0.65f + 0.35f * fNoiseVal ) * fLfoVal;
+
+		// 2. Plasma Turbine Whine (PWM Pulse wave)
+		float fPwm = 0.15f + 0.10f * sinf( s_fEngineLFO * PI2 * 0.5f );
+		float fTurbineL = Osc_Pulse( s_fEnginePhaseTurbineL, fPwm );
+		float fTurbineR = Osc_Pulse( s_fEnginePhaseTurbineR, fPwm );
+
+		// 3. Exhaust Noise Grit
+		float fExhaustNoise = fNoiseVal * ( 0.15f + 0.65f * fSpeed );
+
+		// Mix channels
+		float fEngineL = ( fSubRumble * 0.55f ) + ( fTurbineL * 0.22f ) + ( fExhaustNoise * 0.15f );
+		float fEngineR = ( fSubRumble * 0.55f ) + ( fTurbineR * 0.22f ) + ( fExhaustNoise * 0.15f );
+
+		// Master engine volume (scales slightly with speed)
+		float fEngineVol = 0.003f + 0.001f * fSpeed;
+
+		sAudioBuffer.pData[iFrameInd * 2 + 0] = FX_Bitcrush( fEngineL, 16.0f ) * fEngineVol;
+		sAudioBuffer.pData[iFrameInd * 2 + 1] = FX_Bitcrush( fEngineR, 16.0f ) * fEngineVol;
+
+		// ====================================================================
+		// RETRO ARCADE AUDIO EVENTS (GUNSHOT, CLICKS)
+		// ====================================================================
 
 		for ( int iEvent = 0; iEvent < m_aAudioEvents.size(); iEvent++ )
 		{
@@ -244,255 +257,52 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			float fTimeW = (float)((double)sAudioEvent.iSampleCounter / dLifeTimeSamples);
 			if ( fTimeW > 1.0f ) continue;
 
-			float fExpMaster = 1.0f - fabsf( powf( fTimeW, 0.2f ) - 0.5f ) * 2.0f;
+			float fSampleOut = 0.0f;
 
+			if ( sAudioEvent.type == SAudioEvent::GunShot )
+			{
+				// --- ARCADE SPACESHIP RAILGUN / LASER ---
+				float fFreq = 2600.0f * expf( -fTimeW * 12.0f ) + 150.0f;
+
+				sAudioEvent.fPhase += fFreq / (float)sAudioBuffer.iSampleRate;
+				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
+
+				float fEnv = expf( -fTimeW * 14.0f );
+				float fPulsePWM = 0.125f + 0.05f * sinf( fTimeW * 20.0f );
+				float fLaserTone = Osc_Pulse( sAudioEvent.fPhase, fPulsePWM );
+
+				uint32_t uNoiseSeed = (uint32_t)( sAudioEvent.iSampleCounter * 1664525u + iEvent * 1013904223u );
+				float fNoiseBurst = Osc_8BitNoise( uNoiseSeed ) * expf( -fTimeW * 45.0f );
+
+				float fRawSample = fLaserTone * 0.75f + fNoiseBurst * 0.45f;
+				fSampleOut = FX_Bitcrush( fRawSample, 12.0f ) * fEnv;
+			}
+			else if ( sAudioEvent.type == SAudioEvent::ClickDown || sAudioEvent.type == SAudioEvent::ClickUp )
+			{
+				// --- RETRO ARCADE UI CLICKS ---
+				float fFreq = ( sAudioEvent.type == SAudioEvent::ClickDown )
+					? Lerp( 1200.0f, 300.0f, fTimeW )
+					: Lerp( 400.0f, 1100.0f, fTimeW );
+
+				sAudioEvent.fPhase += fFreq / (float)sAudioBuffer.iSampleRate;
+				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
+
+				float fEnv = expf( -fTimeW * 22.0f );
+				float fClickOsc = Osc_Pulse( sAudioEvent.fPhase, 0.25f );
+				fSampleOut = FX_Bitcrush( fClickOsc, 16.0f ) * fEnv;
+			}
+
+			// Add sound to left and right channels
 			for ( int iChInd = 0; iChInd < 2; iChInd++ )
 			{
-				float x = sinf( sAudioEvent.fPhase * PI2 );
-
-				switch( sAudioEvent.type )
-				{
-					case SAudioEvent::ClickDown:
-					x = WaveShaper_CubicSat( x );
-					break;
-					case SAudioEvent::ClickUp:
-					x = WaveShaper_CubicSat( x );
-					break;
-					case SAudioEvent::GunShot:
-					x = WaveShaper_CubicSat( x );
-					break;
-				}
-				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += (sAudioEvent.fVolume * 0.5f) * x * fExpMaster;
+				sAudioBuffer.pData[iFrameInd * 2 + iChInd] += ( sAudioEvent.fVolume * 0.35f ) * fSampleOut;
 			}
 
 			sAudioEvent.iSampleCounter++;
-
-			if ( sAudioEvent.type == SAudioEvent::ClickDown )
-			{
-				sAudioEvent.fPhase += Lerp( 1000.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
-			}
-			if ( sAudioEvent.type == SAudioEvent::ClickUp )
-			{
-				sAudioEvent.fPhase += Lerp( 700.0f, 440.0f, fTimeW ) / (float)sAudioBuffer.iSampleRate;
-			}
-			if ( sAudioEvent.type == SAudioEvent::GunShot )
-			{
-				sAudioEvent.fPhase += Lerp( 200.0f, 1480.0f, fTimeW*fTimeW ) / (float)sAudioBuffer.iSampleRate;
-			}
-
-					
-			if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
-		}
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-
-	for (uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++)
-	{
-		for ( int iChInd = 0; iChInd < 2; iChInd++ )
-		{
-
 		}
 	}
 
 	Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
-}
-
-// 
-// // --- HELPER: MIDI Note -> Frequency (Hz) ---
-// static float MidiToFreq( int iMidiNote )
-// {
-// 	if ( iMidiNote <= 0 ) return 0.0f; // 0 or negative = Pause / Silence
-// 	return 440.0f * powf( 2.0f, ( (float)iMidiNote - 69.0f ) / 12.0f );
-// }
-// 
-// // --- ARPEGGIO PATTERN ---
-// // C5 (72), G4 (67), D#5 (75), A#4 (70), A5 (81)
-// static const int g_ArpSequence[] = {
-// 	72, 67, 75, 72,
-// 	79, 75, 72, 70,
-// 	72, 79, 75, 81,
-// 	79, 75, 72, 67
-// };
-// static const int g_iArpSequenceCount = sizeof( g_ArpSequence ) / sizeof( g_ArpSequence[0] );
-// 
-// // --- BASSLINE PATTERN ---
-// // C2 (36), D#2 (39), F2 (41), G2 (43), C3 (48), G1 (31)
-// static const int g_BassSequence[] = {
-// 	36, 36, 39, 36, 41, 36, 39, 43,
-// 	36, 36, 39, 36, 48, 36, 39, 31
-// };
-// static const int g_iBassSequenceCount = sizeof( g_BassSequence ) / sizeof( g_BassSequence[0] );
-// 
-// // --- PAD / CHORD STRUCTURE ---
-// struct SChord
-// {
-// 	int aNotes[4]; // 4-note chord voicing
-// };
-// 
-// static const SChord g_PadChords[] = {
-// 	{ { 48, 55, 63, 48 } }, // C minor (C3, G3, D#4, C3)
-// 	{ { 44, 51, 60, 44 } }  // G# major (G#2, D#3, C4, G#2)
-// };
-// static const int g_iPadChordCount = sizeof( g_PadChords ) / sizeof( g_PadChords[0] );
-// 
-// // --- ARPEGGIO SYNTHESIZER ---
-// static float Synth_GetArp( float timeStr, float fAction, float fClimax )
-// {
-// 	float ta = fmodf( timeStr, 0.125f );
-// 	float envA = ta * 40.0f * expf( -ta * 40.0f ) * 2.71828f;
-// 
-// 	int arpStep = (int)( timeStr * 8.0f ) % g_iArpSequenceCount;
-// 	float fA = MidiToFreq( g_ArpSequence[arpStep] );
-// 
-// 	// FM modulation depth driven by action and climax
-// 	float fmDepth = 1.0f + fClimax * 0.8f + fAction * 1.2f;
-// 
-// 	// 2-operator FM synthesis for the arpeggio
-// 	float arpOsc = sinf( PI2 * fA * ta + sinf( PI2 * fA * 1.5f * ta ) * fmDepth * envA );
-// 
-// 	float vol = 0.05f + fClimax * 0.03f + fAction * 0.02f;
-// 	return WaveShaper_Atan( arpOsc, 4.0f ) * envA * vol;
-// }
-// 
-// // --- MAIN MUSIC GENERATOR ---
-// void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
-// {
-// 	// Calculate how many samples make up exactly 32 seconds
-// 	const uint32_t loopLenSamples = 32 * sAudioBuffer.iSampleRate;
-// 
-// 	for ( uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++ )
-// 	{
-// 		// 1. Get current absolute sample, then wrap around the 32 sec loop length
-// 		uint64_t currentSample = m_iSampleCounter - sAudioBuffer.iNumFrames + iFrameInd;
-// 		uint32_t loopSample = (uint32_t)( currentSample % loopLenSamples );
-// 
-// 		// 2. Calculate time in seconds, strictly between 0.0f and 31.999f
-// 		float t = (float)loopSample / (float)sAudioBuffer.iSampleRate;
-// 
-// 		// Normalized phase (0.0 - 1.0) for the whole loop
-// 		float loopPhase = t / 32.0f;
-// 
-// 		float tk = fmodf( t, 0.5f );
-// 
-// 		// --- KICK DRUM ---
-// 		float kick = 0.0f;
-// 		{
-// 			float envK = tk * 50.0f * expf( -tk * 50.0f ) * 2.71828f;
-// 
-// 			float kickPunch = 40.0f + fAction * 20.0f;
-// 			kick = sinf( PI2 * ( kickPunch * tk - 5.0f * expf( -tk * 30.0f ) ) ) * envK;
-// 
-// 			float kickDistortion = 0.6f - fAction * 0.05f;
-// 			float kickVol = 0.45f + fClimax * 0.05f + fAction * 0.05f;
-// 			kick = WaveShaper_Power( kick, kickDistortion ) * kickVol;
-// 		}
-// 
-// 		// --- BASSLINE ---
-// 		float bass = 0.0f;
-// 		{
-// 			float tb = fmodf( t, 0.25f );
-// 			float envB = tb * 30.0f * expf( -tb * 30.0f ) * 2.71828f;
-// 
-// 			int bassStep = (int)( t * 4.0f ) % g_iBassSequenceCount;
-// 			float fB = MidiToFreq( g_BassSequence[bassStep] );
-// 
-// 			if ( loopPhase > 0.5f ) fB *= 0.5f; // Octave drop in the second half of the loop
-// 
-// 			bool isOffBeat = ( bassStep % 2 != 0 );
-// 			float intensity = ( fAction > fClimax ) ? fAction : fClimax;
-// 			float stepActivityMultiplier = 1.0f;
-// 			if ( isOffBeat )
-// 			{
-// 				stepActivityMultiplier = 0.2f + 0.8f * intensity;
-// 			}
-// 
-// 			// Gentle FM growl for bass
-// 			float bassFmEnv = tb * 20.0f * expf( -tb * 20.0f );
-// 			float bassMod = sinf( PI2 * fB * 2.0f * tb ) * fAction * 1.5f * bassFmEnv;
-// 			bass = sinf( PI2 * fB * tb + bassMod ) * envB;
-// 
-// 			float bassDrive = 1.1f + fClimax * 0.3f + fAction * 0.4f;
-// 			float bassVol = ( 0.3f + fClimax * 0.05f ) * stepActivityMultiplier;
-// 			bass = WaveShaper_CubicSat( bass * bassDrive ) * bassVol;
-// 		}
-// 
-// 		// --- PAD / CHORDS ---
-// 		float pad = 0.0f;
-// 		{
-// 			float padMod = sinf( PI2 * 0.5f * t );
-// 
-// 			// Fetch frequencies for Chord 1 (C minor) and Chord 2 (G# major) from MIDI data
-// 			const SChord& c1 = g_PadChords[0];
-// 			const SChord& c2 = g_PadChords[1];
-// 
-// 			float pad1 = sinf( PI2 * MidiToFreq( c1.aNotes[0] ) * t ) +
-// 				sinf( PI2 * MidiToFreq( c1.aNotes[1] ) * t ) +
-// 				sinf( PI2 * MidiToFreq( c1.aNotes[2] ) * t + padMod ) +
-// 				sinf( PI2 * ( MidiToFreq( c1.aNotes[3] ) + 0.39f ) * t ); // slight detune
-// 
-// 			float pad2 = sinf( PI2 * MidiToFreq( c2.aNotes[0] ) * t ) +
-// 				sinf( PI2 * MidiToFreq( c2.aNotes[1] ) * t ) +
-// 				sinf( PI2 * MidiToFreq( c2.aNotes[2] ) * t + padMod ) +
-// 				sinf( PI2 * ( MidiToFreq( c2.aNotes[3] ) + 0.27f ) * t ); // slight detune
-// 
-// 			float padMix = ( sinf( PI2 * t / 16.0f ) * 0.5f + 0.5f );
-// 			pad = ( pad1 * ( 1.0f - padMix ) + pad2 * padMix ) * 0.04f;
-// 
-// 			// Warmer saturation profile
-// 			pad = WaveShaper_Tan( pad, 2.0f );
-// 			float padEnv = 0.5f - 0.5f * cosf( PI2 * loopPhase );
-// 
-// 			float climaxCurve = fClimax * fClimax;
-// 			float pumpEffect = 1.0f - ( fAction * 0.4f * expf( -tk * 15.0f ) );
-// 			float padVolMultiplier = 0.2f + 1.3f * climaxCurve;
-// 			pad *= padEnv * padVolMultiplier * pumpEffect;
-// 		}
-// 
-// 		// --- ARPEGGIO ---
-// 		float arpL = 0.0f;
-// 		float arpR = 0.0f;
-// 		{
-// 			arpL = Synth_GetArp( t, fAction, fClimax );
-// 
-// 			float tR = t - 0.375f;
-// 			if ( tR < 0.0f ) tR += 32.0f;
-// 
-// 			arpR = Synth_GetArp( tR, fAction, fClimax );
-// 		}
-// 
-// 		// --- HI-HAT ---
-// 		float hat = 0.0f;
-// 		{
-// 			uint32_t seed = loopSample * 1664525 + 1013904223;
-// 			float noise = (float)seed * 4.6566129e-10f - 1.0f;
-// 			float th = fmodf( t, 0.125f );
-// 			bool accent = ( (int)( t * 8.0f ) % 4 ) == 2;
-// 
-// 			float decayBase = accent ? 40.0f : 80.0f;
-// 			float decay = decayBase - fAction * ( decayBase * 0.2f );
-// 			float envH = expf( -th * decay );
-// 			float hatVol = 0.035f + fClimax * 0.015f + fAction * 0.01f;
-// 			hat = WaveShaper_CubicSat( noise * envH ) * hatVol;
-// 		}
-// 
-// 		// --- MIXING & MASTERING ---
-// 		float mixL = kick + bass + pad + arpL + hat;
-// 		float mixR = kick + bass + pad + arpR + hat * 0.7f;
-// 
-// 		float masterDrive = 1.0f + fAction * 0.1f;
-// 		mixL = WaveShaper_Tan( mixL * masterDrive, 1.2f ) * 0.2f;
-// 		mixR = WaveShaper_Tan( mixR * masterDrive, 1.2f ) * 0.2f;
-// 
-// 		sAudioBuffer.pData[iFrameInd * 2 + 0] += mixL;
-// 		sAudioBuffer.pData[iFrameInd * 2 + 1] += mixR;
-// 	}
-// }
-
-static float MidiToFreq( int iMidiNote )
-{
-	if ( iMidiNote <= 0 ) return 0.0f;
-	return 440.0f * powf( 2.0f, ( (float)iMidiNote - 69.0f ) / 12.0f );
 }
 
 // ============================================================================
@@ -517,7 +327,6 @@ static const SChord g_ArcadeChords[] = {
 	{ "E7",  52, { 0, 4, 7, 10 } }, // 6: E dominant 7
 	{ "Fm",  53, { 0, 3, 7, 12 } }  // 7: F minor
 };
-static const int g_iNumArcadeChords = sizeof( g_ArcadeChords ) / sizeof( g_ArcadeChords[0] );
 
 // 16-Bar Chord Progression Chain (Controls global song harmony)
 static const int g_ChordProgression[16] = {
@@ -552,7 +361,7 @@ static const int g_PatternLead[16] = {
 
 void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 {
-	const float fBPM = 60.0f; // Classic high-tempo arcade speed
+	const float fBPM = 80.0f; // Tempo
 	const float fSecondsPerBeat = 60.0f / fBPM;
 	const float fSecondsPer16th = fSecondsPerBeat / 4.0f;
 	const float fSecondsPerBar = fSecondsPerBeat * 4.0f;
@@ -660,8 +469,8 @@ void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 
 		// Master drive and 8-bit quantization / bitcrushing stage
 		float fMasterDrive = 1.0f + fAction * 0.2f;
-		fMixL = FX_Bitcrush( WaveShaper_Tan( fMixL * fMasterDrive, 1.1f ), 24.0f ) * 0.25f;
-		fMixR = FX_Bitcrush( WaveShaper_Tan( fMixR * fMasterDrive, 1.1f ), 24.0f ) * 0.25f;
+		fMixL = FX_Bitcrush( WaveShaper_Tan( fMixL * fMasterDrive, 1.1f ), 24.0f ) * 0.10f;
+		fMixR = FX_Bitcrush( WaveShaper_Tan( fMixR * fMasterDrive, 1.1f ), 24.0f ) * 0.10f;
 
 		sAudioBuffer.pData[iFrameInd * 2 + 0] += fMixL;
 		sAudioBuffer.pData[iFrameInd * 2 + 1] += fMixR;
