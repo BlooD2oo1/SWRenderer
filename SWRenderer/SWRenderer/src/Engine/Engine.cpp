@@ -56,7 +56,7 @@ void CEngine::Update()
 
 	m_fElapsedTimeMs = (float)( (double)(m_iTimeStampNs - m_iTimeStampPrevNs) / 1000.0/1000.0 );
 
-	LOG( "ENGINE %.4f sec\n", m_iTimeStampNs / 1000.0 / 1000.0 / 1000.0 );
+	//LOG( "ENGINE %.4f sec\n", m_iTimeStampNs / 1000.0 / 1000.0 / 1000.0 );
 	
 	m_cScene.Update();
 

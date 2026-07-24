@@ -121,7 +121,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 	const uint64_t iDelayedTimeStampNs = iTimeStampNs - iDelayNs;
 
-	LOG( "AUDIO  %.4f sec ( delayed )\n", (double)(iDelayedTimeStampNs) / 1000.0 / 1000.0 / 1000.0 );
+	//LOG( "AUDIO  %.4f sec ( delayed )\n", (double)(iDelayedTimeStampNs) / 1000.0 / 1000.0 / 1000.0 );
 
 	//////////////////////////////////////////////////////////////////////////
 
@@ -240,7 +240,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		float fEngineR = ( fSubRumble * 0.55f ) + ( fTurbineR * 0.22f ) + ( fExhaustNoise * 0.15f );
 
 		// Master engine volume (scales slightly with speed)
-		float fEngineVol = 0.003f + 0.001f * fSpeed;
+		float fEngineVol = 0.003f + 0.2f * fSpeed;
 
 		sAudioBuffer.pData[iFrameInd * 2 + 0] = FX_Bitcrush( fEngineL, 16.0f ) * fEngineVol;
 		sAudioBuffer.pData[iFrameInd * 2 + 1] = FX_Bitcrush( fEngineR, 16.0f ) * fEngineVol;
@@ -262,7 +262,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			if ( sAudioEvent.type == SAudioEvent::GunShot )
 			{
 				// --- ARCADE SPACESHIP RAILGUN / LASER ---
-				float fFreq = 2600.0f * expf( -fTimeW * 12.0f ) + 150.0f;
+				float fFreq = 1600.0f * expf( -fTimeW * 12.0f ) + 150.0f;
 
 				sAudioEvent.fPhase += fFreq / (float)sAudioBuffer.iSampleRate;
 				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;

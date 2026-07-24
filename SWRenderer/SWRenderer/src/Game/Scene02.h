@@ -61,6 +61,7 @@ struct SShipControl
 		m_fSpeed = 0.0f;
 		m_fSpeed_ctrl = 0.0f;
 		m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
+		m_vMovPrev = SVector3( 0.0f, 0.0f, 0.0f );
 
 		m_vPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vDir = SVector3( 1.0f, 0.0f, 0.0f );
@@ -99,6 +100,7 @@ struct SShipControl
 	float		m_fSpeed;
 	float		m_fSpeed_ctrl;
 	SVector3	m_vMov;
+	SVector3	m_vMovPrev;
 
 
 	SVector3	m_vPos;
@@ -112,8 +114,8 @@ struct SShipControl
 	struct SBullet
 	{
 		SVector3	m_vPos;
-		SVector3	m_vDir;
-		float		m_fSpeed;
+		SVector3	m_vPosPrev;
+		SVector3	m_vMov;
 		float		m_fTimer;
 		float		m_fTime;
 	};
