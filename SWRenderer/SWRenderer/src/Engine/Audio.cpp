@@ -262,7 +262,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 			if ( sAudioEvent.type == SAudioEvent::GunShot )
 			{
 				// --- ARCADE SPACESHIP RAILGUN / LASER ---
-				float fFreq = 1600.0f * expf( -fTimeW * 12.0f ) + 150.0f;
+				float fFreq = 600.0f * expf( -fTimeW * 12.0f ) + 150.0f;
 
 				sAudioEvent.fPhase += fFreq / (float)sAudioBuffer.iSampleRate;
 				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;

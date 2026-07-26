@@ -22,12 +22,14 @@ void CScene02::Clear()
 	m_sCamera.Clear();
 	m_sShipControl.Clear();
 	m_cShipMesh.Clear();
+	m_cAsteroidMesh.Clear();
 }
 
 void CScene02::Create()
 {
 	Clear();
 	m_cShipMesh.Create();
+	m_cAsteroidMesh.Create();
 
 	m_sCamera.m_fAspect = (float)CGraphics::GetInstance().GetFrameBuffer().iWidth / (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
@@ -44,6 +46,26 @@ void CScene02::Create()
 		a = a * 0.8f + 0.2f;
 		m_pStars[i].vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
 	}
+
+	for ( int i = 0; i < 100; i++ )
+	{
+		SAsteroid sAsteroid;
+		float fScatterRadius = 600.0f;
+		sAsteroid.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
+		sAsteroid.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
+		sAsteroid.m_vPos.z = 0.0f;
+
+		// uniform distribution of quaternions:
+		float u1 = ((float)rand() / (float)RAND_MAX);
+		float u2 = ((float)rand() / (float)RAND_MAX);
+		float u3 = ((float)rand() / (float)RAND_MAX);
+		sAsteroid.m_qRot.w = sqrtf( 1.0f - u1 ) * sinf( 2.0f * PI * u2 );
+		sAsteroid.m_qRot.x = sqrtf( 1.0f - u1 ) * cosf( 2.0f * PI * u2 );
+		sAsteroid.m_qRot.y = sqrtf( u1 ) * sinf( 2.0f * PI * u3 );
+		sAsteroid.m_qRot.z = sqrtf( u1 ) * cosf( 2.0f * PI * u3 );
+
+		m_aAsteroids.push_back( sAsteroid );
+	}
 }
 
 static float fAction = 0.0f;
@@ -59,30 +81,36 @@ void CScene02::Update()
 		m_sShipControl.m_vMovPrev = m_sShipControl.m_vMov;
 		m_sShipControl.m_matShipPrev = m_sShipControl.m_matShip;
 
-		m_sShipControl.m_fYawSpeed += m_sShipControl.m_fYaw_ctrl * 0.00005f * fElapsedTimeMs;
+		m_sShipControl.m_fYawSpeed += m_sShipControl.m_fYaw_ctrl * 0.00003f * fElapsedTimeMs;
 		m_sShipControl.m_fYawSpeed = Clamp( m_sShipControl.m_fYawSpeed, -0.005f, 0.005f );
 		m_sShipControl.m_fYawSpeed = Lerp( 0.0f, m_sShipControl.m_fYawSpeed, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
 		m_sShipControl.m_fYaw += m_sShipControl.m_fYawSpeed * fElapsedTimeMs;
+		//m_sShipControl.m_fYaw_ctrl = Lerp( 0.0f, m_sShipControl.m_fYaw_ctrl, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
 
-		m_sShipControl.m_fRoll += m_sShipControl.m_fYawSpeed * 0.6f * fElapsedTimeMs;
+		m_sShipControl.m_fRoll += -m_sShipControl.m_fYawSpeed * 0.6f * fElapsedTimeMs;
 		m_sShipControl.m_fRoll = Lerp( 0.0f, m_sShipControl.m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
 		
 		m_sShipControl.m_fSpeed += m_sShipControl.m_fSpeed_ctrl * 0.000002f * fElapsedTimeMs;
 		m_sShipControl.m_fSpeed = Lerp( 0.0f, m_sShipControl.m_fSpeed, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
+
+		m_sShipControl.m_fStrafe += m_sShipControl.m_fStrafe_ctrl * 0.000002f * fElapsedTimeMs;
+		m_sShipControl.m_fStrafe = Lerp( 0.0f, m_sShipControl.m_fStrafe, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
 		
 		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 
 		SVector3 vShipDir( cosf( m_sShipControl.m_fYaw ), sinf( m_sShipControl.m_fYaw ), 0.0f );
+		SVector3 vShipLeft( -vShipDir.y, vShipDir.x, 0.0f );
 
 		m_sShipControl.m_vMov += vShipDir * m_sShipControl.m_fSpeed * fElapsedTimeMs;
+		m_sShipControl.m_vMov += vShipLeft * m_sShipControl.m_fStrafe * fElapsedTimeMs;
 		m_sShipControl.m_vPos += m_sShipControl.m_vMov * fElapsedTimeMs;
 
 		m_sShipControl.UpdateMatrices();
 
 		if ( m_sShipControl.m_bShoot )
 		{
-			SVector3 vGunPos0 = SVector3( 0.0f, 2.0f, 0.0f );
-			SVector3 vGunPos1 = SVector3( 0.0f, -2.0f, 0.0f );
+			SVector3 vGunPos0 = SVector3( 0.5f, 2.7f, 0.0f );
+			SVector3 vGunPos1 = SVector3( 0.5f, -2.7f, 0.0f );
 
 			SVector3 vGunPos0World;
 			SVector3 vGunPos0WorldPrev;
@@ -138,9 +166,9 @@ void CScene02::Update()
 
 				SAudioEvent sAudioEvent;
 				sAudioEvent.type = SAudioEvent::GunShot;
-				sAudioEvent.fVolume = ((float)rand() / (float)RAND_MAX)*0.05f+0.05f;
+				sAudioEvent.fVolume = 0.1f;
 				sAudioEvent.iTimeStampNs = iTNs;
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 500;
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 1500;
 				sAudioEvent.iSampleCounter = 0;
 				sAudioEvent.fPhase = 0.0f;			
 				sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
@@ -170,19 +198,29 @@ void CScene02::Update()
 	{
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
-		float fWSlow = CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs );
+		float fWSlow = CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs );
 		SVector3 vP( m_sShipControl.m_vPos + m_sShipControl.m_vMov*300.0f );
+		//vP += m_sShipControl.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		// lerp with m_sShipControl.m_vMov exp:
-		m_sCamera.m_vEye.z += Lerp( 500.0f, 100.0f, expf( -SVector3::Length( m_sShipControl.m_vMov ) * 1.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 900.0f, 100.0f, expf( -SVector3::Length( m_sShipControl.m_vMov ) * 1.5f ) );
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
+
+		//m_sCamera.m_vUp = m_sShipControl.m_vDir;
+		SVector2 vDir2D( m_sShipControl.m_vDir.x, m_sShipControl.m_vDir.y );
+		//SVector2::Slerp( vDir2D, vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
+		vDir2D = Lerp( vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.0006f, fElapsedTimeMs ) );
+		SVector2::Normalize( vDir2D, vDir2D );
+		m_sCamera.m_vUp.x = vDir2D.x;
+		m_sCamera.m_vUp.y = vDir2D.y;
+
+
 		
 		m_sCamera.UpdateMatrices();
 	}
 
-	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = m_sShipControl.m_fSpeed*1000.0f;//SVector3::Length( m_sShipControl.m_vMov )*100.0f;
+	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = /*m_sShipControl.m_fSpeed*1000.0f;*/SVector3::Length( m_sShipControl.m_vMov )*3.0f;
 	CEngine::GetInstance().GetAudioFrameData().m_vShipPos = m_sShipControl.m_vPos;
 	CEngine::GetInstance().GetAudioFrameData().m_vCameraEye = m_sCamera.m_vEyeSmooth;
 	CEngine::GetInstance().GetAudioFrameData().m_vCameraLookAt = m_sCamera.m_vLookAtSmooth;
@@ -198,7 +236,7 @@ void CScene02::Render()
 		const int iSteps = 3;
 		for ( int j =0; j < iSteps; j++ )
 		{
-			float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 500.0f;
+			float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 200.0f;
 			float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 			for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 			{
@@ -206,9 +244,9 @@ void CScene02::Render()
 				SVertexPh sPh1;
 				{
 					SVector4 vPhSrc( m_pStars[i].vPos * fStarBoxSize, 1.0f );
-					vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_sCamera.m_vEye.x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-					vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_sCamera.m_vEye.y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
-					vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_sCamera.m_vEye.z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+					vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_sCamera.m_vEyeSmooth.x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+					vPhSrc.y = vPhSrc.y - floorf((vPhSrc.y - m_sCamera.m_vEyeSmooth.y) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
+					vPhSrc.z = vPhSrc.z - floorf((vPhSrc.z - m_sCamera.m_vEyeSmooth.z) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
 					SMatrix::Mul( sPh0.vPos, vPhSrc, m_sCamera.m_matViewProj );
 					SMatrix::Mul( sPh1.vPos, vPhSrc, m_sCamera.m_matViewProjPrev );
 				}
@@ -275,6 +313,20 @@ void CScene02::Render()
 		CGraphics::GetInstance().DrawLineList3D( m_cShipMesh.GetLineList(), m_cShipMesh.GetLineListCount(), sVertexShaderBasic );
 	}
 
+	for ( size_t iAsteroidInd = 0; iAsteroidInd < m_aAsteroids.size(); iAsteroidInd++ )
+	{
+		SMatrix matAsteroid;
+		SMatrix::Identity( matAsteroid );
+		SQuaternion::ToMatrix( matAsteroid, m_aAsteroids[iAsteroidInd].m_qRot );
+		matAsteroid.m30 = m_aAsteroids[iAsteroidInd].m_vPos.x;
+		matAsteroid.m31 = m_aAsteroids[iAsteroidInd].m_vPos.y;
+		matAsteroid.m32 = m_aAsteroids[iAsteroidInd].m_vPos.z;
+		SMatrix::Scale( matAsteroid, 3.0f );
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matAsteroid, m_sCamera.m_matViewProj );
+		sVertexShaderBasic.fAlpha = 0.7f;
+		CGraphics::GetInstance().DrawLineList3D( m_cAsteroidMesh.GetLineList(), m_cAsteroidMesh.GetLineListCount(), sVertexShaderBasic );
+	}
+
 	for ( int iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); iBulletInd++ )
 	{
 		const SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
@@ -330,7 +382,7 @@ void CScene02::Render()
 	}
 
 
-	SVector4 vColor = SVector4( 0.1f, 0.0f, 0.4f, 0.5f );
+	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.5f );
 	if ( vColor.w > 1.0f/255.0f )
 	{
 		struct SVertexShaderGrid
@@ -499,6 +551,7 @@ bool CScene02::On_KeyDown( uint32_t key )
 	case 0x25:
 	{
 		m_sShipControl.m_fYaw_ctrl = 1.0f;
+		//m_sShipControl.m_fStrafe_ctrl = 1.0f;
 
 		fClimax += 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
@@ -508,6 +561,7 @@ bool CScene02::On_KeyDown( uint32_t key )
 	case 0x27:
 	{
 		m_sShipControl.m_fYaw_ctrl = -1.0f;
+		//m_sShipControl.m_fStrafe_ctrl = -1.0f;
 
 		fClimax -= 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
@@ -547,12 +601,14 @@ bool CScene02::On_KeyUp( uint32_t key )
 	case 0x25:
 	{
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
+		//m_sShipControl.m_fStrafe_ctrl = 0.0f;
 	}
 	break;
 	// VK_RIGHT
 	case 0x27:
 	{
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
+		//m_sShipControl.m_fStrafe_ctrl = 0.0f;
 	}
 	break;
 	// VK_SPACE
@@ -574,13 +630,19 @@ bool CScene02::On_MouseMove( int deltax, int deltay )
 	{
 	}
 
+	//m_sShipControl.m_fYaw_ctrl -= (float)deltax * 0.003f;
+
 	return false;
 }
 bool CScene02::On_MouseButtonDown( uint32_t button )
 {
 	if ( button == 0 )
 	{
-
+		if ( !m_sShipControl.m_bShoot )
+		{
+			m_sShipControl.m_bShoot = true;
+			m_sShipControl.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+		}
 	}
 	return false;
 }
@@ -589,7 +651,7 @@ bool CScene02::On_MouseButtonUp( uint32_t button )
 {
 	if ( button == 0 )
 	{
-
+		m_sShipControl.m_bShoot = false;
 	}
 
 	return false;

@@ -30,6 +30,7 @@ struct SAudioFrameData
 		m_vCameraLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vShipPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_fShipSpeed = 0.0f;
+
 		m_fMusic_Action = 0.0f;
 		m_fMusic_Climax = 0.0f;
 	}

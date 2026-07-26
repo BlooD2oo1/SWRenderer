@@ -5,6 +5,7 @@
 #include "Engine/Graphics.h"
 #include "Game/ShipControl.h"
 #include "Game/ShipMesh.h"
+#include "Game/AsteroidMesh.h"
 
 struct SCamera
 {
@@ -14,7 +15,7 @@ struct SCamera
 		m_fAspect = 1.0f;
 		m_fNear = 0.1f;
 		m_fFar = 10000.0f;
-		m_vEye = SVector3( 0.0f, 0.0f, 200.0f );
+		m_vEye = SVector3( 0.0f, 0.0f, 10.0f );
 		m_vEyeSmooth = m_vEye;
 		m_vLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vLookAtSmooth = m_vLookAt;
@@ -60,6 +61,8 @@ struct SShipControl
 		m_fRoll = 0.0f;
 		m_fSpeed = 0.0f;
 		m_fSpeed_ctrl = 0.0f;
+		m_fStrafe = 0.0f;
+		m_fStrafe_ctrl = 0.0f;
 		m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vMovPrev = SVector3( 0.0f, 0.0f, 0.0f );
 
@@ -99,6 +102,8 @@ struct SShipControl
 	float		m_fRoll;
 	float		m_fSpeed;
 	float		m_fSpeed_ctrl;
+	float		m_fStrafe;
+	float		m_fStrafe_ctrl;
 	SVector3	m_vMov;
 	SVector3	m_vMovPrev;
 
@@ -148,6 +153,14 @@ private:
 	SCamera			m_sCamera;
 	SShipControl	m_sShipControl;
 	CShipMesh		m_cShipMesh;
+
+	struct SAsteroid
+	{
+		SVector3	m_vPos;
+		SQuaternion	m_qRot;
+	};
+	std::vector< SAsteroid >	m_aAsteroids;
+	CAsteroidMesh	m_cAsteroidMesh;
 
 	SVertexPC*		m_pStars;
 	uint32_t		m_iStarsCount;

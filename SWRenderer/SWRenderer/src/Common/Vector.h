@@ -60,6 +60,27 @@ struct SVector2
 		}
 		return out;
 	}
+
+	static SVector2& Slerp( SVector2& out, const SVector2& a, const SVector2& b, float w) noexcept
+	{
+		float dot = Dot(a, b);
+		dot = std::max(-1.0f, std::min(1.0f, dot));
+		float theta = std::acos(dot);
+		float sinTheta = std::sin(theta);
+		
+		if (std::abs(sinTheta) < 0.0001f)
+		{
+			out.x = a.x * (1.0f - w) + b.x * w;
+			out.y = a.y * (1.0f - w) + b.y * w;
+			return out;
+		}
+		float w0 = std::sin((1.0f - w) * theta) / sinTheta;
+		float w1 = std::sin(w * theta) / sinTheta;
+
+		out.x = a.x * w0 + b.x * w1;
+		out.y = a.y * w0 + b.y * w1;
+		return out;
+	}
 };
 
 constexpr inline SVector2 operator+(const SVector2& a, const SVector2& b) noexcept { return SVector2(a.x + b.x, a.y + b.y); }
@@ -146,7 +167,6 @@ struct SVector3
 		float theta = std::acos(dot);
 		float sinTheta = std::sin(theta);
 
-		// Párhuzamos vagy ellentétes vektorok esetén LERP biztonsági tartalék
 		if (std::abs(sinTheta) < 0.0001f)
 		{
 			out.x = a.x * (1.0f - w) + b.x * w;
