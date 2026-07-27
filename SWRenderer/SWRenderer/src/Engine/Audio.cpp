@@ -1,5 +1,6 @@
 #include "Audio.h"
 #include "Common/Globals.h"
+#include "Audio_Voices.h"
 
 static float WaveShaper_Sin( float x, float fParam )
 {
@@ -26,46 +27,6 @@ static float WaveShaper_CubicSat( float x )
 	return (x - x * x * x * 0.333333f) * 1.5f;
 }
 
-// ============================================================================
-// DSP & CHIPTUNE OSCILLATORS
-// ============================================================================
-
-static float MidiToFreq( int iMidiNote )
-{
-	if ( iMidiNote <= 0 ) return 0.0f;
-	return 440.0f * powf( 2.0f, ( (float)iMidiNote - 69.0f ) / 12.0f );
-}
-
-// Variable width Pulse / Square wave (Classic 8-bit sound: 12.5%, 25%, 50% PWM)
-static float Osc_Pulse( float fPhase, float fPwm = 0.5f )
-{
-	float fP = fmodf( fPhase, 1.0f );
-	if ( fP < 0.0f ) fP += 1.0f;
-	return ( fP < fPwm ) ? 1.0f : -1.0f;
-}
-
-// NES-style 8-bit Triangle wave for smooth chiptune bass
-static float Osc_Triangle( float fPhase )
-{
-	float fP = fmodf( fPhase, 1.0f );
-	if ( fP < 0.0f ) fP += 1.0f;
-	return 4.0f * fabsf( fP - 0.5f ) - 1.0f;
-}
-
-// 8-bit Pseudo-Random Noise generator (LFSR style for chiptune drums & sfx)
-static float Osc_8BitNoise( uint32_t& uSeed )
-{
-	uSeed = uSeed * 1664525u + 1013904223u;
-	// Quantize noise to 16 discrete levels for gritty arcade texture
-	int iLevel = ( uSeed >> 28 ) & 0x0F;
-	return ( (float)iLevel / 7.5f ) - 1.0f;
-}
-
-// Bitcrusher effect for authentic retro output
-static float FX_Bitcrush( float fInput, float fSteps = 16.0f )
-{
-	return floorf( fInput * fSteps ) / fSteps;
-}
 
 // ============================================================================
 
@@ -309,13 +270,6 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 // CHORD SYSTEM & PROGRESSION ENGINE (PO-20 Arcade Core)
 // ============================================================================
 
-struct SChord
-{
-	const char* pName;
-	int iRootMidi;      // Base MIDI root note (e.g., 57 = A3)
-	int aIntervals[4];  // Semitone offsets from root: {0, 3, 7, 12}
-};
-
 // PO-20 Style Arcade Chords Palette
 static const SChord g_ArcadeChords[] = {
 	{ "Am",  57, { 0, 3, 7, 12 } }, // 0: A minor
@@ -356,9 +310,87 @@ static const int g_PatternLead[16] = {
 };
 
 // ============================================================================
-// MAIN PO-ARCADE SYNTHESIS ENGINE
+// PO-20 ARCADE INSTRUMENT VOICES & SFX
 // ============================================================================
 
+void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
+{
+	LOG( "MUSIC  %.4f sec ( action=%.2f, climax=%.2f )\n", (double)(m_iSampleCounter) / 1000.0 / 1000.0 / 1000.0, fAction, fClimax );
+	const float fBPM = 100.0f;
+	const float fSecondsPerBeat = 60.0f / fBPM;
+	const float fSecondsPer16th = fSecondsPerBeat / 4.0f;
+	const float fSecondsPerBar = fSecondsPerBeat * 4.0f;
+	const float fTotalLoopSec = fSecondsPerBar * 16.0f;
+
+	const double dSampleRate = (double)sAudioBuffer.iSampleRate;
+	const uint64_t uSamplesPer16th = (uint64_t)( fSecondsPer16th * dSampleRate );
+	const uint64_t uSamplesPerBar  = (uint64_t)( fSecondsPerBar * dSampleRate );
+	const uint64_t uTotalLoopSamples = (uint64_t)( fTotalLoopSec * dSampleRate );
+
+	for ( uint32_t iFrameInd = 0; iFrameInd < sAudioBuffer.iNumFrames; iFrameInd++ )
+	{
+		uint64_t currentSample = m_iSampleCounter - sAudioBuffer.iNumFrames + iFrameInd;
+
+		uint64_t uLoopSample = currentSample % uTotalLoopSamples;
+
+		float t = (float)uLoopSample / (float)sAudioBuffer.iSampleRate;
+
+		int iCurrentBar  = (int)( uLoopSample / uSamplesPerBar ) % 16;
+		int iCurrent16th = (int)( uLoopSample / uSamplesPer16th ) % 16;
+
+		uint64_t uStepSample = uLoopSample % uSamplesPer16th;
+		float fStepTime = (float)uStepSample / (float)sAudioBuffer.iSampleRate;
+
+		const SChord& activeChord = g_ArcadeChords[g_ChordProgression[iCurrentBar]];
+		float fGlobalPwm = 0.25f + 0.2f * sinf( PI2 * 0.2f * t ) + 0.15f * fAction;
+		uint32_t uNoiseSeed = (uint32_t)( currentSample + iFrameInd * 17 );
+
+		// --- 2. DRUMS ---
+		float fDrums = 0.0f;
+		int iDrumStep = g_PatternDrums[iCurrent16th];
+
+		if ( iDrumStep == 1 )      fDrums += Voice_Kick( fStepTime );
+		else if ( iDrumStep == 2 ) fDrums += Voice_Snare( fStepTime, uNoiseSeed );
+		else if ( iDrumStep == 3 ) fDrums += Voice_HiHat( fStepTime, uNoiseSeed, fClimax );
+
+		// --- 3. BASS ---
+		float fBass = 0.0f;
+		int iBassNoteIdx = g_PatternBass[iCurrent16th];
+		if ( iBassNoteIdx >= 0 )
+		{
+			int iMidiNote = activeChord.iRootMidi - 24 + activeChord.aIntervals[iBassNoteIdx % 4];
+			fBass = Voice_Bass( fStepTime, MidiToFreq( iMidiNote ), t );
+		}
+
+		// --- 4. CHORD PAD / ARPEGGIO ---
+		float fChordPad = Voice_ChordArp( t, activeChord, fSecondsPerBar, fGlobalPwm, fAction, fClimax );
+
+		// --- 5. LEAD SYNTH ---
+		float fLead = 0.0f;
+		int iLeadNoteIdx = g_PatternLead[iCurrent16th];
+		if ( iLeadNoteIdx >= 0 )
+		{
+			int iMidiNote = activeChord.iRootMidi + 12 + activeChord.aIntervals[iLeadNoteIdx % 4];
+			fLead = Voice_Lead( fStepTime, MidiToFreq( iMidiNote ), t, fGlobalPwm );
+		}
+
+		// --- 6. MIXING & MASTERING ---
+		float fMixL = fDrums + fBass + fChordPad + fLead;
+		float fMixR = fDrums + fBass + fChordPad * 0.7f + fLead;
+
+		float fMasterDrive = 1.0f + fAction * 0.2f;
+		//fMixL = FX_Bitcrush( WaveShaper_Tan( fMixL * fMasterDrive, 1.1f ), 24.0f );
+		//fMixR = FX_Bitcrush( WaveShaper_Tan( fMixR * fMasterDrive, 1.1f ), 24.0f );
+
+		fMixL *= 0.2f;
+		fMixR *= 0.2f;
+
+		sAudioBuffer.pData[iFrameInd * 2 + 0] += fMixL;
+		sAudioBuffer.pData[iFrameInd * 2 + 1] += fMixR;
+	}
+}
+
+/*
 void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 {
 	LOG( "MUSIC  %.4f sec ( action=%.2f, climax=%.2f )\n", (double)(m_iSampleCounter) / 1000.0 / 1000.0 / 1000.0, fAction, fClimax );
@@ -478,3 +510,4 @@ void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 		sAudioBuffer.pData[iFrameInd * 2 + 1] += fMixR;
 	}
 }
+*/

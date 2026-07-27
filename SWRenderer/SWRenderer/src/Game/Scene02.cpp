@@ -81,28 +81,40 @@ void CScene02::Update()
 		m_sShipControl.m_vMovPrev = m_sShipControl.m_vMov;
 		m_sShipControl.m_matShipPrev = m_sShipControl.m_matShip;
 
-		m_sShipControl.m_fYawSpeed += m_sShipControl.m_fYaw_ctrl * 0.00003f * fElapsedTimeMs;
+		m_sShipControl.m_fYawSpeed += m_sShipControl.m_fYaw_ctrl * 0.00002f * fElapsedTimeMs;
 		m_sShipControl.m_fYawSpeed = Clamp( m_sShipControl.m_fYawSpeed, -0.005f, 0.005f );
-		m_sShipControl.m_fYawSpeed = Lerp( 0.0f, m_sShipControl.m_fYawSpeed, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
+		m_sShipControl.m_fYawSpeed = Lerp( 0.0f, m_sShipControl.m_fYawSpeed, CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs ) );
 		m_sShipControl.m_fYaw += m_sShipControl.m_fYawSpeed * fElapsedTimeMs;
 		//m_sShipControl.m_fYaw_ctrl = Lerp( 0.0f, m_sShipControl.m_fYaw_ctrl, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
 
 		m_sShipControl.m_fRoll += -m_sShipControl.m_fYawSpeed * 0.6f * fElapsedTimeMs;
 		m_sShipControl.m_fRoll = Lerp( 0.0f, m_sShipControl.m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
 		
-		m_sShipControl.m_fSpeed += m_sShipControl.m_fSpeed_ctrl * 0.000002f * fElapsedTimeMs;
-		m_sShipControl.m_fSpeed = Lerp( 0.0f, m_sShipControl.m_fSpeed, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
+		m_sShipControl.m_fSpeed += m_sShipControl.m_fSpeed_ctrl * 0.00005f * fElapsedTimeMs;
+		m_sShipControl.m_fSpeed = Lerp( 0.0f, m_sShipControl.m_fSpeed, CalcSmoothUpdateWeight( 1.2f, fElapsedTimeMs ) );
 
 		m_sShipControl.m_fStrafe += m_sShipControl.m_fStrafe_ctrl * 0.000002f * fElapsedTimeMs;
 		m_sShipControl.m_fStrafe = Lerp( 0.0f, m_sShipControl.m_fStrafe, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
 		
-		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
-
 		SVector3 vShipDir( cosf( m_sShipControl.m_fYaw ), sinf( m_sShipControl.m_fYaw ), 0.0f );
 		SVector3 vShipLeft( -vShipDir.y, vShipDir.x, 0.0f );
 
 		m_sShipControl.m_vMov += vShipDir * m_sShipControl.m_fSpeed * fElapsedTimeMs;
 		m_sShipControl.m_vMov += vShipLeft * m_sShipControl.m_fStrafe * fElapsedTimeMs;
+
+		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
+		/*float fL = SVector3::Length( m_sShipControl.m_vMov );
+		if ( fL > 0.0f )
+		{
+			m_sShipControl.m_vMov /= fL;
+			fL *= fL;
+			fL = Lerp( 0.0f, fL, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
+			fL = sqrtf( fL );
+			m_sShipControl.m_vMov *= fL;
+		}*/
+
+
+
 		m_sShipControl.m_vPos += m_sShipControl.m_vMov * fElapsedTimeMs;
 
 		m_sShipControl.UpdateMatrices();

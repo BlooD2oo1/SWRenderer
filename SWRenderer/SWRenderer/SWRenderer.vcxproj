@@ -102,6 +102,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Common\Perf.h" />
     <ClInclude Include="src\Common\Vector.h" />
     <ClInclude Include="src\Engine\Audio.h" />
+    <ClInclude Include="src\Engine\Audio_Voices.h" />
     <ClInclude Include="src\Engine\Camera.h" />
     <ClInclude Include="src\Engine\Engine.h" />
     <ClInclude Include="src\Engine\Graphics.h" />

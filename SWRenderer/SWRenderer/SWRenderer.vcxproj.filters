@@ -108,5 +108,8 @@
     <ClInclude Include="src\Game\AsteroidMesh.h">
       <Filter>src\Game</Filter>
     </ClInclude>
+    <ClInclude Include="src\Engine\Audio_Voices.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
