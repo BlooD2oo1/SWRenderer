@@ -104,6 +104,8 @@ public:
 	
 	void DrawPixel( int x, int y, BGRA8 sColor );
 	void DrawPixelAA( const SVector2& v, BGRA8 sColor );
+	void DrawLineH( int x, int y, int len, BGRA8 sColor );
+	void DrawLineV( int x, int y, int len, BGRA8 sColor );
 	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
 	void DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o );	
 	template<class TVertexShader>

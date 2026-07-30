@@ -14,6 +14,9 @@
     <Filter Include="src\Game">
       <UniqueIdentifier>{dae79c81-d153-42f9-9515-81e28ef2a55c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Engine\UI">
+      <UniqueIdentifier>{4dcef02f-cd86-4c63-b5aa-5cab7289cc92}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine\Engine.cpp">
@@ -57,6 +60,12 @@
     </ClCompile>
     <ClCompile Include="src\Game\AsteroidMesh.cpp">
       <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\SceneStack.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\UI\UIBase.cpp">
+      <Filter>src\Engine\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +119,12 @@
     </ClInclude>
     <ClInclude Include="src\Engine\Audio_Voices.h">
       <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\SceneStack.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\UI\UIBase.h">
+      <Filter>src\Engine\UI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

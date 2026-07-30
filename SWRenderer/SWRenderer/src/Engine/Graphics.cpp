@@ -152,6 +152,61 @@ void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
 	}
 }
 
+void CGraphics::DrawLineH( int x, int y, int len, BGRA8 sColor )
+{
+	if ( y < 0 || y >= m_sFrameBuffer.iHeight )
+	{
+		return;
+	}
+
+	int iXStart = x;
+	int iXEnd = (len > 0) ? (x + len - 1) : (x + len + 1);
+	if ( iXStart > iXEnd )
+	{
+		std::swap( iXStart, iXEnd );
+	}
+
+	iXStart = std::max( 0, iXStart );
+	iXEnd = std::min( m_sFrameBuffer.iWidth - 1, iXEnd );
+
+	if ( iXStart > iXEnd )
+	{
+		return;
+	}
+
+	for ( int i = iXStart; i <= iXEnd; i++ )
+	{
+		DrawPixel( i, y, sColor );
+	}
+}
+
+void CGraphics::DrawLineV( int x, int y, int len, BGRA8 sColor )
+{
+	if ( x < 0 || x >= m_sFrameBuffer.iWidth )
+	{
+		return;
+	}
+	int iYStart = y;
+	int iYEnd = (len > 0) ? (y + len - 1) : (y + len + 1);
+	if ( iYStart > iYEnd )
+	{
+		std::swap( iYStart, iYEnd );
+	}
+
+	iYStart = std::max( 0, iYStart );
+	iYEnd = std::min( m_sFrameBuffer.iHeight - 1, iYEnd );
+	
+	if ( iYStart > iYEnd )
+	{
+		return;
+	}
+
+	for ( int i = iYStart; i <= iYEnd; i++ )
+	{
+		DrawPixel( x, i, sColor );
+	}
+}
+
 uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;

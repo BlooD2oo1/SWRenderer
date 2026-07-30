@@ -24,6 +24,7 @@ void CEngine::Clear()
 	m_fElapsedTimeMs = 0.0f;
 	m_sAudioFrameData.Clear();
 	m_cScene.Clear();
+	m_cSceneStack.Clear();
 	CGraphics::GetInstance().Clear();
 }
 
@@ -33,6 +34,8 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 
 	CGraphics::GetInstance().Create( sFrameBuffer );
 	m_cScene.Create();
+	
+	m_cSceneStack.PushScene( new CSceneMainMenu() );
 }
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
@@ -58,6 +61,7 @@ void CEngine::Update()
 
 	//LOG( "ENGINE %.4f sec\n", m_iTimeStampNs / 1000.0 / 1000.0 / 1000.0 );
 	
+	m_cSceneStack.Update();
 	m_cScene.Update();
 
 	m_sAudioFrameData.m_iTimeStampNs = m_iTimeStampNs;
@@ -69,6 +73,7 @@ void CEngine::Render()
 	// clear framebuffer
 	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 0 ) );
 
+	m_cSceneStack.Render();
 	m_cScene.Render();
 
 	/*const uint16_t iLineCount = 16;
@@ -97,7 +102,6 @@ void CEngine::Render()
 		DrawLine( GetFrameBuffer(), v1, SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
 	}*/
 
-
 	//CGraphics::GetInstance().DrawLine( SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
 	//CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
 	//CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
@@ -105,12 +109,12 @@ void CEngine::Render()
 
 bool CEngine::On_KeyDown( uint32_t key )
 {
-    return m_cScene.On_KeyDown( key );
+    return m_cSceneStack.On_KeyDown( key );
 }
 
 bool CEngine::On_KeyUp( uint32_t key )
 {
-	return m_cScene.On_KeyUp( key );
+	return m_cSceneStack.On_KeyUp( key );
 }
 
 bool CEngine::On_MouseMove( int deltax, int deltay )
@@ -119,7 +123,7 @@ bool CEngine::On_MouseMove( int deltax, int deltay )
 	m_sMouseState.y += deltay;
 	m_sMouseState.x = Clamp( m_sMouseState.x, 0, CGraphics::GetInstance().GetFrameBuffer().iWidth-1 );
 	m_sMouseState.y = Clamp( m_sMouseState.y, 0, CGraphics::GetInstance().GetFrameBuffer().iHeight-1 );
-    return m_cScene.On_MouseMove( deltax, deltay );
+    return m_cSceneStack.On_MouseMove( deltax, deltay );
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )
 {
@@ -146,7 +150,7 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 	break;
 	}
 
-	return m_cScene.On_MouseButtonDown( button );
+	return m_cSceneStack.On_MouseButtonDown( button );
 }
 
 bool CEngine::On_MouseButtonUp( uint32_t button )
@@ -174,10 +178,10 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 	break;
 	}
 
-	return m_cScene.On_MouseButtonUp( button );
+	return m_cSceneStack.On_MouseButtonUp( button );
 }
 
 bool CEngine::On_MouseWheel( int iDelta )
 {
-	return m_cScene.On_MouseWheel( iDelta );
+	return m_cSceneStack.On_MouseWheel( iDelta );
 }

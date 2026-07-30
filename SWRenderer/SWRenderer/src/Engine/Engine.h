@@ -3,6 +3,7 @@
 #include "Common/Globals.h"
 #include "Engine/Graphics.h"
 #include "Engine/Audio.h"
+#include "Engine/SceneStack.h"
 #include "Game/Scene01.h"
 #include "Game/Scene02.h"
 
@@ -60,4 +61,6 @@ private:
 	SAudioFrameData	m_sAudioFrameData;
 
 	CScene02		m_cScene;
+
+	CSceneStack		m_cSceneStack;
 };
