@@ -39,6 +39,11 @@ constexpr T Clamp( const T& x, const T& a, const T& b )
 __forceinline static float CalcSmoothUpdateWeight(float fSmoothness, float fElapsedTime) { return powf(fSmoothness, -fElapsedTime); }
 __forceinline static float CalcSmoothUpdateWeight(double fSmoothness, double fElapsedTime) { return (float)pow(fSmoothness, -fElapsedTime); }
 
+constexpr float SmoothConverge( float fSrc, float fDst, float fIncSmoothness, float fDecSmoothness, float fElapsedTimeMs )
+{
+    return Lerp( fDst, fSrc, fDst > fSrc ? CalcSmoothUpdateWeight( fIncSmoothness, fElapsedTimeMs ) : CalcSmoothUpdateWeight( fDecSmoothness, fElapsedTimeMs ) );
+}
+
 static constexpr uint32_t Hash(uint32_t x, uint32_t y)
 {
     uint32_t h = x * 0x8da6b343u + y * 0xd8163841u;

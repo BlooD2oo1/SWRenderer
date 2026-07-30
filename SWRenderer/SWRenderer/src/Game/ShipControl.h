@@ -6,7 +6,7 @@ struct SBullet
 {
 	SVector3	m_vPos;
 	SVector3	m_vDir;
-	float		m_fSpeed;
+	float		m_fAccForward;
 	float		m_fTimer;
 	float		m_fTime;
 };

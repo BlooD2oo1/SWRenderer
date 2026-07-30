@@ -59,10 +59,10 @@ struct SShipControl
 		m_fYawSpeed = 0.0f;
 		m_fYaw_ctrl = 0.0f;
 		m_fRoll = 0.0f;
-		m_fSpeed = 0.0f;
-		m_fSpeed_ctrl = 0.0f;
-		m_fStrafe = 0.0f;
-		m_fStrafe_ctrl = 0.0f;
+		m_fAccForward = 0.0f;
+		m_fAccForward_ctrl = 0.0f;
+		m_fAccLeft = 0.0f;
+		m_fAccLeft_ctrl = 0.0f;
 		m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vMovPrev = SVector3( 0.0f, 0.0f, 0.0f );
 
@@ -100,10 +100,10 @@ struct SShipControl
 	float		m_fYawSpeed;
 	float		m_fYaw_ctrl;
 	float		m_fRoll;
-	float		m_fSpeed;
-	float		m_fSpeed_ctrl;
-	float		m_fStrafe;
-	float		m_fStrafe_ctrl;
+	float		m_fAccForward;
+	float		m_fAccForward_ctrl;
+	float		m_fAccLeft;
+	float		m_fAccLeft_ctrl;
 	SVector3	m_vMov;
 	SVector3	m_vMovPrev;
 

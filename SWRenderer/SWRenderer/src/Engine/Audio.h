@@ -30,6 +30,8 @@ struct SAudioFrameData
 		m_vCameraLookAt = SVector3( 0.0f, 0.0f, 0.0f );
 		m_vShipPos = SVector3( 0.0f, 0.0f, 0.0f );
 		m_fShipSpeed = 0.0f;
+		m_fShipAcc = 0.0f;
+		m_fShipYawSpeed = 0.0f;
 
 		m_fMusic_Action = 0.0f;
 		m_fMusic_Climax = 0.0f;
@@ -42,6 +44,8 @@ struct SAudioFrameData
 		m_vCameraLookAt = ::Lerp( s0.m_vCameraLookAt, s1.m_vCameraLookAt, fW );
 		m_vShipPos = ::Lerp( s0.m_vShipPos, s1.m_vShipPos, fW );
 		m_fShipSpeed = ::Lerp( s0.m_fShipSpeed, s1.m_fShipSpeed, fW );
+		m_fShipAcc = ::Lerp( s0.m_fShipAcc, s1.m_fShipAcc, fW );
+		m_fShipYawSpeed = ::Lerp( s0.m_fShipYawSpeed, s1.m_fShipYawSpeed, fW );
 		m_fMusic_Action = ::Lerp( s0.m_fMusic_Action, s1.m_fMusic_Action, fW );
 		m_fMusic_Climax = ::Lerp( s0.m_fMusic_Climax, s1.m_fMusic_Climax, fW );
 	}
@@ -49,7 +53,9 @@ struct SAudioFrameData
 	SVector3		m_vCameraEye;
 	SVector3		m_vCameraLookAt;
 	SVector3		m_vShipPos;
-	float			m_fShipSpeed;
+	float			m_fShipSpeed;		//0.0 .. ~1.0
+	float			m_fShipAcc;			//-1.0 .. ~1.0
+	float			m_fShipYawSpeed;	//-1.0 .. ~1.0
 
 	float			m_fMusic_Action;
 	float			m_fMusic_Climax;

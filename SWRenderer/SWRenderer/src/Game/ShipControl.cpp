@@ -277,7 +277,7 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.00001f;
 
 			SVector3::Normalize( sBullet.m_vDir, sBullet.m_vDir );
-			sBullet.m_fSpeed = (m_fSpeedForward + 10.000f);
+			sBullet.m_fAccForward = (m_fSpeedForward + 10.000f);
 			sBullet.m_fTime = 4000.0f;
 			sBullet.m_fTimer = 0.0f;
 			m_aBullets.push_back( sBullet );
@@ -304,7 +304,7 @@ void CShipControl::Update( float fElapsedTimeMs, float fTimeMultiplier, const SM
 			m_aBullets.pop_back();
 			continue;
 		}
-		sBullet.m_vPos += sBullet.m_vDir * sBullet.m_fSpeed * fElapsedTimeMs;
+		sBullet.m_vPos += sBullet.m_vDir * sBullet.m_fAccForward * fElapsedTimeMs;
 
 		++iBulletInd;
 	}
