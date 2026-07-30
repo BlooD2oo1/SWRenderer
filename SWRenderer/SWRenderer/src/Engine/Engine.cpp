@@ -18,13 +18,14 @@ CEngine::~CEngine()
 
 void CEngine::Clear()
 {
+	m_eCurrentScene = EScene_MainMenu;
 	m_iFrameInd = 0;
 	m_iTimeStampNs = 0;
 	m_iTimeStampPrevNs = 0;
 	m_fElapsedTimeMs = 0.0f;
 	m_sAudioFrameData.Clear();
-	m_cScene.Clear();
-	m_cSceneStack.Clear();
+	m_cSceneMainMenu.Clear();
+	m_cSceneGame.Clear();
 	CGraphics::GetInstance().Clear();
 }
 
@@ -33,9 +34,8 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	Clear();
 
 	CGraphics::GetInstance().Create( sFrameBuffer );
-	m_cScene.Create();
-	
-	m_cSceneStack.PushScene( new CSceneMainMenu() );
+	m_cSceneMainMenu.Create();
+	m_cSceneGame.Create();
 }
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )
@@ -61,8 +61,15 @@ void CEngine::Update()
 
 	//LOG( "ENGINE %.4f sec\n", m_iTimeStampNs / 1000.0 / 1000.0 / 1000.0 );
 	
-	m_cSceneStack.Update();
-	m_cScene.Update();
+	switch ( m_eCurrentScene )
+	{
+	case EScene_MainMenu:
+		m_cSceneMainMenu.Update();
+		break;
+	case EScene_Game:
+		m_cSceneGame.Update();
+		break;
+	}
 
 	m_sAudioFrameData.m_iTimeStampNs = m_iTimeStampNs;
 	CAudio::GetInstance().MainThread_PushAudioFrameData( m_sAudioFrameData );
@@ -73,8 +80,15 @@ void CEngine::Render()
 	// clear framebuffer
 	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 0 ) );
 
-	m_cSceneStack.Render();
-	m_cScene.Render();
+	switch ( m_eCurrentScene )
+	{
+	case EScene_MainMenu:
+		m_cSceneMainMenu.Render();
+		break;
+	case EScene_Game:
+		m_cSceneGame.Render();
+		break;
+	}	
 
 	/*const uint16_t iLineCount = 16;
 	for ( int i = 0; i < iLineCount; i++ )
@@ -107,14 +121,26 @@ void CEngine::Render()
 	//CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
 }
 
+void CEngine::SetScene( ESceneType eSceneType )
+{
+	m_eCurrentScene = eSceneType;
+}
+
 bool CEngine::On_KeyDown( uint32_t key )
 {
-    return m_cSceneStack.On_KeyDown( key );
+	switch ( m_eCurrentScene )
+	{
+	case EScene_MainMenu:
+	return m_cSceneMainMenu.On_KeyDown( key );
+	case EScene_Game:
+	return m_cSceneGame.On_KeyDown( key );
+	}
+    return false;
 }
 
 bool CEngine::On_KeyUp( uint32_t key )
 {
-	return m_cSceneStack.On_KeyUp( key );
+	return false;
 }
 
 bool CEngine::On_MouseMove( int deltax, int deltay )
@@ -123,7 +149,7 @@ bool CEngine::On_MouseMove( int deltax, int deltay )
 	m_sMouseState.y += deltay;
 	m_sMouseState.x = Clamp( m_sMouseState.x, 0, CGraphics::GetInstance().GetFrameBuffer().iWidth-1 );
 	m_sMouseState.y = Clamp( m_sMouseState.y, 0, CGraphics::GetInstance().GetFrameBuffer().iHeight-1 );
-    return m_cSceneStack.On_MouseMove( deltax, deltay );
+    return false;
 }
 bool CEngine::On_MouseButtonDown( uint32_t button )
 {
@@ -150,7 +176,7 @@ bool CEngine::On_MouseButtonDown( uint32_t button )
 	break;
 	}
 
-	return m_cSceneStack.On_MouseButtonDown( button );
+	return false;
 }
 
 bool CEngine::On_MouseButtonUp( uint32_t button )
@@ -178,10 +204,10 @@ bool CEngine::On_MouseButtonUp( uint32_t button )
 	break;
 	}
 
-	return m_cSceneStack.On_MouseButtonUp( button );
+	return false;
 }
 
 bool CEngine::On_MouseWheel( int iDelta )
 {
-	return m_cSceneStack.On_MouseWheel( iDelta );
+	return false;
 }

@@ -3,9 +3,14 @@
 #include "Common/Globals.h"
 #include "Engine/Graphics.h"
 #include "Engine/Audio.h"
-#include "Engine/SceneStack.h"
-#include "Game/Scene01.h"
-#include "Game/Scene02.h"
+#include "Game/SceneMainMenu.h"
+#include "Game/SceneGame.h"
+
+enum ESceneType
+{
+	EScene_MainMenu,
+	EScene_Game,
+};
 
 struct SMouseState
 {
@@ -35,6 +40,8 @@ public:
 	void Update();	
 	void Render();
 
+	void SetScene( ESceneType eSceneType );
+
 	bool On_KeyDown( uint32_t key );
 	bool On_KeyUp( uint32_t key );
 	bool On_MouseMove( int deltax, int deltay );
@@ -60,7 +67,7 @@ private:
 
 	SAudioFrameData	m_sAudioFrameData;
 
-	CScene02		m_cScene;
-
-	CSceneStack		m_cSceneStack;
+	ESceneType		m_eCurrentScene;
+	CSceneMainMenu	m_cSceneMainMenu;
+	CSceneGame		m_cSceneGame;
 };

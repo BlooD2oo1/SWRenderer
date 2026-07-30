@@ -115,6 +115,8 @@ public:
 	template<class TVertexShader>
 	void DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
 
+	void DrawRect( int x, int y, int w, int h, BGRA8 sColor );
+
 	template<class TVertex>
 	bool ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const;
 	template<class TVertex>

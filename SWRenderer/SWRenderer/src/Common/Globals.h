@@ -8,8 +8,20 @@
 #include <cassert>
 #include <vector>
 #include <chrono>
+#include <atomic>
 
 #include "Common/Math.h"
+
+static std::atomic<bool> g_bRunning( true );
+
+#define KEY_ESCAPE		0x1B
+#define KEY_SPACE		0x20
+#define KEY_ENTER		0x0D
+#define KEY_LEFT		0x25
+#define KEY_UP			0x26
+#define KEY_RIGHT		0x27
+#define KEY_DOWN		0x28
+
 
 #define SAFE_DELETE(p)       { if(p) { delete	(p);   (p)=nullptr; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=nullptr; } }

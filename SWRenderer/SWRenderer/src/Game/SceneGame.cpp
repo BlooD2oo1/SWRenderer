@@ -1,20 +1,20 @@
-#include "Scene02.h"
+#include "SceneGame.h"
 #include "Common/Globals.h"
 #include "Engine/Engine.h"
 #include "winAudio.h"
 
-CScene02::CScene02()
+CSceneGame::CSceneGame()
 {
 	m_pStars = nullptr;
 	Clear();
 }
 
-CScene02::~CScene02()
+CSceneGame::~CSceneGame()
 {
 	Clear();
 }
 
-void CScene02::Clear()
+void CSceneGame::Clear()
 {
 	SAFE_DELETE_ARRAY( m_pStars );
 	m_iStarsCount = 0;
@@ -25,7 +25,7 @@ void CScene02::Clear()
 	m_cAsteroidMesh.Clear();
 }
 
-void CScene02::Create()
+void CSceneGame::Create()
 {
 	Clear();
 	m_cShipMesh.Create();
@@ -71,7 +71,7 @@ void CScene02::Create()
 static float fAction = 0.0f;
 static float fClimax = 0.0f;
 
-void CScene02::Update()
+void CSceneGame::Update()
 {
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
 	{
@@ -225,7 +225,7 @@ void CScene02::Update()
 	CEngine::GetInstance().GetAudioFrameData().m_fMusic_Climax = fClimax;
 }
 
-void CScene02::Render()
+void CSceneGame::Render()
 {
 	{
 		float fAlpha = 1.0f;
@@ -521,12 +521,11 @@ void CScene02::Render()
 	}
 }
 
-bool CScene02::On_KeyDown( uint32_t key )
+bool CSceneGame::On_KeyDown( uint32_t key )
 {
 	switch ( key )
 	{
-	// VK_UP
-	case 0x26:
+	case KEY_UP:
 	{
 		m_sShipControl.m_fAccForward_ctrl = 1.0f;
 
@@ -534,8 +533,7 @@ bool CScene02::On_KeyDown( uint32_t key )
 		fAction = Clamp( fAction, 0.0f, 1.0f );
 	}
 	break;
-	// VK_DOWN
-	case 0x28:
+	case KEY_DOWN:
 	{
 		m_sShipControl.m_fAccForward_ctrl = -1.0f;
 
@@ -543,8 +541,7 @@ bool CScene02::On_KeyDown( uint32_t key )
 		fAction = Clamp( fAction, 0.0f, 1.0f );
 	}
 	break;
-	// VK_LEFT
-	case 0x25:
+	case KEY_LEFT:
 	{
 		m_sShipControl.m_fYaw_ctrl = 1.0f;
 		//m_sShipControl.m_fAccLeft_ctrl = 1.0f;
@@ -553,8 +550,7 @@ bool CScene02::On_KeyDown( uint32_t key )
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 	}
 	break;
-	// VK_RIGHT
-	case 0x27:
+	case KEY_RIGHT:
 	{
 		m_sShipControl.m_fYaw_ctrl = -1.0f;
 		//m_sShipControl.m_fAccLeft_ctrl = -1.0f;
@@ -563,8 +559,7 @@ bool CScene02::On_KeyDown( uint32_t key )
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 	}
 	break;
-	// VK_SPACE
-	case 0x20:
+	case KEY_SPACE:
 	{
 		if ( !m_sShipControl.m_bShoot )
 		{
@@ -577,38 +572,33 @@ bool CScene02::On_KeyDown( uint32_t key )
 	return false;
 }
 
-bool CScene02::On_KeyUp( uint32_t key )
+bool CSceneGame::On_KeyUp( uint32_t key )
 {
 	switch ( key )
 	{
-		// VK_UP
-	case 0x26:
+	case KEY_UP:
 	{
 		m_sShipControl.m_fAccForward_ctrl = 0.0f;
 	}
 	break;
-	// VK_DOWN
-	case 0x28:
+	case KEY_DOWN:
 	{
 		m_sShipControl.m_fAccForward_ctrl = 0.0f;
 	}
 	break;
-	// VK_LEFT
-	case 0x25:
+	case KEY_LEFT:
 	{
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
 		//m_sShipControl.m_fAccLeft_ctrl = 0.0f;
 	}
 	break;
-	// VK_RIGHT
-	case 0x27:
+	case KEY_RIGHT:
 	{
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
 		//m_sShipControl.m_fAccLeft_ctrl = 0.0f;
 	}
 	break;
-	// VK_SPACE
-	case 0x20:
+	case KEY_SPACE:
 	{
 		m_sShipControl.m_bShoot = false;
 	}
@@ -617,7 +607,7 @@ bool CScene02::On_KeyUp( uint32_t key )
 	return false;
 }
 
-bool CScene02::On_MouseMove( int deltax, int deltay )
+bool CSceneGame::On_MouseMove( int deltax, int deltay )
 {
 	if ( CEngine::GetInstance().GetMouseState().bLeftButton )
 	{
@@ -630,7 +620,7 @@ bool CScene02::On_MouseMove( int deltax, int deltay )
 
 	return false;
 }
-bool CScene02::On_MouseButtonDown( uint32_t button )
+bool CSceneGame::On_MouseButtonDown( uint32_t button )
 {
 	if ( button == 0 )
 	{
@@ -643,7 +633,7 @@ bool CScene02::On_MouseButtonDown( uint32_t button )
 	return false;
 }
 
-bool CScene02::On_MouseButtonUp( uint32_t button )
+bool CSceneGame::On_MouseButtonUp( uint32_t button )
 {
 	if ( button == 0 )
 	{
@@ -653,7 +643,7 @@ bool CScene02::On_MouseButtonUp( uint32_t button )
 	return false;
 }
 
-bool CScene02::On_MouseWheel( int iDelta )
+bool CSceneGame::On_MouseWheel( int iDelta )
 {
 
 	return false;

@@ -1,7 +1,6 @@
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #include <stdlib.h>
-#include <atomic>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -29,8 +28,6 @@
 constexpr double TARGET_FPS = 60.0;
 constexpr double TARGET_FRAME_TIME = 1.0 / TARGET_FPS;
 #endif
-
-std::atomic<bool> bRunning( true );
 
 bool bLockMouse = true;
 
@@ -60,8 +57,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_CLOSE:
 		case WM_DESTROY:
 		{
-			bRunning = false;
-			PostQuitMessage(0);
+			g_bRunning = false;
 			return 0;
 		}
 
@@ -81,8 +77,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if ( wParam == VK_ESCAPE )
 			{
-				bRunning = false;
-				PostQuitMessage(0);
+				g_bRunning = false;
 				return 0;
 			}
 			CEngine::GetInstance().On_KeyDown((uint32_t)wParam);
@@ -168,7 +163,7 @@ void AudioThread()
 		return;
 	}
 
-	while (bRunning)
+	while (g_bRunning)
 	{
 		SAudioBuffer sAudioBuffer;
 		Audio_UpdateBegin( sAudioBuffer.pData, sAudioBuffer.iNumFrames, sAudioBuffer.iSampleRate );
@@ -222,7 +217,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	uint64_t iElapsedTimeNs = 0;
 	uint64_t iRenderTimeNs = 0;
 
-	while (bRunning)
+	while (g_bRunning)
 	{
 		// high-resolution frame start timestamp (used for frame-capping)
 #ifdef FRAME_CAP

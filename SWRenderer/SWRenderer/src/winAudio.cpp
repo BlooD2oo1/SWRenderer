@@ -14,9 +14,6 @@ template <class T> void SafeRelease(T** ppT) {
 static const int SAMPLE_RATE = 48000;
 static constexpr float PI2   = 6.28318530717958647692f;
 
-// Thread control flag
-bool bRunning = true;
-
 // WASAPI specific interfaces and handles
 static IMMDeviceEnumerator* gEnumerator   = nullptr;
 static IMMDevice* gDevice       = nullptr;

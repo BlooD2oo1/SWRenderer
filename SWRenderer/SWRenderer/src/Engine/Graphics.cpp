@@ -207,6 +207,14 @@ void CGraphics::DrawLineV( int x, int y, int len, BGRA8 sColor )
 	}
 }
 
+void CGraphics::DrawRect( int x, int y, int w, int h, BGRA8 sColor )
+{
+	DrawLineH( x, y, w, sColor );
+	DrawLineH( x, y + h - 1, w, sColor );
+	DrawLineV( x, y+1, h-2, sColor );
+	DrawLineV( x + w - 1, y+1, h-2, sColor );
+}
+
 uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;
