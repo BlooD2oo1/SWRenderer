@@ -61,7 +61,7 @@ void CSceneMainMenu::Render()
 	for ( int i = 0; i < EMenuItem_Count; i++ )
 	{
 		SMenu& sMenuItem = m_pMenuItems[i];
-		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 255, 255, 64 } : BGRA8{ (uint8_t)10, 20, 128, 64 };
+		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 255, 255, 64 } : BGRA8{ (uint8_t)150, 50, 30, 64 };
 		//CGraphics::GetInstance().DrawRect( sMenuItem.x, sMenuItem.y, sMenuItem.w, sMenuItem.h, sColor );
 		CGraphics::GetInstance().DrawText( sMenuItem.x + 5, sMenuItem.y + 2, 
 			(i == EMenuItem_StartGame) ?	"START GAME" :

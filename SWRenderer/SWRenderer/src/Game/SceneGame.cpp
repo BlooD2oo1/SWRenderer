@@ -93,7 +93,8 @@ void CSceneGame::Update()
 		m_sShipControl.m_vMov += vShipLeft * m_sShipControl.m_fAccLeft * 0.00005f * fElapsedTimeMs;
 		m_sShipControl.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_sShipControl.m_vMov, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
 
-		m_sShipControl.m_fRoll = m_sShipControl.m_fYaw;//Lerp( -m_sShipControl.m_fYawSpeed, m_sShipControl.m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
+		m_sShipControl.m_fRoll = m_sShipControl.m_fYaw*0.5f;//Lerp( -m_sShipControl.m_fYawSpeed, m_sShipControl.m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
+		//m_sShipControl.m_fRoll = SmoothConverge( m_sShipControl.m_fRoll, -m_sShipControl.m_fYaw * 3.5f, 1.0002f, 1.0002f, fElapsedTimeMs );
 
 		m_sShipControl.m_vPos += m_sShipControl.m_vMov * fElapsedTimeMs;
 
@@ -193,7 +194,7 @@ void CSceneGame::Update()
 		//vP += m_sShipControl.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 900.0f, 100.0f, expf( -SVector3::Length( m_sShipControl.m_vMov ) * 1.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 700.0f, 100.0f, expf( -SVector3::Length( m_sShipControl.m_vMov ) * 1.5f ) );
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 
