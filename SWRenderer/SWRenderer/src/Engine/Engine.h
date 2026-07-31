@@ -56,6 +56,9 @@ public:
 	float				GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
 	SAudioFrameData&	GetAudioFrameData() { return m_sAudioFrameData; }
 
+	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
+	const STextureIndexed& GetFontTex_TinyPixie2_8x6() const { return m_sTexFont_TinyPixie2_8x6; }
+
 private:
 
 	uint64_t		m_iFrameInd;
@@ -70,4 +73,7 @@ private:
 	ESceneType		m_eCurrentScene;
 	CSceneMainMenu	m_cSceneMainMenu;
 	CSceneGame		m_cSceneGame;
+
+	STextureIndexed	m_sTexFont_KarenFat_13x16;
+	STextureIndexed	m_sTexFont_TinyPixie2_8x6;
 };

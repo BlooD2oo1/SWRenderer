@@ -149,6 +149,8 @@ public:
 
 	void DrawTexture( int x, int y, const STextureIndexed& sTex );
 
+	void DrawText( int x, int y, const char* pText, BGRA8 sColor, const STextureIndexed& sTex, int iCharWidth, int iCharHeight );
+
 	template<class TVertex>
 	bool ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const;
 	template<class TVertex>

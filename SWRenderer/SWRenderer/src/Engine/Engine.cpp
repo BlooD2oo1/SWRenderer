@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "Common/Time.h"
+#include "Common/PCXLoader.h"
 
 CEngine* CEngine::m_pThis = nullptr;
 
@@ -27,6 +28,8 @@ void CEngine::Clear()
 	m_sAudioFrameData.Clear();
 	m_cSceneMainMenu.Clear();
 	m_cSceneGame.Clear();
+	m_sTexFont_KarenFat_13x16.Clear();
+	m_sTexFont_TinyPixie2_8x6.Clear();
 	CGraphics::GetInstance().Clear();
 }
 
@@ -37,6 +40,9 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	CGraphics::GetInstance().Create( sFrameBuffer );
 	m_cSceneMainMenu.Create();
 	m_cSceneGame.Create();
+	PCX_LoadFromFile( "data/KarenFat_13x16.pcx", m_sTexFont_KarenFat_13x16 );
+	PCX_LoadFromFile( "data/TinyPixie2_8x6.pcx", m_sTexFont_TinyPixie2_8x6 );
+
 }
 
 void CEngine::UpdateAudioThread( SAudioBuffer& sAudioBuffer )

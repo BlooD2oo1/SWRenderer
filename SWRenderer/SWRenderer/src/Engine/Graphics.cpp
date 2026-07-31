@@ -19,6 +19,19 @@ void CGraphics::Clear()
 {
 }
 
+uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
+{
+	BGRA8 sDest;
+	sDest.rgba = dest;
+	uint32_t rOut = sDest.r + ((src.r*src.a)>>8);
+	uint32_t gOut = sDest.g + ((src.g*src.a)>>8);
+	uint32_t bOut = sDest.b + ((src.b*src.a)>>8);
+	rOut = rOut > 255 ? 255 : rOut;
+	gOut = gOut > 255 ? 255 : gOut;
+	bOut = bOut > 255 ? 255 : bOut;
+	return (rOut) | (gOut << 8) | (bOut << 16);
+}
+
 void CGraphics::ClearFrameBuffer( BGRA8 sColor )
 {
 	for ( int y = 0; y < m_sFrameBuffer.iHeight; y++ )
@@ -230,22 +243,49 @@ void CGraphics::DrawTexture( int x, int y, const STextureIndexed& sTex )
 				sColor.r = sTex.m_pPalette[uIndex*3+2];
 				sColor.g = sTex.m_pPalette[uIndex*3+1];
 				sColor.b = sTex.m_pPalette[uIndex*3+0];
-				((BGRA8*)m_sFrameBuffer.pData)[(y+iy) * m_sFrameBuffer.iWidth + (x+ix)] = sColor;
+				((BGRA8*)m_sFrameBuffer.pData)[iDestY * m_sFrameBuffer.iWidth + iDestX] = sColor;
 			}			
 		}
 	}
 }
 
-uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
+void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const STextureIndexed& sTex, int iCharWidth, int iCharHeight )
 {
-	BGRA8 sDest;
-	sDest.rgba = dest;
-	uint32_t rOut = sDest.r + ((src.r*src.a)>>8);
-	uint32_t gOut = sDest.g + ((src.g*src.a)>>8);
-	uint32_t bOut = sDest.b + ((src.b*src.a)>>8);
-	rOut = rOut > 255 ? 255 : rOut;
-	gOut = gOut > 255 ? 255 : gOut;
-	bOut = bOut > 255 ? 255 : bOut;
-	return (rOut) | (gOut << 8) | (bOut << 16);
+	//text length:
+	if ( pText == nullptr || *pText == '\0' )
+	{
+		return;
+	}
+
+	while ( *pText != '\0' )
+	{
+		char c = *pText;
+		if ( c < 32 || c > 127 )
+		{
+			c = '?';
+		}
+		int iCharIndex = c-32;
+		int iCharX = (iCharIndex % 16) * iCharWidth;
+		int iCharY = (iCharIndex / 16) * iCharHeight;
+		for ( int iy = 0; iy < iCharHeight; iy++ )
+		{
+			for ( int ix = 0; ix < iCharWidth; ix++ )
+			{
+				int iDestX = x + ix;
+				int iDestY = y + iy;
+				if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth && iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
+				{
+					uint8_t uIndex = sTex.m_pData[(iCharY+iy) * sTex.m_iWidth + (iCharX+ix)];
+					if ( uIndex == 0 )
+					{
+						continue;
+					}
+					((BGRA8*)m_sFrameBuffer.pData)[iDestY * m_sFrameBuffer.iWidth + iDestX] = sColor;
+				}			
+			}
+		}
+		x += iCharWidth;
+		pText++;
+	}
 }
 
