@@ -1,11 +1,12 @@
 #include "SceneMainMenu.h"
-#include "Engine/Graphics.h"
 #include "Engine/Engine.h"
 
 #include "Common/Threading.h"
+#include "Common/PCXLoader.h"
 
 CSceneMainMenu::CSceneMainMenu()
 {
+	
 }
 
 CSceneMainMenu::~CSceneMainMenu()
@@ -14,10 +15,13 @@ CSceneMainMenu::~CSceneMainMenu()
 
 void CSceneMainMenu::Clear()
 {
+	m_sTexBackground.Clear();
 }
 
 void CSceneMainMenu::Create()
 {
+	PCX_LoadFromFile( "data\\mainscreen.pcx", m_sTexBackground );
+
 	m_eSelectedMenuItem = EMenuItem_StartGame;
 
 	int iMenuHeight = 10;
@@ -52,10 +56,12 @@ void CSceneMainMenu::Update()
 
 void CSceneMainMenu::Render()
 {
+	CGraphics::GetInstance().DrawTexture( 0, 0, m_sTexBackground );
+
 	for ( int i = 0; i < EMenuItem_Count; i++ )
 	{
 		SMenu& sMenuItem = m_pMenuItems[i];
-		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)255, 255, 255, 255 } : BGRA8{ (uint8_t)128, 128, 128, 255 };
+		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)0, 255, 255, 255 } : BGRA8{ (uint8_t)10, 20, 128, 255 };
 		CGraphics::GetInstance().DrawRect( sMenuItem.x, sMenuItem.y, sMenuItem.w, sMenuItem.h, sColor );
 	}
 }
@@ -89,6 +95,10 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 				break;
 			}
 		}
+		return true;
+
+		case KEY_ESCAPE:
+			g_bRunning = false;
 		return true;
 	}
 

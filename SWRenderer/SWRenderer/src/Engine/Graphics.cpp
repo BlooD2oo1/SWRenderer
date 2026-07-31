@@ -215,6 +215,27 @@ void CGraphics::DrawRect( int x, int y, int w, int h, BGRA8 sColor )
 	DrawLineV( x + w - 1, y+1, h-2, sColor );
 }
 
+void CGraphics::DrawTexture( int x, int y, const STextureIndexed& sTex )
+{
+	for ( int iy = 0; iy < sTex.m_iHeight; iy++ )
+	{
+		for ( int ix = 0; ix < sTex.m_iWidth; ix++ )
+		{
+			int iDestX = x + ix;
+			int iDestY = y + iy;
+			if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth && iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
+			{
+				uint8_t uIndex = sTex.m_pData[iy * sTex.m_iWidth + ix];
+				BGRA8 sColor;
+				sColor.r = sTex.m_pPalette[uIndex*3+2];
+				sColor.g = sTex.m_pPalette[uIndex*3+1];
+				sColor.b = sTex.m_pPalette[uIndex*3+0];
+				((BGRA8*)m_sFrameBuffer.pData)[(y+iy) * m_sFrameBuffer.iWidth + (x+ix)] = sColor;
+			}			
+		}
+	}
+}
+
 uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
 {
 	BGRA8 sDest;

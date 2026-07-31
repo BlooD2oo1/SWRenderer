@@ -533,7 +533,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 		fAction += 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
 	}
-	break;
+	return true;
 	case KEY_DOWN:
 	{
 		m_sShipControl.m_fAccForward_ctrl = -1.0f;
@@ -541,7 +541,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 		fAction -= 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
 	}
-	break;
+	return true;
 	case KEY_LEFT:
 	{
 		m_sShipControl.m_fYaw_ctrl = 1.0f;
@@ -550,7 +550,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 		fClimax += 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 	}
-	break;
+	return true;
 	case KEY_RIGHT:
 	{
 		m_sShipControl.m_fYaw_ctrl = -1.0f;
@@ -559,7 +559,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 		fClimax -= 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
 	}
-	break;
+	return true;
 	case KEY_SPACE:
 	{
 		if ( !m_sShipControl.m_bShoot )
@@ -568,7 +568,13 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 			m_sShipControl.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 		}		
 	}
-	break;
+	return true;
+
+	case KEY_ESCAPE:
+	{
+		CEngine::GetInstance().SetScene( EScene_MainMenu );
+	}
+	return true;
 	}
 	return false;
 }
@@ -581,29 +587,29 @@ bool CSceneGame::On_KeyUp( uint32_t key )
 	{
 		m_sShipControl.m_fAccForward_ctrl = 0.0f;
 	}
-	break;
+	return true;
 	case KEY_DOWN:
 	{
 		m_sShipControl.m_fAccForward_ctrl = 0.0f;
 	}
-	break;
+	return true;
 	case KEY_LEFT:
 	{
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
 		//m_sShipControl.m_fAccLeft_ctrl = 0.0f;
 	}
-	break;
+	return true;
 	case KEY_RIGHT:
 	{
 		m_sShipControl.m_fYaw_ctrl = 0.0f;
 		//m_sShipControl.m_fAccLeft_ctrl = 0.0f;
 	}
-	break;
+	return true;
 	case KEY_SPACE:
 	{
 		m_sShipControl.m_bShoot = false;
 	}
-	break;
+	return true;
 	}
 	return false;
 }

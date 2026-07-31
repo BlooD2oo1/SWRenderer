@@ -141,6 +141,13 @@ bool CEngine::On_KeyDown( uint32_t key )
 
 bool CEngine::On_KeyUp( uint32_t key )
 {
+	switch ( m_eCurrentScene )
+	{
+	case EScene_MainMenu:
+		return m_cSceneMainMenu.On_KeyUp( key );
+	case EScene_Game:
+		return m_cSceneGame.On_KeyUp( key );
+	}
 	return false;
 }
 

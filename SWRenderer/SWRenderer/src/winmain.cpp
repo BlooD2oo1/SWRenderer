@@ -76,11 +76,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case WM_KEYDOWN:
 		{
-			if ( wParam == VK_ESCAPE )
+			/*if ( wParam == VK_ESCAPE )
 			{
 				g_bRunning = false;
 				return 0;
-			}
+			}*/
 			CEngine::GetInstance().On_KeyDown((uint32_t)wParam);
 			return 0;
 		}

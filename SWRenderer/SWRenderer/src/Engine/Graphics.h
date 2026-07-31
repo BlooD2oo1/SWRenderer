@@ -39,6 +39,35 @@ struct BGRA8
 	}
 };
 
+struct STextureIndexed
+{
+	int32_t  m_iWidth;
+	int32_t  m_iHeight;
+	uint8_t* m_pData;     // Pixel color indices (m_iWidth * m_iHeight)
+	uint8_t* m_pPalette;  // 256 * 3 bytes RGB palette (R, G, B, R, G, B...)
+
+	STextureIndexed()
+		: m_iWidth(0)
+		, m_iHeight(0)
+		, m_pData(nullptr)
+		, m_pPalette(nullptr)
+	{}
+
+	~STextureIndexed()
+	{
+		Clear();
+	}
+
+	void Clear()
+	{
+		if (m_pData)    { delete[] m_pData; m_pData = nullptr; }
+		if (m_pPalette) { delete[] m_pPalette; m_pPalette = nullptr; }
+		m_iWidth = 0;
+		m_iHeight = 0;
+	}
+};
+
+
 struct SVertexPC
 {
 	SVector3	vPos;
@@ -117,6 +146,8 @@ public:
 	void DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
 
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor );
+
+	void DrawTexture( int x, int y, const STextureIndexed& sTex );
 
 	template<class TVertex>
 	bool ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/Globals.h"
+#include "Engine/Graphics.h"
 
 struct SMenu
 {
@@ -39,4 +40,6 @@ public:
 private:
 	SMenu		m_pMenuItems[EMenuItem_Count];
 	EMenuItem	m_eSelectedMenuItem;
+
+	STextureIndexed m_sTexBackground;
 };

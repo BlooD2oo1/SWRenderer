@@ -100,6 +100,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
   <ItemGroup>
     <ClInclude Include="src\Common\Defines.h" />
     <ClInclude Include="src\Common\Log.h" />
+    <ClInclude Include="src\Common\PCXLoader.h" />
     <ClInclude Include="src\Common\RingBuffer.h" />
     <ClInclude Include="src\Common\Globals.h" />
     <ClInclude Include="src\Common\Math.h" />
