@@ -14,14 +14,8 @@
     <Filter Include="src\Game">
       <UniqueIdentifier>{dae79c81-d153-42f9-9515-81e28ef2a55c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Engine\UI">
-      <UniqueIdentifier>{4dcef02f-cd86-4c63-b5aa-5cab7289cc92}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Engine\Engine.cpp">
-      <Filter>src\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="src\winAudio.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -31,100 +25,106 @@
     <ClCompile Include="src\winGraphics.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Game\Scene01.cpp">
+    <ClCompile Include="src\Game\SceneMainMenu.cpp">
       <Filter>src\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine\Audio.cpp">
-      <Filter>src\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine\Camera.cpp">
-      <Filter>src\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine\Graphics.cpp">
-      <Filter>src\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game\ShipControl.cpp">
-      <Filter>src\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Common\Math.cpp">
-      <Filter>src\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Common\Vector.cpp">
-      <Filter>src\Common</Filter>
     </ClCompile>
     <ClCompile Include="src\Game\ShipMesh.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="src\Game\Scene02.cpp">
+    <ClCompile Include="src\Game\SceneGame.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
     <ClCompile Include="src\Game\AsteroidMesh.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\SceneStack.cpp">
+    <ClCompile Include="src\Game\ShipControl.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\Camera.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Engine.cpp">
       <Filter>src\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\UI\UIBase.cpp">
-      <Filter>src\Engine\UI</Filter>
+    <ClCompile Include="src\Engine\Graphics.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Audio.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Common\Time.cpp">
+      <Filter>src\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Common\Threading.cpp">
+      <Filter>src\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Common\Vector.cpp">
+      <Filter>src\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Common\Math.cpp">
+      <Filter>src\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Engine\Engine.h">
-      <Filter>src\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Common\Globals.h">
-      <Filter>src\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Common\Perf.h">
-      <Filter>src\Common</Filter>
-    </ClInclude>
     <ClInclude Include="src\winAudio.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\winGraphics.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Common\RingBuffer.h">
-      <Filter>src\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\Scene01.h">
-      <Filter>src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine\Audio.h">
-      <Filter>src\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine\Camera.h">
-      <Filter>src\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine\Graphics.h">
-      <Filter>src\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="src\Game\ShipControl.h">
       <Filter>src\Game</Filter>
     </ClInclude>
-    <ClInclude Include="src\Common\Math.h">
-      <Filter>src\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Common\Vector.h">
-      <Filter>src\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\ShipMesh.h">
+    <ClInclude Include="src\Game\SceneMainMenu.h">
       <Filter>src\Game</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game\Scene02.h">
+    <ClInclude Include="src\Game\Camera.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\SceneGame.h">
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\AsteroidMesh.h">
       <Filter>src\Game</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\Audio_Voices.h">
+    <ClInclude Include="src\Game\ShipMesh.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Engine.h">
       <Filter>src\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\SceneStack.h">
+    <ClInclude Include="src\Engine\Graphics.h">
       <Filter>src\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\UI\UIBase.h">
-      <Filter>src\Engine\UI</Filter>
+    <ClInclude Include="src\Engine\Audio.h">
+      <Filter>src\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Vector.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Time.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Threading.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\PCXLoader.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Math.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Log.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Globals.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\Defines.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\RingBuffer.h">
+      <Filter>src\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
