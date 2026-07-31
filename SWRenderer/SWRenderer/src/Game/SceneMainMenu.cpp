@@ -25,8 +25,8 @@ void CSceneMainMenu::Create()
 	m_eSelectedMenuItem = EMenuItem_StartGame;
 
 	int iMenuHeight = 20;
-	int iFirstHeight = 60;
-	int iSpacingHeight = 20;
+	int iFirstHeight = 50;
+	int iSpacingHeight = 10;
 
 	m_pMenuItems[EMenuItem_StartGame].w = 160;
 	m_pMenuItems[EMenuItem_StartGame].h = iMenuHeight;
@@ -58,20 +58,27 @@ void CSceneMainMenu::Render()
 {
 	CGraphics::GetInstance().DrawTexture( 0, 0, m_sTexBackground );
 
+	char szMenuText[EMenuItem_Count][32] = { "START GAME", "LEGEND", "CREDITS", "EXIT" };
+
 	for ( int i = 0; i < EMenuItem_Count; i++ )
 	{
 		SMenu& sMenuItem = m_pMenuItems[i];
-		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 255, 255, 64 } : BGRA8{ (uint8_t)150, 50, 30, 64 };
+		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 240, 240, 255 } : BGRA8{ (uint8_t)150, 100, 100, 255 };
 		//CGraphics::GetInstance().DrawRect( sMenuItem.x, sMenuItem.y, sMenuItem.w, sMenuItem.h, sColor );
-		CGraphics::GetInstance().DrawText( sMenuItem.x + 5, sMenuItem.y + 2, 
-			(i == EMenuItem_StartGame) ?	"START GAME" :
-			(i == EMenuItem_Legend) ?		"LEGEND" :
-			(i == EMenuItem_Credits) ?		"CREDITS" :
-			(i == EMenuItem_Exit) ?			"EXIT" : "", 
-			sColor, CEngine::GetInstance().GetFontTex_KarenFat_13x16(), 13, 16 );
+		const int iFontWidth = 6;
+		const int iFontHeight = 6;
+		const int iSpacing = 1;
+		const int iTextLength = (int)strlen( szMenuText[i] );
+		const int iTextWidth = iTextLength * iFontWidth + (iTextLength - 1) * iSpacing;
+		CGraphics::GetInstance().DrawText( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2, sMenuItem.y + 2, szMenuText[i], sColor, CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, iSpacing );
+		if ( i == m_eSelectedMenuItem )
+		{
+			CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 3, 5, 2, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10 - 5, sMenuItem.y + 3, 5, 2, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+		}
 	}
 
-	CGraphics::GetInstance().DrawText( 246, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, CEngine::GetInstance().GetFontTex_TinyPixie2_8x6(), 8, 6 );
+	CGraphics::GetInstance().DrawText( 280, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -2 );
 }
 
 bool CSceneMainMenu::On_KeyDown( uint32_t key )

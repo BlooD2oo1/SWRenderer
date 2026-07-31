@@ -249,7 +249,7 @@ void CGraphics::DrawTexture( int x, int y, const STextureIndexed& sTex )
 	}
 }
 
-void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const STextureIndexed& sTex, int iCharWidth, int iCharHeight )
+void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const STextureIndexed& sTex, int iCharWidth, int iCharHeight, int iSpacing /*= 0*/ )
 {
 	//text length:
 	if ( pText == nullptr || *pText == '\0' )
@@ -284,7 +284,7 @@ void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const S
 				}			
 			}
 		}
-		x += iCharWidth;
+		x += iCharWidth + iSpacing;
 		pText++;
 	}
 }

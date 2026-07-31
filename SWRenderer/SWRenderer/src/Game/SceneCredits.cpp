@@ -26,7 +26,7 @@ void CSceneCredits::Render()
 {
 
 
-	CGraphics::GetInstance().DrawText( 246, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, CEngine::GetInstance().GetFontTex_TinyPixie2_8x6(), 8, 6 );
+	CGraphics::GetInstance().DrawText( 260, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6 );
 }
 
 bool CSceneCredits::On_KeyDown( uint32_t key )

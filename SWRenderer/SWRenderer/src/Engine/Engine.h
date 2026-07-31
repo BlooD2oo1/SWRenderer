@@ -59,7 +59,8 @@ public:
 	SAudioFrameData&	GetAudioFrameData() { return m_sAudioFrameData; }
 
 	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
-	const STextureIndexed& GetFontTex_TinyPixie2_8x6() const { return m_sTexFont_TinyPixie2_8x6; }
+	const STextureIndexed& GetFontTex_TinyPixie2_6x6() const { return m_sTexFont_TinyPixie2_6x6; }
+	const STextureIndexed& GetFontTex_Habbo_9x13() const { return m_sTexFont_Habbo_9x13; }
 
 private:
 
@@ -78,5 +79,7 @@ private:
 	CSceneGame		m_cSceneGame;
 
 	STextureIndexed	m_sTexFont_KarenFat_13x16;
-	STextureIndexed	m_sTexFont_TinyPixie2_8x6;
+	STextureIndexed	m_sTexFont_TinyPixie2_6x6;
+	STextureIndexed	m_sTexFont_Habbo_9x13;
+
 };

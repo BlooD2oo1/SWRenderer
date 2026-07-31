@@ -30,7 +30,8 @@ void CEngine::Clear()
 	m_cSceneCredits.Clear();
 	m_cSceneGame.Clear();
 	m_sTexFont_KarenFat_13x16.Clear();
-	m_sTexFont_TinyPixie2_8x6.Clear();
+	m_sTexFont_TinyPixie2_6x6.Clear();
+	m_sTexFont_Habbo_9x13.Clear();
 	CGraphics::GetInstance().Clear();
 }
 
@@ -43,7 +44,8 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	m_cSceneCredits.Create();
 	m_cSceneGame.Create();
 	PCX_LoadFromFile( "data/KarenFat_13x16.pcx", m_sTexFont_KarenFat_13x16 );
-	PCX_LoadFromFile( "data/TinyPixie2_8x6.pcx", m_sTexFont_TinyPixie2_8x6 );
+	PCX_LoadFromFile( "data/TinyPixie2_6x6.pcx", m_sTexFont_TinyPixie2_6x6 );
+	PCX_LoadFromFile( "data/Habbo_9x13.pcx", m_sTexFont_Habbo_9x13 );
 
 }
 
