@@ -24,7 +24,7 @@
 #[Oo]bj/
 #[Ll]og/
 
-SWRenderer/Bin
+SWRenderer/Bin/*.exe
 SWRenderer/x64/
 SWRenderer/SWRenderer/x64/
 
