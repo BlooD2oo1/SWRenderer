@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "Common/Time.h"
 
 CEngine* CEngine::m_pThis = nullptr;
 

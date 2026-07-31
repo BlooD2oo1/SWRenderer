@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include <cassert>
 #include <algorithm>
-#include "Common/Globals.h"
 
 struct SVector2
 {

@@ -2,6 +2,7 @@
 
 #include "Common/Globals.h"
 #include "Common/Vector.h"
+#include "Common/Math.h"
 
 struct BGRA8
 {

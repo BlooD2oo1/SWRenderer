@@ -1,5 +1,7 @@
 #include "ShipMesh.h"
 
+#include <vector>
+
 CShipMesh::CShipMesh()
 {
 	m_pLineList = nullptr;

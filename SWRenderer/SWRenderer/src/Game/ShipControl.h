@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Common/Vector.h"
 
 struct SShipControl

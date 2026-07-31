@@ -2,6 +2,8 @@
 #include "Engine/Graphics.h"
 #include "Engine/Engine.h"
 
+#include "Common/Threading.h"
+
 CSceneMainMenu::CSceneMainMenu()
 {
 }
@@ -18,15 +20,30 @@ void CSceneMainMenu::Create()
 {
 	m_eSelectedMenuItem = EMenuItem_StartGame;
 
+	int iMenuHeight = 10;
+	int iFirstHeight = 30;
+	int iSpacingHeight = 20;
+
 	m_pMenuItems[EMenuItem_StartGame].w = 100;
-	m_pMenuItems[EMenuItem_StartGame].h = 10;
+	m_pMenuItems[EMenuItem_StartGame].h = iMenuHeight;
 	m_pMenuItems[EMenuItem_StartGame].x = 320 / 2 - m_pMenuItems[EMenuItem_StartGame].w / 2;
-	m_pMenuItems[EMenuItem_StartGame].y = 50;
+	m_pMenuItems[EMenuItem_StartGame].y = iFirstHeight + (int)EMenuItem_StartGame*iSpacingHeight;
+
+	m_pMenuItems[EMenuItem_Legend].w = 100;
+	m_pMenuItems[EMenuItem_Legend].h = iMenuHeight;
+	m_pMenuItems[EMenuItem_Legend].x = 320 / 2 - m_pMenuItems[EMenuItem_Legend].w / 2;
+	m_pMenuItems[EMenuItem_Legend].y = iFirstHeight + (int)EMenuItem_Legend * iSpacingHeight;
+
+	m_pMenuItems[EMenuItem_Credits].w = 100;
+	m_pMenuItems[EMenuItem_Credits].h = iMenuHeight;
+	m_pMenuItems[EMenuItem_Credits].x = 320 / 2 - m_pMenuItems[EMenuItem_Credits].w / 2;
+	m_pMenuItems[EMenuItem_Credits].y = iFirstHeight + (int)EMenuItem_Credits * iSpacingHeight;
 
 	m_pMenuItems[EMenuItem_Exit].w = 100;
-	m_pMenuItems[EMenuItem_Exit].h = 10;
+	m_pMenuItems[EMenuItem_Exit].h = iMenuHeight;
 	m_pMenuItems[EMenuItem_Exit].x = 320 / 2 - m_pMenuItems[EMenuItem_Exit].w / 2;
-	m_pMenuItems[EMenuItem_Exit].y = 70;
+	m_pMenuItems[EMenuItem_Exit].y = iFirstHeight + (int)EMenuItem_Exit * iSpacingHeight;
+
 }
 
 void CSceneMainMenu::Update()
@@ -62,6 +79,10 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			{
 			case EMenuItem_StartGame:
 				CEngine::GetInstance().SetScene( EScene_Game );
+				break;
+			case EMenuItem_Legend:
+				break;
+			case EMenuItem_Credits:
 				break;
 			case EMenuItem_Exit:
 				g_bRunning = false;

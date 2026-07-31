@@ -1,5 +1,7 @@
 #include "AsteroidMesh.h"
 
+#include <vector>
+
 CAsteroidMesh::CAsteroidMesh()
 {
 	m_pLineList = nullptr;

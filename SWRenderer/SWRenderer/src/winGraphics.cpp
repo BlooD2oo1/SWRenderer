@@ -1,6 +1,8 @@
 #include "winGraphics.h"
 #include "Common/Globals.h"
 
+#include <stdio.h>
+
 HBITMAP hBitmapFrameBuffer = nullptr;
 HDC hDCFrameBuffer = nullptr;
 uint32_t* pFramebuffer = nullptr;

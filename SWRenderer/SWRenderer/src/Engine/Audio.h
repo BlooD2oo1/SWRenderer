@@ -1,8 +1,10 @@
 #pragma once
 
+#include <vector>
 #include <mutex>
 #include <deque>
 #include "Common/Globals.h"
+#include "Common/Math.h"
 #include "Common/Vector.h"
 #include "Common/RingBuffer.h"
 

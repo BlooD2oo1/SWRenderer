@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/Vector.h"
+#include "Common/Math.h"
 
 struct SCamera
 {

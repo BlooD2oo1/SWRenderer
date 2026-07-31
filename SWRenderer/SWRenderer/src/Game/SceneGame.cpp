@@ -1,5 +1,6 @@
 #include "SceneGame.h"
 #include "Common/Globals.h"
+#include "Common/Log.h"
 #include "Engine/Engine.h"
 #include "winAudio.h"
 

@@ -11,7 +11,8 @@
 #include "winGraphics.h"
 
 #include "Common/Globals.h"
-#include "Common/Perf.h"
+#include "Common/Threading.h"
+#include "Common/Time.h"
 #include "Engine/Engine.h"
 
 //#define VSYNC

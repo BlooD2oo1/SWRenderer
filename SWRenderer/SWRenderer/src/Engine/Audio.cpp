@@ -1,5 +1,6 @@
 #include "Audio.h"
 #include "Common/Globals.h"
+#include "Common/Time.h"
 
 // ============================================================================
 // ENVELOPE HELPERS (ZERO-BOUNDED EXPONENTIAL DECAY)

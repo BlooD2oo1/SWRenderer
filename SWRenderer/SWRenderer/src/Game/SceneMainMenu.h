@@ -13,6 +13,8 @@ struct SMenu
 enum EMenuItem
 {
 	EMenuItem_StartGame,
+	EMenuItem_Legend,
+	EMenuItem_Credits,
 	EMenuItem_Exit,
 	EMenuItem_Count,
 };
