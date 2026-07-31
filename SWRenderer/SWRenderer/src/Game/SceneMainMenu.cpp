@@ -79,11 +79,13 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 	switch ( key )
 	{
 		case KEY_UP:
-		m_eSelectedMenuItem = (EMenuItem)(((int)m_eSelectedMenuItem + EMenuItem_Count - 1) % EMenuItem_Count);
+		if ( m_eSelectedMenuItem > 0 )
+			m_eSelectedMenuItem = (EMenuItem)((int)m_eSelectedMenuItem - 1);
 		return true;
 
 		case KEY_DOWN:
-		m_eSelectedMenuItem = (EMenuItem)( ( (int)m_eSelectedMenuItem + 1 ) % EMenuItem_Count );
+		if ( m_eSelectedMenuItem < EMenuItem_Count - 1 )
+			m_eSelectedMenuItem = (EMenuItem)((int)m_eSelectedMenuItem + 1);
 		return true;
 
 		case KEY_ENTER:
@@ -97,6 +99,7 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			case EMenuItem_Legend:
 				break;
 			case EMenuItem_Credits:
+				CEngine::GetInstance().SetScene( EScene_Credits );
 				break;
 			case EMenuItem_Exit:
 				g_bRunning = false;
@@ -106,7 +109,14 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 		return true;
 
 		case KEY_ESCAPE:
-			g_bRunning = false;
+			if ( m_eSelectedMenuItem != EMenuItem_Exit )
+			{
+				m_eSelectedMenuItem = EMenuItem_Exit;
+			}
+			else
+			{
+				g_bRunning = false;
+			}
 		return true;
 	}
 
@@ -114,25 +124,6 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 }
 
 bool CSceneMainMenu::On_KeyUp( uint32_t key )
-{
-	return false;
-}
-
-bool CSceneMainMenu::On_MouseMove( int deltax, int deltay )
-{
-	return false;
-}
-bool CSceneMainMenu::On_MouseButtonDown( uint32_t button )
-{
-	return false;
-}
-
-bool CSceneMainMenu::On_MouseButtonUp( uint32_t button )
-{
-	return false;
-}
-
-bool CSceneMainMenu::On_MouseWheel( int iDelta )
 {
 	return false;
 }

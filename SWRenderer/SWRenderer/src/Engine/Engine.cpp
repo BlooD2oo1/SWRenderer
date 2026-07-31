@@ -27,6 +27,7 @@ void CEngine::Clear()
 	m_fElapsedTimeMs = 0.0f;
 	m_sAudioFrameData.Clear();
 	m_cSceneMainMenu.Clear();
+	m_cSceneCredits.Clear();
 	m_cSceneGame.Clear();
 	m_sTexFont_KarenFat_13x16.Clear();
 	m_sTexFont_TinyPixie2_8x6.Clear();
@@ -39,6 +40,7 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 
 	CGraphics::GetInstance().Create( sFrameBuffer );
 	m_cSceneMainMenu.Create();
+	m_cSceneCredits.Create();
 	m_cSceneGame.Create();
 	PCX_LoadFromFile( "data/KarenFat_13x16.pcx", m_sTexFont_KarenFat_13x16 );
 	PCX_LoadFromFile( "data/TinyPixie2_8x6.pcx", m_sTexFont_TinyPixie2_8x6 );
@@ -73,6 +75,9 @@ void CEngine::Update()
 	case EScene_MainMenu:
 		m_cSceneMainMenu.Update();
 		break;
+	case EScene_Credits:
+		m_cSceneCredits.Update();
+		break;
 	case EScene_Game:
 		m_cSceneGame.Update();
 		break;
@@ -91,6 +96,9 @@ void CEngine::Render()
 	{
 	case EScene_MainMenu:
 		m_cSceneMainMenu.Render();
+		break;
+	case EScene_Credits:
+		m_cSceneCredits.Render();
 		break;
 	case EScene_Game:
 		m_cSceneGame.Render();
@@ -139,6 +147,8 @@ bool CEngine::On_KeyDown( uint32_t key )
 	{
 	case EScene_MainMenu:
 	return m_cSceneMainMenu.On_KeyDown( key );
+	case EScene_Credits:
+	return m_cSceneCredits.On_KeyDown( key );
 	case EScene_Game:
 	return m_cSceneGame.On_KeyDown( key );
 	}
@@ -151,6 +161,8 @@ bool CEngine::On_KeyUp( uint32_t key )
 	{
 	case EScene_MainMenu:
 		return m_cSceneMainMenu.On_KeyUp( key );
+	case EScene_Credits:
+		return m_cSceneCredits.On_KeyUp( key );
 	case EScene_Game:
 		return m_cSceneGame.On_KeyUp( key );
 	}

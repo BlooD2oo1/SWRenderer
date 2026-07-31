@@ -4,11 +4,13 @@
 #include "Engine/Graphics.h"
 #include "Engine/Audio.h"
 #include "Game/SceneMainMenu.h"
+#include "Game/SceneCredits.h"
 #include "Game/SceneGame.h"
 
 enum ESceneType
 {
 	EScene_MainMenu,
+	EScene_Credits,
 	EScene_Game,
 };
 
@@ -72,6 +74,7 @@ private:
 
 	ESceneType		m_eCurrentScene;
 	CSceneMainMenu	m_cSceneMainMenu;
+	CSceneCredits	m_cSceneCredits;
 	CSceneGame		m_cSceneGame;
 
 	STextureIndexed	m_sTexFont_KarenFat_13x16;

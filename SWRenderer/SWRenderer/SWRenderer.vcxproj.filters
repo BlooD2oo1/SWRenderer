@@ -64,6 +64,9 @@
     <ClCompile Include="src\Common\Math.cpp">
       <Filter>src\Common</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\SceneCredits.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\winAudio.h">
@@ -125,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="src\Common\RingBuffer.h">
       <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\SceneCredits.h">
+      <Filter>src\Game</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
