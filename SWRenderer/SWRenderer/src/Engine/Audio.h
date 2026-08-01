@@ -71,7 +71,6 @@ struct SAudioEvent
 	{
 		ClickDown,
 		ClickUp,
-		MenuHover,
 		MenuSelect,
 		GunShot,
 	} type;

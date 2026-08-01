@@ -24,9 +24,9 @@ void CSceneMainMenu::Create()
 
 	m_eSelectedMenuItem = EMenuItem_StartGame;
 
-	int iMenuHeight = 20;
+	int iMenuHeight = 8;
 	int iFirstHeight = 50;
-	int iSpacingHeight = 10;
+	int iSpacingHeight = 8;
 
 	m_pMenuItems[EMenuItem_StartGame].w = 160;
 	m_pMenuItems[EMenuItem_StartGame].h = iMenuHeight;
@@ -63,7 +63,7 @@ void CSceneMainMenu::Render()
 	for ( int i = 0; i < EMenuItem_Count; i++ )
 	{
 		SMenu& sMenuItem = m_pMenuItems[i];
-		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 240, 240, 255 } : BGRA8{ (uint8_t)150, 100, 100, 255 };
+		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 250, 255, 255 } : BGRA8{ (uint8_t)160, 130, 120, 255 };
 		//CGraphics::GetInstance().DrawRect( sMenuItem.x, sMenuItem.y, sMenuItem.w, sMenuItem.h, sColor );
 		const int iFontWidth = 6;
 		const int iFontHeight = 6;
@@ -87,12 +87,34 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 	{
 		case KEY_UP:
 		if ( m_eSelectedMenuItem > 0 )
+		{
 			m_eSelectedMenuItem = (EMenuItem)((int)m_eSelectedMenuItem - 1);
+
+			SAudioEvent sAudioEvent;
+			sAudioEvent.type = SAudioEvent::MenuSelect;
+			sAudioEvent.fVolume = 0.2f;
+			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
+			sAudioEvent.iSampleCounter = 0;
+			sAudioEvent.fPhase = 0.0f;
+			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+		}
 		return true;
 
 		case KEY_DOWN:
 		if ( m_eSelectedMenuItem < EMenuItem_Count - 1 )
+		{
 			m_eSelectedMenuItem = (EMenuItem)((int)m_eSelectedMenuItem + 1);
+
+			SAudioEvent sAudioEvent;
+			sAudioEvent.type = SAudioEvent::MenuSelect;
+			sAudioEvent.fVolume = 0.2f;
+			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
+			sAudioEvent.iSampleCounter = 0;
+			sAudioEvent.fPhase = 0.0f;
+			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+		}
 		return true;
 
 		case KEY_ENTER:
@@ -119,6 +141,15 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			if ( m_eSelectedMenuItem != EMenuItem_Exit )
 			{
 				m_eSelectedMenuItem = EMenuItem_Exit;
+
+				SAudioEvent sAudioEvent;
+				sAudioEvent.type = SAudioEvent::MenuSelect;
+				sAudioEvent.fVolume = 0.2f;
+				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
+				sAudioEvent.iSampleCounter = 0;
+				sAudioEvent.fPhase = 0.0f;
+				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 			}
 			else
 			{
