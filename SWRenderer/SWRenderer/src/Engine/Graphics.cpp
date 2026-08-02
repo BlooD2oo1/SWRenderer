@@ -113,7 +113,7 @@ void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor
 		DrawPixel( x, y, sColor );
 	}
 }
-
+/*
 void CGraphics::DrawLine( const SVertexPC::SVertexh& v0o, const SVertexPC::SVertexh& v1o )
 {
 	SVector2 v( v1o.vPos.x - v0o.vPos.x, v1o.vPos.y - v0o.vPos.y );
@@ -164,7 +164,7 @@ void CGraphics::DrawLine( const SVertexPC::SVertexh& v0o, const SVertexPC::SVert
 		DrawPixel( x, y, sColor );
 	}
 }
-
+*/
 void CGraphics::DrawLineH( int x, int y, int len, BGRA8 sColor )
 {
 	if ( y < 0 || y >= m_sFrameBuffer.iHeight || len == 0 )

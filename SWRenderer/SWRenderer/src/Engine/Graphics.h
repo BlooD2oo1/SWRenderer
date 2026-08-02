@@ -77,6 +77,9 @@ struct SVertexP
 		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
 		{
 		}
+		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float a, float b )
+		{
+		}
 	};
 };
 
@@ -93,6 +96,11 @@ struct SVertexPC
 		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
 		{
 			vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
+		}
+
+		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float a, float b )
+		{
+			vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
 		}
 	};
 };
@@ -142,13 +150,14 @@ public:
 	void DrawLineH( int x, int y, int len, BGRA8 sColor );
 	void DrawLineV( int x, int y, int len, BGRA8 sColor );
 	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
-	void DrawLine( const SVertexPC::SVertexh& v0o, const SVertexPC::SVertexh& v1o );	
-	template<class TVertex, class TVertexShader>
-	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader );
-	template<class TVertex, class TVertexShader>
-	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
-	template<class TVertex, class TVertexShader>
-	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
+	template<class TVertexh, class TPixelShader>
+	void DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader );
+	template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
+	template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
+	template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
 
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor );
 
@@ -187,17 +196,71 @@ private:
 	SFrameBuffer	m_sFrameBuffer;
 };
 
-template<class TVertex, class TVertexShader>
-void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader )
+template<class TVertexh, class TPixelShader>
+void CGraphics::DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader )
 {
-	SVertexPC::SVertexh vPh0;
-	SVertexPC::SVertexh vPh1;
+	SVector2 v( v1o.vPos.x - v0o.vPos.x, v1o.vPos.y - v0o.vPos.y );
+
+	if ( v.x == 0.0f && v.y == 0.0f )
+	{
+		return;
+	}
+
+	bool bSwizzle = fabsf(v.x) < fabsf(v.y);
+
+	TVertexh v0( v0o );
+	TVertexh v1( v1o );
+	if ( bSwizzle )
+	{
+		std::swap( v0.vPos.x, v0.vPos.y );
+		std::swap( v1.vPos.x, v1.vPos.y );
+	}
+	if ( v1.vPos.x < v0.vPos.x )
+	{
+		std::swap( v0, v1 );
+	}
+	v.x = v1.vPos.x - v0.vPos.x;
+	v.y = v1.vPos.y - v0.vPos.y;
+
+	int iXStart = (int)(v0.vPos.x+0.5f);
+	int iXEnd = (int)(v1.vPos.x+0.5f);
+	//assert( iXEnd-iXStart < 1000 );
+	for ( int iX = iXStart; iX < iXEnd; iX++ )
+	{
+		float t = (((float)iX + 0.5f) - v0.vPos.x) / v.x;
+		float fY = v.y * t + v0.vPos.y;
+
+		int x = iX;
+		int y = (int)fY;
+
+		float a = (1.0f - t) / v0.vPos.w;
+		float b = t / v1.vPos.w;
+
+		//SVector4 vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
+		TVertexh vPh;
+		vPh.InterpolateAttribs( v0, v1, b / (a + b) );
+
+		if ( bSwizzle )
+		{
+			std::swap( x, y );
+		}
+
+		DrawPixel( x, y, sPixelShader.Process( vPh ) );
+
+	}
+}
+
+template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader )
+{
+	TVertexh vPh0;
+	TVertexh vPh1;
 	sVertexShader.Process( vPh0, sV0 );
 	sVertexShader.Process( vPh1, sV1 );
 
-	if ( ClipLineDepth<SVertexPC::SVertexh>( vPh0, vPh1 ) )
+	if ( ClipLineDepth<TVertexh>( vPh0, vPh1 ) )
 	{
-		if ( ClipLineXY<SVertexPC::SVertexh>( vPh0, vPh1 ) )
+		if ( ClipLineXY<TVertexh>( vPh0, vPh1 ) )
 		{
 			{
 				float fWRec0 = 1.0f / vPh0.vPos.w;
@@ -219,32 +282,32 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVerte
 			vPh1.vPos.x *= (float)m_sFrameBuffer.iWidth;
 			vPh1.vPos.y *= (float)m_sFrameBuffer.iHeight;
 
-			DrawLine( vPh0, vPh1 );
+			DrawLine<TVertexh, TPixelShader>( vPh0, vPh1, sPixelShader );
 		}
 	}
 }
 
-template<class TVertex, class TVertexShader>
-void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
+template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader )
 {
 	assert( pLineList != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		int iInd0 = i*2+0;
 		int iInd1 = i*2+1;
-		DrawLine3D( pLineList[iInd0], pLineList[iInd1], sVertexShader );
+		DrawLine3D<TVertex, TVertexShader, TVertexh, TPixelShader>( pLineList[iInd0], pLineList[iInd1], sVertexShader, sPixelShader );
 	}
 }
 
-template<class TVertex, class TVertexShader>
-void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
+template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader )
 {
 	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		uint32_t iInd0 = pIndices[i * 2 + 0];
 		uint32_t iInd1 = pIndices[i * 2 + 1];
-		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sVertexShader );
+		DrawLine3D<TVertex, TVertexShader, TVertexh, TPixelShader>( pVertices[iInd0], pVertices[iInd1], sVertexShader, sPixelShader );
 	}
 }
 
