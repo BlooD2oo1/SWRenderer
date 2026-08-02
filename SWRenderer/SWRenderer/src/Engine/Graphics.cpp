@@ -114,7 +114,7 @@ void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor
 	}
 }
 
-void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
+void CGraphics::DrawLine( const SVertexPC::SVertexh& v0o, const SVertexPC::SVertexh& v1o )
 {
 	SVector2 v( v1o.vPos.x - v0o.vPos.x, v1o.vPos.y - v0o.vPos.y );
 
@@ -125,8 +125,8 @@ void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
 
 	bool bSwizzle = fabsf(v.x) < fabsf(v.y);
 
-	SVertexPhC v0( v0o );
-	SVertexPhC v1( v1o );
+	SVertexPC::SVertexh v0( v0o );
+	SVertexPC::SVertexh v1( v1o );
 	if ( bSwizzle )
 	{
 		std::swap( v0.vPos.x, v0.vPos.y );

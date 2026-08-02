@@ -67,31 +67,36 @@ struct STextureIndexed
 	}
 };
 
+struct SVertexP
+{
+	SVector3	vPos;
+
+	struct SVertexh
+	{
+		SVector4	vPos;
+		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
+		{
+		}
+	};
+};
 
 struct SVertexPC
 {
 	SVector3	vPos;
 	SVector4	vColor;
-};
 
-struct SVertexPh
-{
-	SVector4	vPos;
-	inline void InterpolateAttribs( const SVertexPh& v0, const SVertexPh& v1, float t )
+	struct SVertexh
 	{
-	}
+		SVector4	vPos;
+		SVector4	vColor;
+
+		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
+		{
+			vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
+		}
+	};
 };
 
-struct SVertexPhC
-{
-	SVector4	vPos;
-	SVector4	vColor;
-
-	inline void InterpolateAttribs( const SVertexPhC& v0, const SVertexPhC& v1, float t )
-	{
-		vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
-	}
-};
 
 struct SFrameBuffer
 {
@@ -137,13 +142,13 @@ public:
 	void DrawLineH( int x, int y, int len, BGRA8 sColor );
 	void DrawLineV( int x, int y, int len, BGRA8 sColor );
 	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
-	void DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o );	
-	template<class TVertexShader>
-	void DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const TVertexShader& sVertexShader );
-	template<class TVertexShader>
-	void DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
-	template<class TVertexShader>
-	void DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
+	void DrawLine( const SVertexPC::SVertexh& v0o, const SVertexPC::SVertexh& v1o );	
+	template<class TVertex, class TVertexShader>
+	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader );
+	template<class TVertex, class TVertexShader>
+	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
+	template<class TVertex, class TVertexShader>
+	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader );
 
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor );
 
@@ -182,17 +187,17 @@ private:
 	SFrameBuffer	m_sFrameBuffer;
 };
 
-template<class TVertexShader>
-void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const TVertexShader& sVertexShader )
+template<class TVertex, class TVertexShader>
+void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader )
 {
-	SVertexPhC vPh0;
-	SVertexPhC vPh1;
+	SVertexPC::SVertexh vPh0;
+	SVertexPC::SVertexh vPh1;
 	sVertexShader.Process( vPh0, sV0 );
 	sVertexShader.Process( vPh1, sV1 );
 
-	if ( ClipLineDepth<SVertexPhC>( vPh0, vPh1 ) )
+	if ( ClipLineDepth<SVertexPC::SVertexh>( vPh0, vPh1 ) )
 	{
-		if ( ClipLineXY<SVertexPhC>( vPh0, vPh1 ) )
+		if ( ClipLineXY<SVertexPC::SVertexh>( vPh0, vPh1 ) )
 		{
 			{
 				float fWRec0 = 1.0f / vPh0.vPos.w;
@@ -219,8 +224,8 @@ void CGraphics::DrawLine3D( const SVertexPC& sV0, const SVertexPC& sV1, const TV
 	}
 }
 
-template<class TVertexShader>
-void CGraphics::DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
+template<class TVertex, class TVertexShader>
+void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
 {
 	assert( pLineList != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
@@ -231,8 +236,8 @@ void CGraphics::DrawLineList3D( const SVertexPC* pLineList, uint32_t iPrimitiveC
 	}
 }
 
-template<class TVertexShader>
-void CGraphics::DrawLineList3D( const SVertexPC* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
+template<class TVertex, class TVertexShader>
+void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader )
 {
 	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )

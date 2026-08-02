@@ -169,26 +169,24 @@ void CSceneGame::Render()
 			float fEstimatedPlayerDistance = fPlayerSpeed * fTimeToReachPlayer;
 			SVector2 vEstimatedPlayerPos2D = vPlayerPos2D + vPlayerMovDir2D * fEstimatedPlayerDistance;
 
-			/*{
+			{
 				struct SVertexShaderBasic
 				{
 					SMatrix matWorldViewProj;
-					void Process( SVertexPhC& out, const SVertexPC& in ) const
+					void Process( SVertexPC::SVertexh& out, const SVertexP& in ) const
 					{
 						SVector4 vPhSrc0( in.vPos, 1.0f );
 						SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
-						out.vColor = in.vColor;
+						out.vColor = SVector4( 0.0f, 0.3f, 0.0f, 1.0f );
 					}
 				} sVertexShaderBasic;
 				sVertexShaderBasic.matWorldViewProj = m_sCamera.m_matViewProj;
 
-				SVertexPC sLine[2];
+				SVertexP sLine[2];
 				sLine[0].vPos = SVector3( sEnemyShip.m_vPos.x, sEnemyShip.m_vPos.y, 0.0f );
-				sLine[0].vColor = SVector4( 0.0f, 1.0f, 0.0f, 0.0f );
 				sLine[1].vPos = SVector3( vEstimatedPlayerPos2D.x, vEstimatedPlayerPos2D.y, 0.0f );
-				sLine[1].vColor = SVector4( 0.0f, 1.0f, 0.0f, 0.5f );
-				CGraphics::GetInstance().DrawLine3D<SVertexShaderBasic>( sLine[0], sLine[1], sVertexShaderBasic );
-			}*/
+				CGraphics::GetInstance().DrawLine3D<SVertexP, SVertexShaderBasic>( sLine[0], sLine[1], sVertexShaderBasic );
+			}
 
 			SVector2 vEnemyToEstimatedPlayer2D( vEstimatedPlayerPos2D - vEnemyPos2D );
 			SVector2 vEnemyToEstimatedPlayer2DNorm;
@@ -220,8 +218,8 @@ void CSceneGame::Render()
 			float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 			for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 			{
-				SVertexPh sPh0;
-				SVertexPh sPh1;
+				SVertexP::SVertexh sPh0;
+				SVertexP::SVertexh sPh1;
 				{
 					SVector4 vPhSrc( m_pStars[i].vPos * fStarBoxSize, 1.0f );
 					vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_sCamera.m_vEyeSmooth.x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
@@ -231,9 +229,9 @@ void CSceneGame::Render()
 					SMatrix::Mul( sPh1.vPos, vPhSrc, m_sCamera.m_matViewProjPrev );
 				}
 
-				if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
+				if ( CGraphics::GetInstance().ClipLineDepth<SVertexP::SVertexh>( sPh0, sPh1 ) )
 				{
-					if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
+					if ( CGraphics::GetInstance().ClipLineXY<SVertexP::SVertexh>( sPh0, sPh1 ) )
 					{
 						{
 							float fWRec0 = 1.0f / sPh0.vPos.w;
@@ -278,7 +276,7 @@ void CSceneGame::Render()
 	{
 		SMatrix matWorldViewProj;
 		float fAlpha;
-		void Process( SVertexPhC& out, const SVertexPC& in ) const
+		void Process( SVertexPC::SVertexh& out, const SVertexPC& in ) const
 		{
 			SVector4 vPhSrc0( in.vPos, 1.0f );
 			SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
@@ -317,8 +315,8 @@ void CSceneGame::Render()
 	for ( int iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); iBulletInd++ )
 	{
 		const SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
-		SVertexPh sPh0;
-		SVertexPh sPh1;
+		SVertexP::SVertexh sPh0;
+		SVertexP::SVertexh sPh1;
 		{
 			SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
 			SVector4 vPhSrc1( sBullet.m_vPosPrev, 1.0f );
@@ -326,9 +324,9 @@ void CSceneGame::Render()
 			SMatrix::Mul( sPh1.vPos, vPhSrc1, m_sCamera.m_matViewProjPrev );
 		}
 
-		if ( CGraphics::GetInstance().ClipLineDepth<SVertexPh>( sPh0, sPh1 ) )
+		if ( CGraphics::GetInstance().ClipLineDepth<SVertexP::SVertexh>( sPh0, sPh1 ) )
 		{
-			if ( CGraphics::GetInstance().ClipLineXY<SVertexPh>( sPh0, sPh1 ) )
+			if ( CGraphics::GetInstance().ClipLineXY<SVertexP::SVertexh>( sPh0, sPh1 ) )
 			{
 				{
 					float fWRec0 = 1.0f / sPh0.vPos.w;
@@ -375,7 +373,7 @@ void CSceneGame::Render()
 		struct SVertexShaderGrid
 		{
 			SMatrix matWorldViewProj;
-			void Process( SVertexPhC& out, const SVertexPC& in ) const
+			void Process( SVertexPC::SVertexh& out, const SVertexPC& in ) const
 			{
 				SVector4 vPhSrc0( in.vPos, 1.0f );
 				SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
