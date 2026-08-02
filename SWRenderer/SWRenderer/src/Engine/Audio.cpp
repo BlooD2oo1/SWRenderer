@@ -506,7 +506,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		float fEngineR = ( fSubRumble * 0.55f ) + ( fTurbineR * 0.22f ) + ( fExhaustNoise * 0.15f );
 
 		// Master engine volume (scales slightly with speed)
-		float fEngineVol = 0.003f + 0.05f * fSpeed * fVolume;
+		float fEngineVol = 0.001f + 0.01f * fSpeed * fVolume;
 
 		sAudioBuffer.pData[iFrameInd * 2 + 0] = FX_Bitcrush( fEngineL, 16.0f ) * fEngineVol;
 		sAudioBuffer.pData[iFrameInd * 2 + 1] = FX_Bitcrush( fEngineR, 16.0f ) * fEngineVol;
@@ -583,5 +583,5 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		}
 	}
 
-	Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
+	//Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
 }

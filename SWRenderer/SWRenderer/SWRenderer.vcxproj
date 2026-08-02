@@ -89,6 +89,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\Engine\Graphics.cpp" />
     <ClCompile Include="src\Game\AsteroidMesh.cpp" />
     <ClCompile Include="src\Game\Camera.cpp" />
+    <ClCompile Include="src\Game\EnemyShipMesh.cpp" />
     <ClCompile Include="src\Game\SceneCredits.cpp" />
     <ClCompile Include="src\Game\SceneGame.cpp" />
     <ClCompile Include="src\Game\SceneMainMenu.cpp" />
@@ -113,6 +114,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Engine\Graphics.h" />
     <ClInclude Include="src\Game\AsteroidMesh.h" />
     <ClInclude Include="src\Game\Camera.h" />
+    <ClInclude Include="src\Game\EnemyShipMesh.h" />
     <ClInclude Include="src\Game\SceneCredits.h" />
     <ClInclude Include="src\Game\SceneGame.h" />
     <ClInclude Include="src\Game\SceneMainMenu.h" />

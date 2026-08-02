@@ -25,7 +25,7 @@ void CSceneMainMenu::Create()
 	m_eSelectedMenuItem = EMenuItem_StartGame;
 
 	int iMenuHeight = 8;
-	int iFirstHeight = 50;
+	int iFirstHeight = 55;
 	int iSpacingHeight = 8;
 
 	m_pMenuItems[EMenuItem_StartGame].w = 160;
@@ -33,10 +33,10 @@ void CSceneMainMenu::Create()
 	m_pMenuItems[EMenuItem_StartGame].x = 320 / 2 - m_pMenuItems[EMenuItem_StartGame].w / 2;
 	m_pMenuItems[EMenuItem_StartGame].y = iFirstHeight + (int)EMenuItem_StartGame*iSpacingHeight;
 
-	m_pMenuItems[EMenuItem_Legend].w = 160;
-	m_pMenuItems[EMenuItem_Legend].h = iMenuHeight;
-	m_pMenuItems[EMenuItem_Legend].x = 320 / 2 - m_pMenuItems[EMenuItem_Legend].w / 2;
-	m_pMenuItems[EMenuItem_Legend].y = iFirstHeight + (int)EMenuItem_Legend * iSpacingHeight;
+	m_pMenuItems[EMenuItem_Logs].w = 160;
+	m_pMenuItems[EMenuItem_Logs].h = iMenuHeight;
+	m_pMenuItems[EMenuItem_Logs].x = 320 / 2 - m_pMenuItems[EMenuItem_Logs].w / 2;
+	m_pMenuItems[EMenuItem_Logs].y = iFirstHeight + (int)EMenuItem_Logs * iSpacingHeight;
 
 	m_pMenuItems[EMenuItem_Credits].w = 160;
 	m_pMenuItems[EMenuItem_Credits].h = iMenuHeight;
@@ -58,7 +58,7 @@ void CSceneMainMenu::Render()
 {
 	CGraphics::GetInstance().DrawTexture( 0, 0, m_sTexBackground );
 
-	char szMenuText[EMenuItem_Count][32] = { "START GAME", "LEGEND", "CREDITS", "EXIT" };
+	char szMenuText[EMenuItem_Count][32] = { "START GAME", "LOGS", "CREDITS", "EXIT" };
 
 	for ( int i = 0; i < EMenuItem_Count; i++ )
 	{
@@ -67,14 +67,20 @@ void CSceneMainMenu::Render()
 		//CGraphics::GetInstance().DrawRect( sMenuItem.x, sMenuItem.y, sMenuItem.w, sMenuItem.h, sColor );
 		const int iFontWidth = 6;
 		const int iFontHeight = 6;
-		const int iSpacing = 1;
+		const int iSpacing = 0;
 		const int iTextLength = (int)strlen( szMenuText[i] );
 		const int iTextWidth = iTextLength * iFontWidth + (iTextLength - 1) * iSpacing;
 		CGraphics::GetInstance().DrawText( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2, sMenuItem.y + 2, szMenuText[i], sColor, CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, iSpacing );
 		if ( i == m_eSelectedMenuItem )
 		{
-			CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 3, 5, 2, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10 - 5, sMenuItem.y + 3, 5, 2, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			//CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 3, 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			//CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10 - 5, sMenuItem.y + 3, 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 3, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 4, 5, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 3, -3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10, sMenuItem.y + 4, -5, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 5, -3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
 		}
 	}
 
@@ -125,7 +131,7 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			case EMenuItem_StartGame:
 				CEngine::GetInstance().SetScene( EScene_Game );
 				break;
-			case EMenuItem_Legend:
+			case EMenuItem_Logs:
 				break;
 			case EMenuItem_Credits:
 				CEngine::GetInstance().SetScene( EScene_Credits );

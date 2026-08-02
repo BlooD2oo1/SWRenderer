@@ -20,18 +20,26 @@ CEngine::~CEngine()
 
 void CEngine::Clear()
 {
-	m_eCurrentScene = EScene_MainMenu;
 	m_iFrameInd = 0;
 	m_iTimeStampNs = 0;
 	m_iTimeStampPrevNs = 0;
 	m_fElapsedTimeMs = 0.0f;
+	
 	m_sAudioFrameData.Clear();
+
+	m_eCurrentScene = EScene_MainMenu;
 	m_cSceneMainMenu.Clear();
 	m_cSceneCredits.Clear();
 	m_cSceneGame.Clear();
+
+	m_cShipMesh.Clear();
+	m_cAsteroidMesh.Clear();
+	m_cEnemyShipMesh.Clear();
+
 	m_sTexFont_KarenFat_13x16.Clear();
 	m_sTexFont_TinyPixie2_6x6.Clear();
 	m_sTexFont_Habbo_9x13.Clear();
+
 	CGraphics::GetInstance().Clear();
 }
 
@@ -40,9 +48,15 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	Clear();
 
 	CGraphics::GetInstance().Create( sFrameBuffer );
+
+	m_cShipMesh.Create();
+	m_cEnemyShipMesh.Create();
+	m_cAsteroidMesh.Create();
+
 	m_cSceneMainMenu.Create();
 	m_cSceneCredits.Create();
 	m_cSceneGame.Create();
+
 	PCX_LoadFromFile( "data/KarenFat_13x16.pcx", m_sTexFont_KarenFat_13x16 );
 	PCX_LoadFromFile( "data/TinyPixie2_6x6.pcx", m_sTexFont_TinyPixie2_6x6 );
 	PCX_LoadFromFile( "data/Habbo_9x13.pcx", m_sTexFont_Habbo_9x13 );
@@ -136,6 +150,20 @@ void CEngine::Render()
 	//CGraphics::GetInstance().DrawLine( SVector2( 100.5f, 100.5f ), SVector2( (float)GetMouseState().x, (float)GetMouseState().y ), BGRA8{ 32, 0, 64, 255 } );
 	//CGraphics::GetInstance().DrawPixel( 100, 100, BGRA8{ 255, 0, 255, 255 } );
 	//CGraphics::GetInstance().DrawPixel( GetMouseState().x, GetMouseState().y, BGRA8{ 255, 0, 255, 255 } );
+
+	/*static int c = 0;
+	c++;
+	static int i = -2;
+	if ( c % 10 == 0 )
+	{
+	i++;
+	if ( i > 2 )
+	{
+		i = -2;
+	}
+	}
+	CGraphics::GetInstance().DrawLineH( 10, 10, i, BGRA8{ (uint8_t)255, 0, 0, 255 } );
+	CGraphics::GetInstance().DrawLineH( 10, 11, -i, BGRA8{ (uint8_t)255, 0, 0, 255 } );*/
 }
 
 void CEngine::SetScene( ESceneType eSceneType )

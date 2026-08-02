@@ -4,8 +4,6 @@
 #include "Engine/Graphics.h"
 #include "Game/Camera.h"
 #include "Game/ShipControl.h"
-#include "Game/ShipMesh.h"
-#include "Game/AsteroidMesh.h"
 
 class CSceneGame
 {
@@ -26,7 +24,8 @@ private:
 
 	SCamera			m_sCamera;
 	SShipControl	m_sShipControl;
-	CShipMesh		m_cShipMesh;
+
+	std::vector< SShipControl >	m_aEnemyShips;
 
 	struct SAsteroid
 	{
@@ -34,7 +33,6 @@ private:
 		SQuaternion	m_qRot;
 	};
 	std::vector< SAsteroid >	m_aAsteroids;
-	CAsteroidMesh	m_cAsteroidMesh;
 
 	SVertexPC*		m_pStars;
 	uint32_t		m_iStarsCount;

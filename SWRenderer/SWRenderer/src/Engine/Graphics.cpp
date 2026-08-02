@@ -167,7 +167,7 @@ void CGraphics::DrawLine( const SVertexPhC& v0o, const SVertexPhC& v1o )
 
 void CGraphics::DrawLineH( int x, int y, int len, BGRA8 sColor )
 {
-	if ( y < 0 || y >= m_sFrameBuffer.iHeight )
+	if ( y < 0 || y >= m_sFrameBuffer.iHeight || len == 0 )
 	{
 		return;
 	}
@@ -195,10 +195,11 @@ void CGraphics::DrawLineH( int x, int y, int len, BGRA8 sColor )
 
 void CGraphics::DrawLineV( int x, int y, int len, BGRA8 sColor )
 {
-	if ( x < 0 || x >= m_sFrameBuffer.iWidth )
+	if ( x < 0 || x >= m_sFrameBuffer.iWidth || len == 0 )
 	{
 		return;
 	}
+
 	int iYStart = y;
 	int iYEnd = (len > 0) ? (y + len - 1) : (y + len + 1);
 	if ( iYStart > iYEnd )

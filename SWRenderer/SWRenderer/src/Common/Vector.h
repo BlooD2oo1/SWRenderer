@@ -32,6 +32,11 @@ struct SVector2
 		return a.x * b.x + a.y * b.y;
 	}
 
+	constexpr static float Cross( const SVector2& a, const SVector2& b ) noexcept
+	{
+		return a.x * b.y - a.y * b.x;
+	}
+
 	constexpr static float LengthSq( const SVector2& v ) noexcept
 	{
 		return v.x * v.x + v.y * v.y;
