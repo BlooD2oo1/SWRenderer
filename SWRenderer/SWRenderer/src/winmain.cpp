@@ -202,7 +202,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 	uint32_t* pFrameBuffer = Graphics_Init( hwnd );
 
-	SFrameBuffer sFrameBuffer(pFrameBuffer, WIDTH, HEIGHT);
+	SFrameBuffer sFrameBuffer((BGRA8*)pFrameBuffer, WIDTH, HEIGHT);
 	CEngine::CreateInstance();
 	CEngine::GetInstance().Create(sFrameBuffer);
 

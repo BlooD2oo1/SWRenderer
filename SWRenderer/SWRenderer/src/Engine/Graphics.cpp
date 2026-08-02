@@ -19,17 +19,17 @@ void CGraphics::Clear()
 {
 }
 
-uint32_t CGraphics::BlendAdditive( uint32_t dest, BGRA8 src )
+void CGraphics::BlendAdditive( BGRA8& dest, BGRA8 src )
 {
-	BGRA8 sDest;
-	sDest.rgba = dest;
-	uint32_t rOut = sDest.r + ((src.r*src.a)>>8);
-	uint32_t gOut = sDest.g + ((src.g*src.a)>>8);
-	uint32_t bOut = sDest.b + ((src.b*src.a)>>8);
+	uint32_t rOut = dest.r + ((src.r*src.a)>>8);
+	uint32_t gOut = dest.g + ((src.g*src.a)>>8);
+	uint32_t bOut = dest.b + ((src.b*src.a)>>8);
 	rOut = rOut > 255 ? 255 : rOut;
 	gOut = gOut > 255 ? 255 : gOut;
 	bOut = bOut > 255 ? 255 : bOut;
-	return (rOut) | (gOut << 8) | (bOut << 16);
+	dest.r = (uint8_t)rOut;
+	dest.g = (uint8_t)gOut;
+	dest.b = (uint8_t)bOut;
 }
 
 void CGraphics::ClearFrameBuffer( BGRA8 sColor )
@@ -48,7 +48,7 @@ void CGraphics::DrawPixel( int x, int y, BGRA8 sColor )
 	assert( x >= 0 && x < m_sFrameBuffer.iWidth && y >= 0 && y < m_sFrameBuffer.iHeight );
 	//if ( x >= 0 && x < m_sFrameBuffer.iWidth && y >= 0 && y < m_sFrameBuffer.iHeight )
 	{
-		m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x] = BlendAdditive( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], sColor );
+		BlendAdditive( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], sColor );
 	}
 }
 
@@ -68,10 +68,10 @@ void CGraphics::DrawPixelAA( const SVector2& v, BGRA8 sColor )
 		uint8_t i10 = (uint8_t)( sqrtf( fxmod * fymodinv ) * sColor.a);
 		uint8_t i11 = (uint8_t)( sqrtf( fxmod * fymod ) * sColor.a);
 
-		m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix] = BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i00 } );
-		m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1] = BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i10 } );
-		m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix] = BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i01 } );
-		m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1] = BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i11 } );
+		BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i00 } );
+		BlendAdditive( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i10 } );
+		BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i01 } );
+		BlendAdditive( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i11 } );
 	}
 }
 

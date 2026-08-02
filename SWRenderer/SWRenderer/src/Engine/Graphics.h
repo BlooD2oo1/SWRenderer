@@ -113,12 +113,12 @@ struct SFrameBuffer
 	{
 		vClipScaleInHom = SVector2( 1.0f, 1.0f );
 	}
-	SFrameBuffer( uint32_t* pData, int iWidth, int iHeight )
+	SFrameBuffer( BGRA8* pData, int iWidth, int iHeight )
 		: pData( pData ), iWidth( iWidth ), iHeight( iHeight )
 	{
 		vClipScaleInHom = SVector2( 1.0f - 0.5f/(float)iWidth, 1.0f - 0.5f/(float)iHeight );
 	}
-	uint32_t*	pData = nullptr;
+	BGRA8*		pData = nullptr;
 	int			iWidth = 0;
 	int			iHeight = 0;
 	SVector2	vClipScaleInHom;
@@ -152,11 +152,11 @@ public:
 	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
 	template<class TVertexh, class TPixelShader>
 	void DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader );
-	template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+	template<class TVertex, class TVertexShader, class TPixelShader>
 	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
-	template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+	template<class TVertex, class TVertexShader, class TPixelShader>
 	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
-	template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+	template<class TVertex, class TVertexShader, class TPixelShader>
 	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
 
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor );
@@ -179,6 +179,8 @@ public:
 		return true;
 	}
 
+	static void BlendAdditive( BGRA8& dest, BGRA8 src );
+
 private:
 	uint8_t ClipCode( const SVector4& vP4 ) const
 	{
@@ -189,8 +191,6 @@ private:
 		iRet |= ( vP4.y > vP4.w * m_sFrameBuffer.vClipScaleInHom.y ) ? 8 : 0;
 		return iRet;
 	}
-
-	static uint32_t BlendAdditive( uint32_t dest, BGRA8 src );
 
 private:
 	SFrameBuffer	m_sFrameBuffer;
@@ -245,22 +245,23 @@ void CGraphics::DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixel
 			std::swap( x, y );
 		}
 
-		DrawPixel( x, y, sPixelShader.Process( vPh ) );
+		sPixelShader.Process( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], vPh );
 
 	}
 }
 
-template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+template<class TVertex, class TVertexShader, class TPixelShader>
 void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader )
 {
+	using TVertexh = typename TVertexShader::VertexOut;
 	TVertexh vPh0;
 	TVertexh vPh1;
 	sVertexShader.Process( vPh0, sV0 );
 	sVertexShader.Process( vPh1, sV1 );
 
-	if ( ClipLineDepth<TVertexh>( vPh0, vPh1 ) )
+	if ( ClipLineDepth( vPh0, vPh1 ) )
 	{
-		if ( ClipLineXY<TVertexh>( vPh0, vPh1 ) )
+		if ( ClipLineXY( vPh0, vPh1 ) )
 		{
 			{
 				float fWRec0 = 1.0f / vPh0.vPos.w;
@@ -282,12 +283,12 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVerte
 			vPh1.vPos.x *= (float)m_sFrameBuffer.iWidth;
 			vPh1.vPos.y *= (float)m_sFrameBuffer.iHeight;
 
-			DrawLine<TVertexh, TPixelShader>( vPh0, vPh1, sPixelShader );
+			DrawLine( vPh0, vPh1, sPixelShader );
 		}
 	}
 }
 
-template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+template<class TVertex, class TVertexShader, class TPixelShader>
 void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader )
 {
 	assert( pLineList != nullptr && iPrimitiveCount > 0 );
@@ -295,11 +296,11 @@ void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCou
 	{
 		int iInd0 = i*2+0;
 		int iInd1 = i*2+1;
-		DrawLine3D<TVertex, TVertexShader, TVertexh, TPixelShader>( pLineList[iInd0], pLineList[iInd1], sVertexShader, sPixelShader );
+		DrawLine3D( pLineList[iInd0], pLineList[iInd1], sVertexShader, sPixelShader );
 	}
 }
 
-template<class TVertex, class TVertexShader, class TVertexh, class TPixelShader>
+template<class TVertex, class TVertexShader, class TPixelShader>
 void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader )
 {
 	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
@@ -307,7 +308,7 @@ void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, ui
 	{
 		uint32_t iInd0 = pIndices[i * 2 + 0];
 		uint32_t iInd1 = pIndices[i * 2 + 1];
-		DrawLine3D<TVertex, TVertexShader, TVertexh, TPixelShader>( pVertices[iInd0], pVertices[iInd1], sVertexShader, sPixelShader );
+		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sVertexShader, sPixelShader );
 	}
 }
 
