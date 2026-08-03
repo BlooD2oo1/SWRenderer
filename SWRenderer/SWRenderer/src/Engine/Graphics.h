@@ -70,62 +70,61 @@ struct STextureIndexed
 struct SVertexP
 {
 	SVector3	vPos;
+};
 
-	struct SVertexh
+struct SVertexPh
+{
+	SVector4	vPos;
+	inline void InterpolateAttribs( const SVertexPh& v0, const SVertexPh& v1, float t )
 	{
-		SVector4	vPos;
-		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
-		{
-		}
-		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float a, float b )
-		{
-		}
-	};
+	}
+	inline void InterpolateAttribs( const SVertexPh& v0, const SVertexPh& v1, float a, float b )
+	{
+	}
 };
 
 struct SVertexPC
 {
 	SVector3	vPos;
 	SVector4	vColor;
+};
 
-	struct SVertexh
+struct SVertexPhC
+{
+	SVector4	vPos;
+	SVector4	vColor;
+
+	inline void InterpolateAttribs( const SVertexPhC& v0, const SVertexPhC& v1, float t )
 	{
-		SVector4	vPos;
-		SVector4	vColor;
+		vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
+	}
 
-		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
-		{
-			vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
-		}
-
-		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float a, float b )
-		{
-			vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
-		}
-	};
+	inline void InterpolateAttribs( const SVertexPhC& v0, const SVertexPhC& v1, float a, float b )
+	{
+		vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
+	}
 };
 
 struct SVertexPW
 {
 	SVector3	vPos;
 	float		fW;
+};
 
+struct SVertexPhW
+{
+	SVector4	vPos;
+	float		fW;
 
-	struct SVertexh
+	inline void InterpolateAttribs( const SVertexPhW& v0, const SVertexPhW& v1, float t )
 	{
-		SVector4	vPos;
-		float		fW;
+		fW = v0.fW + (v1.fW - v0.fW) * t;
+	}
 
-		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
-		{
-			fW = v0.fW + (v1.fW - v0.fW) * t;
-		}
-
-		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float a, float b )
-		{
-			fW = (v0.fW * a + v1.fW * b) / (a + b);
-		}
-	};
+	inline void InterpolateAttribs( const SVertexPhW& v0, const SVertexPhW& v1, float a, float b )
+	{
+		fW = (v0.fW * a + v1.fW * b) / (a + b);
+	}
 };
 
 

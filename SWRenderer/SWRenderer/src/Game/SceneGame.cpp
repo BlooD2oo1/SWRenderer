@@ -172,7 +172,7 @@ void CSceneGame::Render()
 			{
 				struct SVertexShaderBasic
 				{
-					using VertexOut = SVertexPW::SVertexh;
+					using VertexOut = SVertexPhW;
 					SMatrix matWorldViewProj;
 					void Process( VertexOut& out, const SVertexPW& in ) const
 					{
@@ -185,7 +185,8 @@ void CSceneGame::Render()
 
 				struct SPixelShaderBasic
 				{
-					void Process( BGRA8& inout, const SVertexPW::SVertexh& in ) const
+					using VertexIn = SVertexShaderBasic::VertexOut;
+					void Process( BGRA8& inout, const VertexIn& in ) const
 					{
 						CGraphics::BlendAdditive( inout, ((int)(in.fW) % 3) == 0 ? BGRA8( 0x77ff00ff ) : BGRA8( 0x00000000 ) );
 					}
@@ -229,8 +230,8 @@ void CSceneGame::Render()
 			float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 			for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 			{
-				SVertexP::SVertexh sPh0;
-				SVertexP::SVertexh sPh1;
+				SVertexPh sPh0;
+				SVertexPh sPh1;
 				{
 					SVector4 vPhSrc( m_pStars[i].vPos * fStarBoxSize, 1.0f );
 					vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_sCamera.m_vEyeSmooth.x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
@@ -272,8 +273,9 @@ void CSceneGame::Render()
 
 						struct SPixelShaderBasic
 						{
+							using VertexIn = SVertexPh;
 							BGRA8 sColor;
-							void Process( BGRA8& inout, const SVertexP::SVertexh& in ) const
+							void Process( BGRA8& inout, const VertexIn& in ) const
 							{
 								CGraphics::BlendAdditive( inout, sColor );
 							}
@@ -296,7 +298,7 @@ void CSceneGame::Render()
 
 	struct SVertexShaderBasic
 	{
-		using VertexOut = SVertexPC::SVertexh;
+		using VertexOut = SVertexPhC;
 		SMatrix matWorldViewProj;
 		float fAlpha;
 		void Process( VertexOut& out, const SVertexPC& in ) const
@@ -310,7 +312,8 @@ void CSceneGame::Render()
 
 	struct SPixelShaderBasic
 	{
-		void Process( BGRA8& inout, const SVertexPC::SVertexh& in ) const
+		using VertexIn = SVertexShaderBasic::VertexOut;
+		void Process( BGRA8& inout, const VertexIn& in ) const
 		{
 			CGraphics::BlendAdditive( inout, BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w ) );
 		}
@@ -346,8 +349,8 @@ void CSceneGame::Render()
 	for ( int iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); iBulletInd++ )
 	{
 		const SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
-		SVertexP::SVertexh sPh0;
-		SVertexP::SVertexh sPh1;
+		SVertexPh sPh0;
+		SVertexPh sPh1;
 		{
 			SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
 			SVector4 vPhSrc1( sBullet.m_vPosPrev, 1.0f );
@@ -403,7 +406,7 @@ void CSceneGame::Render()
 	{
 		struct SVertexShaderGrid
 		{
-			using VertexOut = SVertexPC::SVertexh;
+			using VertexOut = SVertexPhC;
 			SMatrix matWorldViewProj;
 			void Process( VertexOut& out, const SVertexPC& in ) const
 			{
@@ -415,7 +418,8 @@ void CSceneGame::Render()
 
 		struct SPixelShaderGrid
 		{
-			void Process( BGRA8& inout, const SVertexPC::SVertexh& in ) const
+			using VertexIn = SVertexShaderGrid::VertexOut;
+			void Process( BGRA8& inout, const VertexIn& in ) const
 			{
 				CGraphics::BlendAdditive( inout, BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w ) );
 			}
