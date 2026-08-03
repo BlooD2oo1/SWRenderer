@@ -25,7 +25,7 @@ void CSceneCredits::Update()
 void CSceneCredits::Render()
 {
 	// todo text:
-	CGraphics::GetInstance().DrawText( 10, 10, "TODO", BGRA8( (uint8_t)255, 255, 255, 255 ), CEngine::GetInstance().GetFontTex_KarenFat_13x16(), 13, 16 );
+	CGraphics::GetInstance().DrawText( 10, 10, "TODO", BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_KarenFat_13x16(), 13, 16 );
 }
 
 bool CSceneCredits::On_KeyDown( uint32_t key )

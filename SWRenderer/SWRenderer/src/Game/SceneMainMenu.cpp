@@ -56,7 +56,7 @@ void CSceneMainMenu::Update()
 
 void CSceneMainMenu::Render()
 {
-	CGraphics::GetInstance().DrawTexture( 0, 0, m_sTexBackground );
+	CGraphics::GetInstance().DrawTexture( 0, 0, SBlendFuncCopy(), m_sTexBackground );
 
 	char szMenuText[EMenuItem_Count][32] = { "START GAME", "LOGS", "CREDITS", "EXIT" };
 
@@ -70,21 +70,22 @@ void CSceneMainMenu::Render()
 		const int iSpacing = 0;
 		const int iTextLength = (int)strlen( szMenuText[i] );
 		const int iTextWidth = iTextLength * iFontWidth + (iTextLength - 1) * iSpacing;
-		CGraphics::GetInstance().DrawText( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2, sMenuItem.y + 2, szMenuText[i], sColor, CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, iSpacing );
+		CGraphics::GetInstance().DrawText( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2, sMenuItem.y + 2, szMenuText[i], sColor, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, iSpacing );
 		if ( i == m_eSelectedMenuItem )
 		{
 			//CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 3, 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
 			//CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10 - 5, sMenuItem.y + 3, 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 3, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 4, 5, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 3, -3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10, sMenuItem.y + 4, -5, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 5, -3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
+			SBlendFuncCopy sBlendFunc;
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 3, 3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 4, 5, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 3, -3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10, sMenuItem.y + 4, -5, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
+			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 5, -3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
 		}
 	}
 
-	CGraphics::GetInstance().DrawText( 280, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -2 );
+	CGraphics::GetInstance().DrawText( 280, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -2 );
 }
 
 bool CSceneMainMenu::On_KeyDown( uint32_t key )

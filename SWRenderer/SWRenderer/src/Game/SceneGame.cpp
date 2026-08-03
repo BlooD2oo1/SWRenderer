@@ -174,7 +174,7 @@ void CSceneGame::Render()
 				{
 					using AttribsType = SVertexPW::SAttribs;
 					SMatrix matWorldViewProj;
-					void Process( SClipVertex<AttribsType>& out, const SVertexPW& in ) const
+					void Execute( SClipVertex<AttribsType>& out, const SVertexPW& in ) const
 					{
 						SVector4 vPhSrc0( in.vPos, 1.0f );
 						SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
@@ -185,18 +185,18 @@ void CSceneGame::Render()
 
 				struct SPixelShaderBasic
 				{
-					void Process( BGRA8& inout, int x, int y, const SVertexPW::SAttribs& in ) const
+					BGRA8 Execute( const SVertexPW::SAttribs& in ) const
 					{
-						CGraphics::BlendAdditive( inout, ((int)(in.fW) % 3) != 0 ? BGRA8( 0x6600ff00 ) : BGRA8( 0x00000000 ) );
+						return ((int)(in.fW) % 3) != 0 ? BGRA8( 0x6600ff00 ) : BGRA8( 0x00000000 );
 					}
-				} sPixelShaderBasic;
+				};
 
 				SVertexPW sLine[2];
 				sLine[0].vPos = SVector3( sEnemyShip.m_vPos.x, sEnemyShip.m_vPos.y, 0.0f );				
 				sLine[1].vPos = SVector3( vEstimatedPlayerPos2D.x, vEstimatedPlayerPos2D.y, 0.0f );
 				sLine[0].sAttribs.fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
 				sLine[1].sAttribs.fW = 0.0f;				
-				CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], sVertexShaderBasic, sPixelShaderBasic );
+				CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 			}
 
 			SVector2 vEnemyToEstimatedPlayer2D( vEstimatedPlayerPos2D - vEnemyPos2D );
@@ -223,9 +223,9 @@ void CSceneGame::Render()
 		struct SPixelShaderBasic
 		{
 			BGRA8 sColor;
-			void Process( BGRA8& inout, int x, int y, const SVertexP::SAttribs& in ) const
+			BGRA8 Execute( const SVertexP::SAttribs& in ) const
 			{
-				CGraphics::BlendAdditive( inout, sColor );
+				return sColor;
 			}
 		} sPixelShaderBasic;
 
@@ -248,7 +248,7 @@ void CSceneGame::Render()
 					SMatrix::Mul( sPh1.vPos, vPhSrc, m_sCamera.m_matViewProjPrev );
 				}
 
-				if ( CGraphics::GetInstance().ClipLineDepth( sPh0, sPh1 ) )
+				if ( CGraphics::GetInstance().ClipLineZ( sPh0, sPh1 ) )
 				{
 					if ( CGraphics::GetInstance().ClipLineXY( sPh0, sPh1 ) )
 					{
@@ -280,12 +280,12 @@ void CSceneGame::Render()
 						if ( fL > 1.5f )
 						{
 							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w / (fL * 0.2f + 1.0f) );
-							CGraphics::GetInstance().RasterizeLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic );
+							CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
 						}
 						else
 						{
-							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w );
-							CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPh0.sAttribs, sPixelShaderBasic );
+							BGRA8 sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w );
+							CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sColor, SBlendFuncAdditive() );
 						}
 					}
 				}
@@ -299,7 +299,7 @@ void CSceneGame::Render()
 		using AttribsType = SVertexPC::SAttribs;
 		SMatrix matWorldViewProj;
 		float fAlpha;
-		void Process( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
+		void Execute( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
 		{
 			SVector4 vPhSrc0( in.vPos, 1.0f );
 			SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
@@ -310,23 +310,23 @@ void CSceneGame::Render()
 
 	struct SPixelShaderBasic
 	{
-		void Process( BGRA8& inout, int x, int y, const SVertexPC::SAttribs& in ) const
+		BGRA8 Execute( const SVertexPC::SAttribs& in ) const
 		{
-			CGraphics::BlendAdditive( inout, BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w ) );
+			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w );
 		}
-	} sPixelShaderBasic;
+	};
 
 	{
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, m_sShipControl.m_matShip, m_sCamera.m_matViewProj );
 		sVertexShaderBasic.fAlpha = 0.7f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMesh().GetLineList(), CEngine::GetInstance().GetShipMesh().GetLineListCount(), sVertexShaderBasic, sPixelShaderBasic );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMesh().GetLineList(), CEngine::GetInstance().GetShipMesh().GetLineListCount(), sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_aEnemyShips.size(); iEnemyShipInd++ )
 	{
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, m_aEnemyShips[iEnemyShipInd].m_matShip, m_sCamera.m_matViewProj );
 		sVertexShaderBasic.fAlpha = 0.7f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetEnemyShipMesh().GetLineList(), CEngine::GetInstance().GetEnemyShipMesh().GetLineListCount(), sVertexShaderBasic, sPixelShaderBasic );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetEnemyShipMesh().GetLineList(), CEngine::GetInstance().GetEnemyShipMesh().GetLineListCount(), sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	for ( size_t iAsteroidInd = 0; iAsteroidInd < m_aAsteroids.size(); iAsteroidInd++ )
@@ -340,16 +340,16 @@ void CSceneGame::Render()
 		SMatrix::Scale( matAsteroid, 3.0f );
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProj, matAsteroid, m_sCamera.m_matViewProj );
 		sVertexShaderBasic.fAlpha = 0.7f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetAsteroidMesh().GetLineList(), CEngine::GetInstance().GetAsteroidMesh().GetLineListCount(), sVertexShaderBasic, sPixelShaderBasic );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetAsteroidMesh().GetLineList(), CEngine::GetInstance().GetAsteroidMesh().GetLineListCount(), sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 	
 	{
 		struct SPixelShaderBasic
 		{
 			BGRA8 sColor;
-			void Process( BGRA8& inout, int x, int y, const SVertexP::SAttribs& in ) const
+			BGRA8 Execute( const SVertexP::SAttribs& in ) const
 			{
-				CGraphics::BlendAdditive( inout, sColor );
+				return sColor;
 			}
 		} sPixelShaderBasic;
 
@@ -366,7 +366,7 @@ void CSceneGame::Render()
 				SMatrix::Mul( sPh1.vPos, vPhSrc1, m_sCamera.m_matViewProjPrev );
 			}
 
-			if ( CGraphics::GetInstance().ClipLineDepth( sPh0, sPh1 ) )
+			if ( CGraphics::GetInstance().ClipLineZ( sPh0, sPh1 ) )
 			{
 				if ( CGraphics::GetInstance().ClipLineXY( sPh0, sPh1 ) )
 				{
@@ -400,16 +400,15 @@ void CSceneGame::Render()
 
 					if ( fL > 1.5f )
 					{
-						CGraphics::GetInstance().RasterizeLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic );
+						CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
 					}
 					else
 					{
-						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPh0.sAttribs, sPixelShaderBasic );
+						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPixelShaderBasic.sColor, SBlendFuncAdditive() );
 					}
 				}
 			}
 		}
-
 	}
 
 	
@@ -420,7 +419,7 @@ void CSceneGame::Render()
 		{
 			using AttribsType = SVertexPC::SAttribs;
 			SMatrix matWorldViewProj;
-			void Process( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
+			void Execute( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
 			{
 				SVector4 vPhSrc0( in.vPos, 1.0f );
 				SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
@@ -430,11 +429,11 @@ void CSceneGame::Render()
 
 		struct SPixelShaderGrid
 		{
-			void Process( BGRA8& inout, int x, int y, const SVertexPC::SAttribs& in ) const
+			BGRA8 Execute( const SVertexPC::SAttribs& in ) const
 			{
-				CGraphics::BlendAdditive( inout, BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w ) );
+				return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w );
 			}
-		} sPixelShaderGrid;
+		};
 
 		float fSpacing = 60.0f;
 		int iHalfGridSize = 10/2;
@@ -495,8 +494,8 @@ void CSceneGame::Render()
 					sVertex1.sAttribs.vColor.w *= fAlpha;
 					sVertex2.sAttribs.vColor.w *= 0.0f;
 
-					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid, sPixelShaderGrid );
-					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid, sPixelShaderGrid );
+					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
+					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
 				}
 			}
 		}
@@ -553,8 +552,8 @@ void CSceneGame::Render()
 					sVertex1.sAttribs.vColor.w *= fAlpha;
 					sVertex2.sAttribs.vColor.w *= 0.0f;
 
-					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid, sPixelShaderGrid );
-					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid, sPixelShaderGrid );
+					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
+					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
 				}
 			}
 		}
