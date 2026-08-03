@@ -56,7 +56,7 @@ void CSceneMainMenu::Update()
 
 void CSceneMainMenu::Render()
 {
-	CGraphics::GetInstance().DrawTexture( 0, 0, SBlendFuncCopy(), m_sTexBackground );
+	CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexBackground );
 
 	char szMenuText[EMenuItem_Count][32] = { "START GAME", "LOGS", "CREDITS", "EXIT" };
 

@@ -169,7 +169,7 @@ void CSceneGame::Render()
 			float fEstimatedPlayerDistance = fPlayerSpeed * fTimeToReachPlayer;
 			SVector2 vEstimatedPlayerPos2D = vPlayerPos2D + vPlayerMovDir2D * fEstimatedPlayerDistance;
 
-			{
+			/*{
 				struct SVertexShaderBasic
 				{
 					using AttribsType = SVertexPW::SAttribs;
@@ -197,7 +197,7 @@ void CSceneGame::Render()
 				sLine[0].sAttribs.fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
 				sLine[1].sAttribs.fW = 0.0f;				
 				CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
-			}
+			}*/
 
 			SVector2 vEnemyToEstimatedPlayer2D( vEstimatedPlayerPos2D - vEnemyPos2D );
 			SVector2 vEnemyToEstimatedPlayer2DNorm;
@@ -412,26 +412,26 @@ void CSceneGame::Render()
 	}
 
 	
-	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.5f );
-	if ( vColor.w > 1.0f/255.0f )
+	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.6f );
 	{
 		struct SVertexShaderGrid
 		{
-			using AttribsType = SVertexPC::SAttribs;
+			using AttribsType = SVertexPCW::SAttribs;
 			SMatrix matWorldViewProj;
-			void Execute( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
+			void Execute( SClipVertex<AttribsType>& out, const SVertexPCW& in ) const
 			{
 				SVector4 vPhSrc0( in.vPos, 1.0f );
 				SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
 				out.sAttribs.vColor = in.sAttribs.vColor;
+				out.sAttribs.fW = in.sAttribs.fW;
 			}
 		} sVertexShaderGrid;
 
 		struct SPixelShaderGrid
 		{
-			BGRA8 Execute( const SVertexPC::SAttribs& in ) const
+			BGRA8 Execute( const SVertexPCW::SAttribs& in ) const
 			{
-				return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w );
+				return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, ( ( ((int)(in.fW*10.0f)) % 5 ) != 2 ) ? in.vColor.w : 0.0f );
 			}
 		};
 
@@ -458,6 +458,7 @@ void CSceneGame::Render()
 
 			float fi = vCenter.y - floorf(vCenter.y);
 			float fj = vCenter.z - floorf(vCenter.z);
+			float fk = vCenter.x - floorf(vCenter.x);
 
 			for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
 			{
@@ -466,18 +467,20 @@ void CSceneGame::Render()
 				{
 					SVector3 vOffset( 0.0f, (float)i, (float)j );
 
-					SVertexPC sVertex0;
-					SVertexPC sVertex1;
-					SVertexPC sVertex2;
+					SVertexPCW sVertex0;
+					SVertexPCW sVertex1;
+					SVertexPCW sVertex2;
 
 					sVertex0.vPos = SVector3( vOffset );
 					sVertex0.sAttribs.vColor = vColor;
+					sVertex0.sAttribs.fW = fk;
 
 					sVertex1.vPos = sVertex0.vPos;
 					sVertex1.sAttribs.vColor = vColor;
-
+					sVertex1.sAttribs.fW = (float)iHalfGridSize + fk;
 					sVertex2.vPos = sVertex0.vPos;
 					sVertex2.sAttribs.vColor = vColor;
+					sVertex2.sAttribs.fW = (float)(iHalfGridSize*2) + fk;
 
 					sVertex0.vPos.x -= (float)iHalfGridSize;
 					sVertex2.vPos.x += (float)iHalfGridSize;
@@ -516,6 +519,7 @@ void CSceneGame::Render()
 
 			float fi = vCenter.x - floorf(vCenter.x);
 			float fj = vCenter.z - floorf(vCenter.z);
+			float fk = vCenter.y - floorf(vCenter.y);
 
 			for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
 			{
@@ -524,18 +528,21 @@ void CSceneGame::Render()
 				{
 					SVector3 vOffset( (float)i, 0.0f, (float)j );
 
-					SVertexPC sVertex0;
-					SVertexPC sVertex1;
-					SVertexPC sVertex2;
+					SVertexPCW sVertex0;
+					SVertexPCW sVertex1;
+					SVertexPCW sVertex2;
 
 					sVertex0.vPos = SVector3( vOffset );
 					sVertex0.sAttribs.vColor = vColor;
+					sVertex0.sAttribs.fW = fk;
 
 					sVertex1.vPos = sVertex0.vPos;
 					sVertex1.sAttribs.vColor = vColor;
+					sVertex1.sAttribs.fW = (float)iHalfGridSize + fk;
 
 					sVertex2.vPos = sVertex0.vPos;
 					sVertex2.sAttribs.vColor = vColor;
+					sVertex2.sAttribs.fW = (float)(iHalfGridSize*2) + fk;
 
 					sVertex0.vPos.y -= (float)iHalfGridSize;
 					sVertex2.vPos.y += (float)iHalfGridSize;

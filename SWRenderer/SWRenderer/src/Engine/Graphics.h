@@ -137,6 +137,28 @@ struct SVertexPW
 	} sAttribs;
 };
 
+struct SVertexPCW
+{
+	SVector3	vPos;
+	struct SAttribs
+	{
+		SVector4	vColor;
+		float		fW;
+
+		inline static void Lerp( SAttribs& out, const SAttribs& v0, const SAttribs& v1, float t )
+		{
+			out.vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
+			out.fW = v0.fW + (v1.fW - v0.fW) * t;
+		}
+
+		inline static void LerpPerspective( SAttribs& out, const SAttribs& v0, const SAttribs& v1, float a, float b )
+		{
+			out.vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
+			out.fW = (v0.fW * a + v1.fW * b) / (a + b);
+		}
+	} sAttribs;
+};
+
 template<typename TAttribs>
 struct SClipVertex
 {
@@ -232,7 +254,7 @@ public:
 	template<class TBlendFunc>
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
-	void DrawTexture( int x, int y, const TBlendFunc& sBlendFunc, const STextureIndexed& sTex );
+	void DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX = 0, int iDstY = 0, int iWidth = INT_MAX, int iHeight = INT_MAX, int iTexX = 0, int iTexY = 0 );
 	template<class TBlendFunc>
 	void DrawText( int x, int y, const char* pText, BGRA8 sColor, const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iCharWidth, int iCharHeight, int iSpacing = 0 );
 
@@ -490,23 +512,29 @@ void CGraphics::DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlend
 }
 
 template<class TBlendFunc>
-void CGraphics::DrawTexture( int x, int y, const TBlendFunc& sBlendFunc, const STextureIndexed& sTex )
+void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iWidth, int iHeight, int iTexX, int iTexY )
 {
-	for ( int iy = 0; iy < sTex.m_iHeight; iy++ )
+	iWidth = std::min( iWidth, sTex.m_iWidth - iTexX );
+	iHeight = std::min( iHeight, sTex.m_iHeight - iTexY );
+	for ( int iy = 0; iy < iHeight; iy++ )
 	{
-		for ( int ix = 0; ix < sTex.m_iWidth; ix++ )
+		int iDestY = iDstY + iy;
+		if ( iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
 		{
-			int iDestX = x + ix;
-			int iDestY = y + iy;
-			if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth && iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
+			for ( int ix = 0; ix < iWidth; ix++ )
 			{
-				uint8_t uIndex = sTex.m_pData[iy * sTex.m_iWidth + ix];
-				BGRA8 sColor;
-				sColor.r = sTex.m_pPalette[uIndex*3+2];
-				sColor.g = sTex.m_pPalette[uIndex*3+1];
-				sColor.b = sTex.m_pPalette[uIndex*3+0];
-				RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
-			}			
+				int iDestX = iDstX + ix;
+			
+				if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth )
+				{
+					uint8_t uIndex = sTex.m_pData[(iTexY+iy) * sTex.m_iWidth + (iTexX+ix)];
+					BGRA8 sColor;
+					sColor.r = sTex.m_pPalette[uIndex*3+2];
+					sColor.g = sTex.m_pPalette[uIndex*3+1];
+					sColor.b = sTex.m_pPalette[uIndex*3+0];
+					RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
+				}			
+			}
 		}
 	}
 }
@@ -532,19 +560,22 @@ void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const T
 		int iCharY = (iCharIndex / 16) * iCharHeight;
 		for ( int iy = 0; iy < iCharHeight; iy++ )
 		{
-			for ( int ix = 0; ix < iCharWidth; ix++ )
+			int iDestY = y + iy;
+			if ( iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
 			{
-				int iDestX = x + ix;
-				int iDestY = y + iy;
-				if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth && iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
+				for ( int ix = 0; ix < iCharWidth; ix++ )
 				{
-					uint8_t uIndex = sTex.m_pData[(iCharY+iy) * sTex.m_iWidth + (iCharX+ix)];
-					if ( uIndex == 0 )
+					int iDestX = x + ix;
+					if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth )
 					{
-						continue;
+						uint8_t uIndex = sTex.m_pData[(iCharY+iy) * sTex.m_iWidth + (iCharX+ix)];
+						if ( uIndex == 0 )
+						{
+							continue;
+						}
+						RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
 					}
-					RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
-				}			
+				}
 			}
 		}
 		x += iCharWidth + iSpacing;
