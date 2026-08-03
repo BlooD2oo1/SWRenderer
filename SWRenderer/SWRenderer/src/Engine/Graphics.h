@@ -105,6 +105,29 @@ struct SVertexPC
 	};
 };
 
+struct SVertexPW
+{
+	SVector3	vPos;
+	float		fW;
+
+
+	struct SVertexh
+	{
+		SVector4	vPos;
+		float		fW;
+
+		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float t )
+		{
+			fW = v0.fW + (v1.fW - v0.fW) * t;
+		}
+
+		inline void InterpolateAttribs( const SVertexh& v0, const SVertexh& v1, float a, float b )
+		{
+			fW = (v0.fW * a + v1.fW * b) / (a + b);
+		}
+	};
+};
+
 
 struct SFrameBuffer
 {
@@ -145,20 +168,26 @@ public:
 
 	void ClearFrameBuffer( BGRA8 sColor );
 	
-	void DrawPixel( int x, int y, BGRA8 sColor );
+	// Rasterize functions ( no clipping )
+	void RasterizePixel( int x, int y, BGRA8 sColor );
+	void RasterizeLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
+
+	template<class TVertexh, class TPixelShader>
+	void RasterizePixel( const TVertexh& vo, const TPixelShader& sPixelShader );
+	template<class TVertexh, class TPixelShader>
+	void RasterizeLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader );
+
+	// Draw functions ( with clipping )
 	void DrawPixelAA( const SVector2& v, BGRA8 sColor );
 	void DrawLineH( int x, int y, int len, BGRA8 sColor );
 	void DrawLineV( int x, int y, int len, BGRA8 sColor );
-	void DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
-	template<class TVertexh, class TPixelShader>
-	void DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader );
 	template<class TVertex, class TVertexShader, class TPixelShader>
 	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
 	template<class TVertex, class TVertexShader, class TPixelShader>
 	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
 	template<class TVertex, class TVertexShader, class TPixelShader>
 	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader );
-
+	
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor );
 
 	void DrawTexture( int x, int y, const STextureIndexed& sTex );
@@ -197,7 +226,13 @@ private:
 };
 
 template<class TVertexh, class TPixelShader>
-void CGraphics::DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader )
+void CGraphics::RasterizePixel( const TVertexh& vo, const TPixelShader& sPixelShader )
+{
+	sPixelShader.Process( m_sFrameBuffer.pData[(int)vo.vPos.y * m_sFrameBuffer.iWidth + (int)vo.vPos.x], vo );
+}
+
+template<class TVertexh, class TPixelShader>
+void CGraphics::RasterizeLine( const TVertexh& v0o, const TVertexh& v1o, const TPixelShader& sPixelShader )
 {
 	SVector2 v( v1o.vPos.x - v0o.vPos.x, v1o.vPos.y - v0o.vPos.y );
 
@@ -238,7 +273,8 @@ void CGraphics::DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixel
 
 		//SVector4 vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
 		TVertexh vPh;
-		vPh.InterpolateAttribs( v0, v1, b / (a + b) );
+		//vPh.InterpolateAttribs( v0, v1, b / (a + b) );
+		vPh.InterpolateAttribs( v0, v1, a, b );
 
 		if ( bSwizzle )
 		{
@@ -246,7 +282,6 @@ void CGraphics::DrawLine( const TVertexh& v0o, const TVertexh& v1o, const TPixel
 		}
 
 		sPixelShader.Process( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], vPh );
-
 	}
 }
 
@@ -283,7 +318,7 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVerte
 			vPh1.vPos.x *= (float)m_sFrameBuffer.iWidth;
 			vPh1.vPos.y *= (float)m_sFrameBuffer.iHeight;
 
-			DrawLine( vPh0, vPh1, sPixelShader );
+			RasterizeLine( vPh0, vPh1, sPixelShader );
 		}
 	}
 }

@@ -43,7 +43,7 @@ void CGraphics::ClearFrameBuffer( BGRA8 sColor )
 	}	
 }
 
-void CGraphics::DrawPixel( int x, int y, BGRA8 sColor )
+void CGraphics::RasterizePixel( int x, int y, BGRA8 sColor )
 {
 	assert( x >= 0 && x < m_sFrameBuffer.iWidth && y >= 0 && y < m_sFrameBuffer.iHeight );
 	//if ( x >= 0 && x < m_sFrameBuffer.iWidth && y >= 0 && y < m_sFrameBuffer.iHeight )
@@ -75,7 +75,7 @@ void CGraphics::DrawPixelAA( const SVector2& v, BGRA8 sColor )
 	}
 }
 
-void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor )
+void CGraphics::RasterizeLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor )
 {
 	SVector2 v( v1o - v0o );
 
@@ -110,7 +110,7 @@ void CGraphics::DrawLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor
 			std::swap( x, y );
 		}
 
-		DrawPixel( x, y, sColor );
+		RasterizePixel( x, y, sColor );
 	}
 }
 /*
@@ -189,7 +189,7 @@ void CGraphics::DrawLineH( int x, int y, int len, BGRA8 sColor )
 
 	for ( int i = iXStart; i <= iXEnd; i++ )
 	{
-		DrawPixel( i, y, sColor );
+		RasterizePixel( i, y, sColor );
 	}
 }
 
@@ -217,7 +217,7 @@ void CGraphics::DrawLineV( int x, int y, int len, BGRA8 sColor )
 
 	for ( int i = iYStart; i <= iYEnd; i++ )
 	{
-		DrawPixel( x, i, sColor );
+		RasterizePixel( x, i, sColor );
 	}
 }
 
