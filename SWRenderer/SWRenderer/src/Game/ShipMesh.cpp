@@ -238,8 +238,8 @@ void CShipMesh::Create()
 				.vPos =
 				pts[edges[i].second];
 
-			m_pLineList[i * 2 + 0].vColor = SVector4( 0.4f, 0.4f, 0.4f, 1.0f );
-			m_pLineList[i * 2 + 1].vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.4f );
+			m_pLineList[i * 2 + 0].sVaryings.vColor = SVector4( 0.4f, 0.4f, 0.4f, 1.0f );
+			m_pLineList[i * 2 + 1].sVaryings.vColor = SVector4( 0.0f, 0.3f, 1.0f, 0.4f );
 		}
 	}
 }

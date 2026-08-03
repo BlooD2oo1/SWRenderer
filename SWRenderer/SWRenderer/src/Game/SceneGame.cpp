@@ -42,7 +42,7 @@ void CSceneGame::Create()
 		float a = ((float)rand()/(float)RAND_MAX);
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
-		m_pStars[i].vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
+		m_pStars[i].sVaryings.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
 	}
 
 	for ( int i = 0; i < 100; i++ )
@@ -172,21 +172,20 @@ void CSceneGame::Render()
 			{
 				struct SVertexShaderBasic
 				{
-					using VertexOut = SVertexPhW;
+					using VaryingsType = SVertexPW::SVaryings;
 					SMatrix matWorldViewProj;
-					void Process( VertexOut& out, const SVertexPW& in ) const
+					void Process( SClipVertex<VaryingsType>& out, const SVertexPW& in ) const
 					{
 						SVector4 vPhSrc0( in.vPos, 1.0f );
 						SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
-						out.fW = in.fW * 1.0f;
+						out.sVaryings.fW = in.sVaryings.fW * 1.0f;
 					}
 				} sVertexShaderBasic;
 				sVertexShaderBasic.matWorldViewProj = m_sCamera.m_matViewProj;
 
 				struct SPixelShaderBasic
 				{
-					using VertexIn = SVertexShaderBasic::VertexOut;
-					void Process( BGRA8& inout, const VertexIn& in ) const
+					void Process( BGRA8& inout, int x, int y, const SVertexPW::SVaryings& in ) const
 					{
 						CGraphics::BlendAdditive( inout, ((int)(in.fW) % 3) == 0 ? BGRA8( 0x77ff00ff ) : BGRA8( 0x00000000 ) );
 					}
@@ -195,8 +194,8 @@ void CSceneGame::Render()
 				SVertexPW sLine[2];
 				sLine[0].vPos = SVector3( sEnemyShip.m_vPos.x, sEnemyShip.m_vPos.y, 0.0f );				
 				sLine[1].vPos = SVector3( vEstimatedPlayerPos2D.x, vEstimatedPlayerPos2D.y, 0.0f );
-				sLine[0].fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
-				sLine[1].fW = 0.0f;				
+				sLine[0].sVaryings.fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
+				sLine[1].sVaryings.fW = 0.0f;				
 				CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], sVertexShaderBasic, sPixelShaderBasic );
 			}
 
@@ -220,7 +219,7 @@ void CSceneGame::Render()
 		}
 	}
 
-
+/*
 	{
 		float fAlpha = 1.0f;
 		const int iSteps = 2;
@@ -282,12 +281,12 @@ void CSceneGame::Render()
 						} sPixelShaderBasic;
 						if ( fL > 1.5f )
 						{
-							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].vColor.x * fAlpha, m_pStars[i].vColor.y, m_pStars[i].vColor.z * fAlpha, m_pStars[i].vColor.w / (fL * 0.2f + 1.0f) );
+							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sVaryings.vColor.x * fAlpha, m_pStars[i].sVaryings.vColor.y, m_pStars[i].sVaryings.vColor.z * fAlpha, m_pStars[i].sVaryings.vColor.w / (fL * 0.2f + 1.0f) );
 							CGraphics::GetInstance().RasterizeLine( sPh0, sPh1, sPixelShaderBasic );
 						}
 						else
 						{
-							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].vColor.x * fAlpha, m_pStars[i].vColor.y, m_pStars[i].vColor.z * fAlpha, m_pStars[i].vColor.w );
+							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sVaryings.vColor.x * fAlpha, m_pStars[i].sVaryings.vColor.y, m_pStars[i].sVaryings.vColor.z * fAlpha, m_pStars[i].sVaryings.vColor.w );
 							CGraphics::GetInstance().RasterizePixel( sPh0, sPixelShaderBasic );
 						}
 					}
@@ -548,6 +547,7 @@ void CSceneGame::Render()
 			}
 		}
 	}
+	*/
 }
 
 bool CSceneGame::On_KeyDown( uint32_t key )

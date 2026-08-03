@@ -137,8 +137,8 @@ void CAsteroidMesh::Create()
 			m_pLineList[i * 2 + 1].vPos = pts[edges[i].second];
 
 			// Line colors
-			m_pLineList[i * 2 + 0].vColor = SVector4( 0.4f, 0.7f, 1.0f, 1.0f );
-			m_pLineList[i * 2 + 1].vColor = SVector4( 0.1f, 0.3f, 0.6f, 0.6f );
+			m_pLineList[i * 2 + 0].sVaryings.vColor = SVector4( 0.4f, 0.7f, 1.0f, 1.0f );
+			m_pLineList[i * 2 + 1].sVaryings.vColor = SVector4( 0.1f, 0.3f, 0.6f, 0.6f );
 		}
 	}
 }
