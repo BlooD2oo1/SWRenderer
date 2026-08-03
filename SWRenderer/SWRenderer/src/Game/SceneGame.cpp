@@ -42,7 +42,7 @@ void CSceneGame::Create()
 		float a = ((float)rand()/(float)RAND_MAX);
 		a = powf( a, 40.0f );
 		a = a * 0.8f + 0.2f;
-		m_pStars[i].sVaryings.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
+		m_pStars[i].sAttribs.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
 	}
 
 	for ( int i = 0; i < 100; i++ )
@@ -172,20 +172,20 @@ void CSceneGame::Render()
 			{
 				struct SVertexShaderBasic
 				{
-					using VaryingsType = SVertexPW::SVaryings;
+					using AttribsType = SVertexPW::SAttribs;
 					SMatrix matWorldViewProj;
-					void Process( SClipVertex<VaryingsType>& out, const SVertexPW& in ) const
+					void Process( SClipVertex<AttribsType>& out, const SVertexPW& in ) const
 					{
 						SVector4 vPhSrc0( in.vPos, 1.0f );
 						SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
-						out.sVaryings.fW = in.sVaryings.fW * 1.0f;
+						out.sAttribs.fW = in.sAttribs.fW * 1.0f;
 					}
 				} sVertexShaderBasic;
 				sVertexShaderBasic.matWorldViewProj = m_sCamera.m_matViewProj;
 
 				struct SPixelShaderBasic
 				{
-					void Process( BGRA8& inout, int x, int y, const SVertexPW::SVaryings& in ) const
+					void Process( BGRA8& inout, int x, int y, const SVertexPW::SAttribs& in ) const
 					{
 						CGraphics::BlendAdditive( inout, ((int)(in.fW) % 3) != 0 ? BGRA8( 0x6600ff00 ) : BGRA8( 0x00000000 ) );
 					}
@@ -194,8 +194,8 @@ void CSceneGame::Render()
 				SVertexPW sLine[2];
 				sLine[0].vPos = SVector3( sEnemyShip.m_vPos.x, sEnemyShip.m_vPos.y, 0.0f );				
 				sLine[1].vPos = SVector3( vEstimatedPlayerPos2D.x, vEstimatedPlayerPos2D.y, 0.0f );
-				sLine[0].sVaryings.fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
-				sLine[1].sVaryings.fW = 0.0f;				
+				sLine[0].sAttribs.fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
+				sLine[1].sAttribs.fW = 0.0f;				
 				CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], sVertexShaderBasic, sPixelShaderBasic );
 			}
 
@@ -223,7 +223,7 @@ void CSceneGame::Render()
 		struct SPixelShaderBasic
 		{
 			BGRA8 sColor;
-			void Process( BGRA8& inout, int x, int y, const SVertexP::SVaryings& in ) const
+			void Process( BGRA8& inout, int x, int y, const SVertexP::SAttribs& in ) const
 			{
 				CGraphics::BlendAdditive( inout, sColor );
 			}
@@ -237,8 +237,8 @@ void CSceneGame::Render()
 			float fStarBoxSizeInv = 1.0f / fStarBoxSize;
 			for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 			{
-				SClipVertex<SVertexP::SVaryings> sPh0;
-				SClipVertex<SVertexP::SVaryings> sPh1;
+				SClipVertex<SVertexP::SAttribs> sPh0;
+				SClipVertex<SVertexP::SAttribs> sPh1;
 				{
 					SVector4 vPhSrc( m_pStars[i].vPos * fStarBoxSize, 1.0f );
 					vPhSrc.x = vPhSrc.x - floorf((vPhSrc.x - m_sCamera.m_vEyeSmooth.x) * fStarBoxSizeInv + 0.5f) * fStarBoxSize;
@@ -279,13 +279,13 @@ void CSceneGame::Render()
 
 						if ( fL > 1.5f )
 						{
-							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sVaryings.vColor.x * fAlpha, m_pStars[i].sVaryings.vColor.y, m_pStars[i].sVaryings.vColor.z * fAlpha, m_pStars[i].sVaryings.vColor.w / (fL * 0.2f + 1.0f) );
-							CGraphics::GetInstance().RasterizeLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sVaryings, sPixelShaderBasic );
+							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w / (fL * 0.2f + 1.0f) );
+							CGraphics::GetInstance().RasterizeLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic );
 						}
 						else
 						{
-							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sVaryings.vColor.x * fAlpha, m_pStars[i].sVaryings.vColor.y, m_pStars[i].sVaryings.vColor.z * fAlpha, m_pStars[i].sVaryings.vColor.w );
-							CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPh0.sVaryings, sPixelShaderBasic );
+							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w );
+							CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPh0.sAttribs, sPixelShaderBasic );
 						}
 					}
 				}
@@ -296,21 +296,21 @@ void CSceneGame::Render()
 
 	struct SVertexShaderBasic
 	{
-		using VaryingsType = SVertexPC::SVaryings;
+		using AttribsType = SVertexPC::SAttribs;
 		SMatrix matWorldViewProj;
 		float fAlpha;
-		void Process( SClipVertex<VaryingsType>& out, const SVertexPC& in ) const
+		void Process( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
 		{
 			SVector4 vPhSrc0( in.vPos, 1.0f );
 			SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
-			out.sVaryings.vColor = in.sVaryings.vColor;
-			out.sVaryings.vColor.w *= fAlpha;
+			out.sAttribs.vColor = in.sAttribs.vColor;
+			out.sAttribs.vColor.w *= fAlpha;
 		}
 	} sVertexShaderBasic;
 
 	struct SPixelShaderBasic
 	{
-		void Process( BGRA8& inout, int x, int y, const SVertexPC::SVaryings& in ) const
+		void Process( BGRA8& inout, int x, int y, const SVertexPC::SAttribs& in ) const
 		{
 			CGraphics::BlendAdditive( inout, BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w ) );
 		}
@@ -347,7 +347,7 @@ void CSceneGame::Render()
 		struct SPixelShaderBasic
 		{
 			BGRA8 sColor;
-			void Process( BGRA8& inout, int x, int y, const SVertexP::SVaryings& in ) const
+			void Process( BGRA8& inout, int x, int y, const SVertexP::SAttribs& in ) const
 			{
 				CGraphics::BlendAdditive( inout, sColor );
 			}
@@ -356,8 +356,8 @@ void CSceneGame::Render()
 		for ( int iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); iBulletInd++ )
 		{
 			const SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
-			SClipVertex<SVertexP::SVaryings> sPh0;
-			SClipVertex<SVertexP::SVaryings> sPh1;
+			SClipVertex<SVertexP::SAttribs> sPh0;
+			SClipVertex<SVertexP::SAttribs> sPh1;
 
 			{
 				SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
@@ -400,11 +400,11 @@ void CSceneGame::Render()
 
 					if ( fL > 1.5f )
 					{
-						CGraphics::GetInstance().RasterizeLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sVaryings, sPixelShaderBasic );
+						CGraphics::GetInstance().RasterizeLine( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic );
 					}
 					else
 					{
-						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPh0.sVaryings, sPixelShaderBasic );
+						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPh0.sAttribs, sPixelShaderBasic );
 					}
 				}
 			}
@@ -418,19 +418,19 @@ void CSceneGame::Render()
 	{
 		struct SVertexShaderGrid
 		{
-			using VaryingsType = SVertexPC::SVaryings;
+			using AttribsType = SVertexPC::SAttribs;
 			SMatrix matWorldViewProj;
-			void Process( SClipVertex<VaryingsType>& out, const SVertexPC& in ) const
+			void Process( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
 			{
 				SVector4 vPhSrc0( in.vPos, 1.0f );
 				SMatrix::Mul( out.vPos, vPhSrc0, matWorldViewProj );
-				out.sVaryings.vColor = in.sVaryings.vColor;
+				out.sAttribs.vColor = in.sAttribs.vColor;
 			}
 		} sVertexShaderGrid;
 
 		struct SPixelShaderGrid
 		{
-			void Process( BGRA8& inout, int x, int y, const SVertexPC::SVaryings& in ) const
+			void Process( BGRA8& inout, int x, int y, const SVertexPC::SAttribs& in ) const
 			{
 				CGraphics::BlendAdditive( inout, BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w ) );
 			}
@@ -472,13 +472,13 @@ void CSceneGame::Render()
 					SVertexPC sVertex2;
 
 					sVertex0.vPos = SVector3( vOffset );
-					sVertex0.sVaryings.vColor = vColor;
+					sVertex0.sAttribs.vColor = vColor;
 
 					sVertex1.vPos = sVertex0.vPos;
-					sVertex1.sVaryings.vColor = vColor;
+					sVertex1.sAttribs.vColor = vColor;
 
 					sVertex2.vPos = sVertex0.vPos;
-					sVertex2.sVaryings.vColor = vColor;
+					sVertex2.sAttribs.vColor = vColor;
 
 					sVertex0.vPos.x -= (float)iHalfGridSize;
 					sVertex2.vPos.x += (float)iHalfGridSize;
@@ -491,9 +491,9 @@ void CSceneGame::Render()
 
 					float fAlpha = 1.0f-t;
 
-					sVertex0.sVaryings.vColor.w *= 0.0f;
-					sVertex1.sVaryings.vColor.w *= fAlpha;
-					sVertex2.sVaryings.vColor.w *= 0.0f;
+					sVertex0.sAttribs.vColor.w *= 0.0f;
+					sVertex1.sAttribs.vColor.w *= fAlpha;
+					sVertex2.sAttribs.vColor.w *= 0.0f;
 
 					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid, sPixelShaderGrid );
 					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid, sPixelShaderGrid );
@@ -530,13 +530,13 @@ void CSceneGame::Render()
 					SVertexPC sVertex2;
 
 					sVertex0.vPos = SVector3( vOffset );
-					sVertex0.sVaryings.vColor = vColor;
+					sVertex0.sAttribs.vColor = vColor;
 
 					sVertex1.vPos = sVertex0.vPos;
-					sVertex1.sVaryings.vColor = vColor;
+					sVertex1.sAttribs.vColor = vColor;
 
 					sVertex2.vPos = sVertex0.vPos;
-					sVertex2.sVaryings.vColor = vColor;
+					sVertex2.sAttribs.vColor = vColor;
 
 					sVertex0.vPos.y -= (float)iHalfGridSize;
 					sVertex2.vPos.y += (float)iHalfGridSize;
@@ -549,9 +549,9 @@ void CSceneGame::Render()
 
 					float fAlpha = 1.0f-t;
 
-					sVertex0.sVaryings.vColor.w *= 0.0f;
-					sVertex1.sVaryings.vColor.w *= fAlpha;
-					sVertex2.sVaryings.vColor.w *= 0.0f;
+					sVertex0.sAttribs.vColor.w *= 0.0f;
+					sVertex1.sAttribs.vColor.w *= fAlpha;
+					sVertex2.sAttribs.vColor.w *= 0.0f;
 
 					CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sVertexShaderGrid, sPixelShaderGrid );
 					CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sVertexShaderGrid, sPixelShaderGrid );

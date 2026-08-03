@@ -19,19 +19,6 @@ void CGraphics::Clear()
 {
 }
 
-void CGraphics::BlendAdditive( BGRA8& dest, BGRA8 src )
-{
-	uint32_t rOut = dest.r + ((src.r*src.a)>>8);
-	uint32_t gOut = dest.g + ((src.g*src.a)>>8);
-	uint32_t bOut = dest.b + ((src.b*src.a)>>8);
-	rOut = rOut > 255 ? 255 : rOut;
-	gOut = gOut > 255 ? 255 : gOut;
-	bOut = bOut > 255 ? 255 : bOut;
-	dest.r = (uint8_t)rOut;
-	dest.g = (uint8_t)gOut;
-	dest.b = (uint8_t)bOut;
-}
-
 void CGraphics::ClearFrameBuffer( BGRA8 sColor )
 {
 	for ( int y = 0; y < m_sFrameBuffer.iHeight; y++ )

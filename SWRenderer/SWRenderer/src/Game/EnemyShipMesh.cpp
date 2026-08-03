@@ -181,7 +181,7 @@ void CEnemyShipMesh::Create()
 		m_pLineList[i * 2 + 1].vPos = pts[edges[i].second];
 
 		// Dark red base color fading to semi-transparent orange edge endpoints
-		m_pLineList[i * 2 + 0].sVaryings.vColor = SVector4(0.1f, 0.1f, 0.9f, 1.0f);
-		m_pLineList[i * 2 + 1].sVaryings.vColor = SVector4(0.0f, 0.4f, 1.0f, 0.5f);
+		m_pLineList[i * 2 + 0].sAttribs.vColor = SVector4(0.1f, 0.1f, 0.9f, 1.0f);
+		m_pLineList[i * 2 + 1].sAttribs.vColor = SVector4(0.0f, 0.4f, 1.0f, 0.5f);
 	}
 }
