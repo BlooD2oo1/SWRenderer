@@ -179,12 +179,13 @@ public:
 	
 	// Rasterize functions ( no clipping )
 	void RasterizePixel( int x, int y, BGRA8 sColor );
-	void RasterizeLine( const SVector2& v0o, const SVector2& v1o, BGRA8 sColor );
 
-	template<class TVertexh, class TPixelShader>
-	void RasterizePixel( const TVertexh& vo, const TPixelShader& sPixelShader );
 	template<class TVaryings, class TPixelShader>
-	void RasterizeLine( const SVector2& vPos0, const TVaryings& sVaryings0, float fW0, const SVector2& vPos1, const TVaryings& sVaryings1, float fW1, const TPixelShader& sPixelShader );
+	void RasterizePixel( int x, int y, const TVaryings& sVaryings, const TPixelShader& sPixelShader );
+	template<class TVaryings, class TPixelShader>
+	void RasterizeLine( const SVector2& v0o, const SVector2& v1o, const TVaryings& sVaryings, const TPixelShader& sPixelShader );
+	template<class TVaryings, class TPixelShader>
+	void RasterizeLine( const SVector2& vPos0, TVaryings sVaryings0, float fW0, const SVector2& vPos1, TVaryings sVaryings1, float fW1, const TPixelShader& sPixelShader );
 
 	// Draw functions ( with clipping )
 	void DrawPixelAA( const SVector2& v, BGRA8 sColor );
@@ -203,10 +204,10 @@ public:
 
 	void DrawText( int x, int y, const char* pText, BGRA8 sColor, const STextureIndexed& sTex, int iCharWidth, int iCharHeight, int iSpacing = 0 );
 
-	template<class TVertex>
-	bool ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const;
-	template<class TVertex>
-	bool ClipLineXY( TVertex& vPh0, TVertex& vPh1 ) const;
+	template<class TVaryings>
+	bool ClipLineDepth( SClipVertex<TVaryings>& vPh0, SClipVertex<TVaryings>& vPh1 ) const;
+	template<class TVaryings>
+	bool ClipLineXY( SClipVertex<TVaryings>& vPh0, SClipVertex<TVaryings>& vPh1 ) const;
 	bool ClipPixel( SVector4 vPh ) const
 	{
 		uint8_t iClipCode = ClipCode( vPh );
@@ -234,16 +235,56 @@ private:
 	SFrameBuffer	m_sFrameBuffer;
 };
 
-template<class TVertexh, class TPixelShader>
-void CGraphics::RasterizePixel( const TVertexh& vo, const TPixelShader& sPixelShader )
+template<class TVaryings, class TPixelShader>
+void CGraphics::RasterizePixel( int x, int y, const TVaryings& sVaryings, const TPixelShader& sPixelShader )
 {
-	sPixelShader.Process( m_sFrameBuffer.pData[(int)vo.vPos.y * m_sFrameBuffer.iWidth + (int)vo.vPos.x], vo );
+	sPixelShader.Process( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], x, y, sVaryings );
 }
 
 template<class TVaryings, class TPixelShader>
-void CGraphics::RasterizeLine( const SVector2& vPos0, const TVaryings& sVaryings0, float fW0, const SVector2& vPos1, const TVaryings& sVaryings1, float fW1, const TPixelShader& sPixelShader )
+void CGraphics::RasterizeLine( const SVector2& v0o, const SVector2& v1o, const TVaryings& sVaryings, const TPixelShader& sPixelShader )
 {
-	SVector2 v( vPos1 - vPos1 );
+	SVector2 v( v1o - v0o );
+
+	if ( v.x == 0.0f && v.y == 0.0f )
+	{
+		return;
+	}
+
+	bool bSwizzle = fabsf(v.x) < fabsf(v.y);
+
+	SVector2 v0( v0o );
+	SVector2 v1( v1o );
+	if ( bSwizzle )
+	{
+		std::swap( v0.x, v0.y );
+		std::swap( v1.x, v1.y );
+	}
+	if ( v1.x < v0.x ) std::swap( v0, v1 );
+	v = v1 - v0;
+
+	int iXStart = (int)(v0.x+0.5f);
+	int iXEnd = (int)(v1.x+0.5f);
+
+	for ( int iX = iXStart; iX < iXEnd; iX++ )
+	{
+		float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y;
+
+		int x = iX;
+		int y = (int)fY;
+		if ( bSwizzle )
+		{
+			std::swap( x, y );
+		}
+
+		RasterizePixel( x, y, sVaryings, sPixelShader );
+	}
+}
+
+template<class TVaryings, class TPixelShader>
+void CGraphics::RasterizeLine( const SVector2& vPos0, TVaryings sVaryings0, float fW0, const SVector2& vPos1, TVaryings sVaryings1, float fW1, const TPixelShader& sPixelShader )
+{
+	SVector2 v( vPos1 - vPos0 );
 
 	if ( v.x == 0.0f && v.y == 0.0f )
 	{
@@ -270,7 +311,7 @@ void CGraphics::RasterizeLine( const SVector2& vPos0, const TVaryings& sVaryings
 
 	int iXStart = (int)(v0.x+0.5f);
 	int iXEnd = (int)(v1.x+0.5f);
-	//assert( iXEnd-iXStart < 1000 );
+
 	for ( int iX = iXStart; iX < iXEnd; iX++ )
 	{
 		float t = (((float)iX + 0.5f) - v0.x) / v.x;
@@ -282,10 +323,6 @@ void CGraphics::RasterizeLine( const SVector2& vPos0, const TVaryings& sVaryings
 		float a = (1.0f - t) / fW0;
 		float b = t / fW1;
 
-		//TVertexh vPh;
-		//vPh.InterpolateAttribs( v0, v1, b / (a + b) );
-		//vPh.InterpolateAttribs( v0, v1, a, b );
-
 		TVaryings sVaryings;
 		TVaryings::InterpolateAttribs( sVaryings, sVaryings0, sVaryings1, a, b );
 
@@ -294,7 +331,7 @@ void CGraphics::RasterizeLine( const SVector2& vPos0, const TVaryings& sVaryings
 			std::swap( x, y );
 		}
 
-		sPixelShader.Process( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], x, y, sVaryings );
+		RasterizePixel( x, y, sVaryings, sPixelShader );
 	}
 }
 
@@ -364,8 +401,8 @@ void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, ui
 	}
 }
 
-template<class TVertex>
-bool CGraphics::ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const
+template<class TVaryings>
+bool CGraphics::ClipLineDepth( SClipVertex<TVaryings>& vPh0, SClipVertex<TVaryings>& vPh1 ) const
 {
 	while ( 1 )
 	{
@@ -382,7 +419,7 @@ bool CGraphics::ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const
 
 		int bit = ( ( iClipCode0 & 1 ) != ( iClipCode1 & 1 ) ) ? 1 : 2;
 
-		TVertex vTemp;
+		SClipVertex<TVaryings> vTemp;
 		{
 			switch ( bit )
 			{
@@ -422,8 +459,8 @@ bool CGraphics::ClipLineDepth( TVertex& vPh0, TVertex& vPh1 ) const
 	return true;
 }
 
-template<class TVertex>
-bool CGraphics::ClipLineXY( TVertex& vPh0, TVertex& vPh1 ) const
+template<class TVaryings>
+bool CGraphics::ClipLineXY( SClipVertex<TVaryings>& vPh0, SClipVertex<TVaryings>& vPh1 ) const
 {
 	while ( 1 )
 	{
@@ -445,7 +482,7 @@ bool CGraphics::ClipLineXY( TVertex& vPh0, TVertex& vPh1 ) const
 		else if	( ( iClipCode0 & 4 ) != ( iClipCode1 & 4 ) )	bit = 4;
 		else													bit = 8;
 
-		TVertex vTemp;
+		SClipVertex<TVaryings> vTemp;
 
 		switch (bit)
 		{
