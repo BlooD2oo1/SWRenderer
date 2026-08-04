@@ -204,14 +204,26 @@ void CSceneGame::Render()
 			SVector2::Normalize( vEnemyToEstimatedPlayer2DNorm, vEnemyToEstimatedPlayer2D );
 			float fEnemyToEstimatedPlayerForwardDistance = SVector2::Dot( vEnemyToEstimatedPlayer2D, vEnemyDir2D );
 
-			sEnemyShip.m_fAccForward_ctrl = fEnemyToEstimatedPlayerForwardDistance / 10.0f;
-			sEnemyShip.m_fAccForward_ctrl = Clamp( sEnemyShip.m_fAccForward_ctrl, 0.0f, 1.0f ) * 2.0f;
+			sEnemyShip.m_fAccForward_ctrl = ( fEnemyToEstimatedPlayerForwardDistance - 20.0f ) / 10.0f;
+			sEnemyShip.m_fAccForward_ctrl = Clamp( sEnemyShip.m_fAccForward_ctrl, -0.5f, 1.0f ) * 2.0f;
 
 			float fSide = SVector2::Cross( vEnemyDir2D, vEnemyToEstimatedPlayer2D );
 
 			sEnemyShip.m_fYaw_ctrl = fSide * 0.2f;
 
 			//sEnemyShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sEnemyShip.m_vMov, CalcSmoothUpdateWeight( 1.05f, CEngine::GetInstance().GetElapsedTimeMs() ) );
+
+			float fShootRangeMin = 60.0f;
+			float fShootRangeMax = 70.0f;
+			if ( !sEnemyShip.m_bShoot && fEnemyToEstimatedPlayerForwardDistance > fShootRangeMin && fEnemyToEstimatedPlayerForwardDistance < fShootRangeMax )
+			{
+				sEnemyShip.m_bShoot = true;
+				sEnemyShip.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+			}
+			if ( sEnemyShip.m_bShoot && (fEnemyToEstimatedPlayerForwardDistance < fShootRangeMin || fEnemyToEstimatedPlayerForwardDistance > fShootRangeMax	) )
+			{
+				sEnemyShip.m_bShoot = false;
+			}
 
 			m_aEnemyShips[i].UpdateControl();
 			m_aEnemyShips[i].UpdateMatrices();
@@ -353,64 +365,68 @@ void CSceneGame::Render()
 			}
 		} sPixelShaderBasic;
 
-		for ( int iBulletInd = 0; iBulletInd < m_sShipControl.m_aBullets.size(); iBulletInd++ )
+		for ( int i = -1; i < (int)m_aEnemyShips.size(); i++ )
 		{
-			const SShipControl::SBullet& sBullet = m_sShipControl.m_aBullets[iBulletInd];
-			SClipVertex<SVertexP::SAttribs> sPh0;
-			SClipVertex<SVertexP::SAttribs> sPh1;
+			SShipControl& sShip = (i == -1) ? m_sShipControl : m_aEnemyShips[i];
 
+			for ( int iBulletInd = 0; iBulletInd < sShip.m_aBullets.size(); iBulletInd++ )
 			{
-				SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
-				SVector4 vPhSrc1( sBullet.m_vPosPrev, 1.0f );
-				SMatrix::Mul( sPh0.vPos, vPhSrc0, m_sCamera.m_matViewProj );
-				SMatrix::Mul( sPh1.vPos, vPhSrc1, m_sCamera.m_matViewProjPrev );
-			}
+				const SShipControl::SBullet& sBullet = sShip.m_aBullets[iBulletInd];
+				SClipVertex<SVertexP::SAttribs> sPh0;
+				SClipVertex<SVertexP::SAttribs> sPh1;
 
-			if ( CGraphics::GetInstance().ClipLineZ( sPh0, sPh1 ) )
-			{
-				if ( CGraphics::GetInstance().ClipLineXY( sPh0, sPh1 ) )
 				{
+					SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
+					SVector4 vPhSrc1( sBullet.m_vPosPrev, 1.0f );
+					SMatrix::Mul( sPh0.vPos, vPhSrc0, m_sCamera.m_matViewProj );
+					SMatrix::Mul( sPh1.vPos, vPhSrc1, m_sCamera.m_matViewProjPrev );
+				}
+
+				if ( CGraphics::GetInstance().ClipLineZ( sPh0, sPh1 ) )
+				{
+					if ( CGraphics::GetInstance().ClipLineXY( sPh0, sPh1 ) )
 					{
-						float fWRec0 = 1.0f / sPh0.vPos.w;
-						sPh0.vPos.x = sPh0.vPos.x * fWRec0;
-						sPh0.vPos.y = sPh0.vPos.y * fWRec0;
+						{
+							float fWRec0 = 1.0f / sPh0.vPos.w;
+							sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+							sPh0.vPos.y = sPh0.vPos.y * fWRec0;
 
-						float fWRec1 = 1.0f / sPh1.vPos.w;
-						sPh1.vPos.x = sPh1.vPos.x * fWRec1;
-						sPh1.vPos.y = sPh1.vPos.y * fWRec1;
-					}
+							float fWRec1 = 1.0f / sPh1.vPos.w;
+							sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+							sPh1.vPos.y = sPh1.vPos.y * fWRec1;
+						}
 
-					SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
-					vL.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
-					vL.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
-					float fL = SVector2::Length( vL );
+						SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+						vL.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth * 0.5f;
+						vL.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight * 0.5f;
+						float fL = SVector2::Length( vL );
 
-					sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
-					sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
-					sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
-					sPh0.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+						sPh0.vPos.x = sPh0.vPos.x * 0.5f + 0.5f;
+						sPh0.vPos.y = -(sPh0.vPos.y) * 0.5f + 0.5f;
+						sPh0.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+						sPh0.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
-					sPh1.vPos.x = sPh1.vPos.x * 0.5f + 0.5f;
-					sPh1.vPos.y = -(sPh1.vPos.y) * 0.5f + 0.5f;
-					sPh1.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
-					sPh1.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
+						sPh1.vPos.x = sPh1.vPos.x * 0.5f + 0.5f;
+						sPh1.vPos.y = -(sPh1.vPos.y) * 0.5f + 0.5f;
+						sPh1.vPos.x *= (float)CGraphics::GetInstance().GetFrameBuffer().iWidth;
+						sPh1.vPos.y *= (float)CGraphics::GetInstance().GetFrameBuffer().iHeight;
 
-					float fAlpha = 1.0f - sBullet.m_fTimer / sBullet.m_fTime;
-					sPixelShaderBasic.sColor = BGRA8( 0.0f, fAlpha, 1.0f, fAlpha );
+						float fAlpha = 1.0f - sBullet.m_fTimer / sBullet.m_fTime;
+						sPixelShaderBasic.sColor = BGRA8( 0.0f, fAlpha, 1.0f, fAlpha );
 
-					if ( fL > 1.5f )
-					{
-						CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
-					}
-					else
-					{
-						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPixelShaderBasic.sColor, SBlendFuncAdditive() );
+						if ( fL > 1.5f )
+						{
+							CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
+						}
+						else
+						{
+							CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPixelShaderBasic.sColor, SBlendFuncAdditive() );
+						}
 					}
 				}
 			}
 		}
 	}
-
 	
 	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.6f );
 	{

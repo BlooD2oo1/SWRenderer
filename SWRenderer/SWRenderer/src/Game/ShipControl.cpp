@@ -95,7 +95,7 @@ void SShipControl::UpdateShoot()
 		SMatrix::TransformCoord( vGunPos1WorldPrev, vGunPos1, m_matShipPrev );
 
 
-		const float fShootFreqHz = 10.0f;
+		const float fShootFreqHz = 20.0f;
 		const uint64_t iShootPeriodNs = (uint64_t)(1.0f / fShootFreqHz * 1000.0f * 1000.0f * 1000.0f);
 
 		static bool bGunPos = false;
@@ -118,13 +118,13 @@ void SShipControl::UpdateShoot()
 			bGunPos = !bGunPos;
 
 			SVector3 vBulletDir = Lerp( vGunDirPrev, vGunDir, fFrameW );
-			sBullet.m_vMov = Lerp( vGunMovPrev, vGunMov, fFrameW ) + vBulletDir * 0.2f;
+			sBullet.m_vMov = Lerp( vGunMovPrev, vGunMov, fFrameW ) + vBulletDir * 0.1f;
 
 			/*sBullet.m_vDir.x += (rand() % 1000 - 500) * 0.00001f;
 			sBullet.m_vDir.y += (rand() % 1000 - 500) * 0.00001f;
 			sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.00001f;*/
 
-			sBullet.m_fTime = 1000.0f;
+			sBullet.m_fTime = 3000.0f;
 			sBullet.m_fTimer = 0.0f;
 			m_aBullets.push_back( sBullet );
 
