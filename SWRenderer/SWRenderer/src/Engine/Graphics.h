@@ -44,17 +44,51 @@ struct SFrameBuffer
 	SFrameBuffer()
 		: pData( nullptr ), iWidth( 0 ), iHeight( 0 )
 	{
-		vClipScaleInHom = SVector2( 1.0f, 1.0f );
+		vClipScaleInHom00 = SVector2( 1.0f, 1.0f );
+		vClipScaleInHom11 = SVector2( 1.0f, 1.0f );
 	}
 	SFrameBuffer( BGRA8* pData, int iWidth, int iHeight )
 		: pData( pData ), iWidth( iWidth ), iHeight( iHeight )
 	{
-		vClipScaleInHom = SVector2( 1.0f - 0.5f/(float)iWidth, 1.0f - 0.5f/(float)iHeight );
+		//vClipScaleInHom = SVector2( 1.0f - 0.5f/(float)iWidth, 1.0f - 0.5f/(float)iHeight );
+		vClipScaleInHom00 = SVector2( 150.0f, 150.0f );
+		vClipScaleInHom11 = SVector2( 160.0f, 160.0f );
 	}
 	BGRA8*		pData = nullptr;
 	int			iWidth = 0;
 	int			iHeight = 0;
-	SVector2	vClipScaleInHom;
+	SVector2	vClipScaleInHom00;
+	SVector2	vClipScaleInHom11;
+};
+
+struct SViewPort
+{
+	SViewPort()
+		: v00( 0.0f, 0.0f )
+		, v11( 0.0f, 0.0f )
+	{
+		SMatrix::Identity( matViewPort );
+	}
+
+	void Create( const SVector2& _v00, const SVector2& _v11 )
+	{
+		v00 = _v00;
+		v11 = _v11;
+		SMatrix::Identity( matViewPort );
+		matViewPort.m[0][0] = +( v11.x - v00.x ) * 0.5f;
+		matViewPort.m[1][1] = -( v11.y - v00.y ) * 0.5f;
+		matViewPort.m[3][0] = ( v00.x + v11.x ) * 0.5f;
+		matViewPort.m[3][1] = ( v00.y + v11.y ) * 0.5f;
+	}
+
+	inline const SVector2& Get00() const { return v00; }
+	inline const SVector2& Get11() const { return v11; }
+	inline const SMatrix& GetViewPortMatrix() const { return matViewPort; }
+
+private:
+	SVector2 v00;
+	SVector2 v11;
+	SMatrix  matViewPort;
 };
 
 struct STextureIndexed
@@ -246,11 +280,13 @@ public:
 	template<class TBlendFunc>
 	void DrawLineV( int x, int y, int len, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
+	void DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
+	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
+	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
+	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
+	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
 	template<class TBlendFunc>
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
@@ -261,16 +297,16 @@ public:
 	template<class TAttribs>
 	bool ClipLineZ( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& vPh1 ) const;
 	template<class TAttribs>
-	bool ClipLineXY( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& vPh1 ) const;
+	bool ClipLineXY( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& vPh1, const SViewPort& sViewPort ) const;
 
 private:
-	uint8_t ClipCode( const SVector4& vP4 ) const
+	inline uint8_t ClipCode( const SVector4& vP4, const SViewPort& sViewPort ) const
 	{
 		uint8_t iRet = 0;
-		iRet |= ( vP4.x < -vP4.w * m_sFrameBuffer.vClipScaleInHom.x ) ? 1 : 0;
-		iRet |= ( vP4.x > vP4.w * m_sFrameBuffer.vClipScaleInHom.x ) ? 2 : 0;
-		iRet |= ( vP4.y < -vP4.w * m_sFrameBuffer.vClipScaleInHom.y ) ? 4 : 0;
-		iRet |= ( vP4.y > vP4.w * m_sFrameBuffer.vClipScaleInHom.y ) ? 8 : 0;
+		iRet |= ( vP4.x < vP4.w * sViewPort.Get00().x ) ? 1 : 0;
+		iRet |= ( vP4.x > vP4.w * sViewPort.Get11().x ) ? 2 : 0;
+		iRet |= ( vP4.y < vP4.w * sViewPort.Get00().y ) ? 4 : 0;
+		iRet |= ( vP4.y > vP4.w * sViewPort.Get11().y ) ? 8 : 0;
 		return iRet;
 	}
 
@@ -281,6 +317,10 @@ private:
 template<class TBlendFunc>
 void CGraphics::RasterizePixel( int x, int y, BGRA8 sColor, const TBlendFunc& sBlendFunc )
 {
+	/*if ( x < 0 || x >= m_sFrameBuffer.iWidth || y < 0 || y >= m_sFrameBuffer.iHeight )
+	{
+		return;
+	}*/
 	sBlendFunc.Execute( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], sColor );
 }
 
@@ -379,7 +419,28 @@ void CGraphics::RasterizeLine( const SVector2& vPos0, TAttribs sAttribs0, float 
 }
 
 template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+void CGraphics::DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+{
+	using TAttribs = typename TVertexShader::AttribsType;
+	using TClipVertex = SClipVertex<TAttribs>;
+	TClipVertex vPh;
+	sVertexShader.Execute( vPh, sV );
+	if ( vPh.vPos.w > 0.0f )
+	{
+		if ( ClipCode( vPh.vPos, sViewPort ) == 0 )
+		{
+			float fWRec = 1.0f / vPh.vPos.w;
+			vPh.vPos.x = vPh.vPos.x * fWRec;
+			vPh.vPos.y = vPh.vPos.y * fWRec;
+			SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
+
+			RasterizePixel( (int)(vScreen.x+0.5f), (int)(vScreen.y+0.5f), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+		}
+	}
+}
+
+template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
+void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
 {
 	using TAttribs = typename TVertexShader::AttribsType;
 	using TClipVertex = SClipVertex<TAttribs>;
@@ -391,7 +452,7 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVerte
 
 	if ( ClipLineZ( vPh0, vPh1 ) )
 	{
-		if ( ClipLineXY( vPh0, vPh1 ) )
+		if ( ClipLineXY( vPh0, vPh1, sViewPort ) )
 		{
 			{
 				float fWRec0 = 1.0f / vPh0.vPos.w;
@@ -404,16 +465,7 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVerte
 			}
 
 			SVector2 vScreen0( vPh0.vPos.x, vPh0.vPos.y );
-			vScreen0.x = vScreen0.x * 0.5f + 0.5f;
-			vScreen0.y = -(vScreen0.y) * 0.5f + 0.5f;
-			vScreen0.x *= (float)m_sFrameBuffer.iWidth;
-			vScreen0.y *= (float)m_sFrameBuffer.iHeight;
-
 			SVector2 vScreen1( vPh1.vPos.x, vPh1.vPos.y );
-			vScreen1.x = vScreen1.x * 0.5f + 0.5f;
-			vScreen1.y = -(vScreen1.y) * 0.5f + 0.5f;
-			vScreen1.x *= (float)m_sFrameBuffer.iWidth;
-			vScreen1.y *= (float)m_sFrameBuffer.iHeight;
 
 			RasterizeLine( vScreen0, vPh0.sAttribs, vPh0.vPos.w, vScreen1, vPh1.sAttribs, vPh1.vPos.w, sPixelShader, sBlendFunc );
 		}
@@ -421,26 +473,26 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const TVerte
 }
 
 template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
 {
 	assert( pLineList != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		int iInd0 = i*2+0;
 		int iInd1 = i*2+1;
-		DrawLine3D( pLineList[iInd0], pLineList[iInd1], sVertexShader, sPixelShader, sBlendFunc );
+		DrawLine3D( pLineList[iInd0], pLineList[iInd1], sViewPort, sVertexShader, sPixelShader, sBlendFunc );
 	}
 }
 
 template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
 {
 	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		uint32_t iInd0 = pIndices[i * 2 + 0];
 		uint32_t iInd1 = pIndices[i * 2 + 1];
-		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sVertexShader, sPixelShader, sBlendFunc );
+		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sViewPort, sVertexShader, sPixelShader, sBlendFunc );
 	}
 }
 
@@ -643,12 +695,12 @@ bool CGraphics::ClipLineZ( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& v
 }
 
 template<class TAttribs>
-bool CGraphics::ClipLineXY( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& vPh1 ) const
+bool CGraphics::ClipLineXY( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& vPh1, const SViewPort& sViewPort ) const
 {
 	while ( 1 )
 	{
-		uint8_t iClipCode0 = ClipCode( vPh0.vPos );
-		uint8_t iClipCode1 = ClipCode( vPh1.vPos );
+		uint8_t iClipCode0 = ClipCode( vPh0.vPos, sViewPort );
+		uint8_t iClipCode1 = ClipCode( vPh1.vPos, sViewPort );
 
 		if ( ( iClipCode0 | iClipCode1 ) == 0 )
 		{
@@ -671,44 +723,44 @@ bool CGraphics::ClipLineXY( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& 
 		{
 		case 1:
 			{
-				float d0 = vPh0.vPos.x + vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
-				float d1 = vPh1.vPos.x + vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				float d0 = vPh0.vPos.x - vPh0.vPos.w * sViewPort.Get00().x;
+				float d1 = vPh1.vPos.x - vPh1.vPos.w * sViewPort.Get00().x;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.x = -vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				vTemp.vPos.x = vTemp.vPos.w * sViewPort.Get00().x;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
 
 		case 2:
 			{
-				float d0 = vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.x - vPh0.vPos.x;
-				float d1 = vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.x - vPh1.vPos.x;
+				float d0 = vPh0.vPos.w * sViewPort.Get11().x - vPh0.vPos.x;
+				float d1 = vPh1.vPos.w * sViewPort.Get11().x - vPh1.vPos.x;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.x = vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.x;
+				vTemp.vPos.x = vTemp.vPos.w * sViewPort.Get11().x;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
 
 		case 4:
 			{
-				float d0 = vPh0.vPos.y + vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
-				float d1 = vPh1.vPos.y + vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				float d0 = vPh0.vPos.y - vPh0.vPos.w * sViewPort.Get00().y;
+				float d1 = vPh1.vPos.y - vPh1.vPos.w * sViewPort.Get00().y;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.y = -vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				vTemp.vPos.y = vTemp.vPos.w * sViewPort.Get00().y;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
 
 		default:
 			{
-				float d0 = vPh0.vPos.w * m_sFrameBuffer.vClipScaleInHom.y - vPh0.vPos.y;
-				float d1 = vPh1.vPos.w * m_sFrameBuffer.vClipScaleInHom.y - vPh1.vPos.y;
+				float d0 = vPh0.vPos.w * sViewPort.Get11().y - vPh0.vPos.y;
+				float d1 = vPh1.vPos.w * sViewPort.Get11().y - vPh1.vPos.y;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.y = vTemp.vPos.w * m_sFrameBuffer.vClipScaleInHom.y;
+				vTemp.vPos.y = vTemp.vPos.w * sViewPort.Get11().y;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;

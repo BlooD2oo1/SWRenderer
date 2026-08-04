@@ -380,7 +380,28 @@ struct SMatrix
 		return out;
 	}
 
-		static SMatrix& BuildLHProjectionMatrix( SMatrix& out, float fovY, float aspect, float znear, float zfar ) noexcept
+	static SMatrix& BuildLHOrthoMatrix( SMatrix& out, float width, float height, float znear, float zfar ) noexcept
+	{
+		out.m00 = 2.0f / width;
+		out.m01 = 0.0f;
+		out.m02 = 0.0f;
+		out.m03 = 0.0f;
+		out.m10 = 0.0f;
+		out.m11 = 2.0f / height;
+		out.m12 = 0.0f;
+		out.m13 = 0.0f;
+		out.m20 = 0.0f;
+		out.m21 = 0.0f;
+		out.m22 = 1.0f / (zfar - znear);
+		out.m23 = 0.0f;
+		out.m30 = 0.0f;
+		out.m31 = 0.0f;
+		out.m32 = -znear / (zfar - znear);
+		out.m33 = 1.0f;
+		return out;
+	}
+
+	static SMatrix& BuildLHProjectionMatrix( SMatrix& out, float fovY, float aspect, float znear, float zfar ) noexcept
 	{
 		const float f = 1.0f / std::tan(fovY * 0.5f);
 

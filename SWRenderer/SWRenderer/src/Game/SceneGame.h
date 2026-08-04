@@ -23,6 +23,10 @@ public:
 private:
 
 	SCamera			m_sCamera;
+	SViewPort		m_sViewportGameView;
+	SViewPort		m_sViewportMiniMap;
+	STextureIndexed	m_sTexHUD;
+
 	SShipControl	m_sShipControl;
 
 	std::vector< SShipControl >	m_aEnemyShips;

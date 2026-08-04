@@ -46,6 +46,16 @@ void SShipControl::UpdateControl()
 	SVector3 vShipLeft( -vShipDir.y, vShipDir.x, 0.0f );
 	m_vMov += vShipDir * m_fAccForward * 0.00005f * fElapsedTimeMs;
 	m_vMov += vShipLeft * m_fAccLeft * 0.00005f * fElapsedTimeMs;
+
+	// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
+	/*SVector3 vMovDir( m_vDir );
+	vMovDir = vMovDir * SVector3::Dot( m_vMov, vMovDir );
+	SVector3 vMovRight( -m_vDir.y, m_vDir.x, 0.0f );
+	vMovRight = vMovRight * SVector3::Dot( m_vMov, vMovRight );
+	vMovDir = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovDir, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
+	vMovRight = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovRight, CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs ) );
+	m_vMov = vMovDir + vMovRight;*/
+
 	m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_vMov, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
 
 	//m_fRoll = m_fYaw*0.5f;
