@@ -21,7 +21,7 @@ void CSceneGame::Clear()
 	m_sCamera.Clear();
 	m_sTexHUD.Clear();
 
-	m_sShipControl.Clear();
+	m_sShipPlayer.Clear();
 	m_aEnemyShips.clear();	
 }
 
@@ -72,25 +72,33 @@ void CSceneGame::Create()
 		m_aAsteroids.push_back( sAsteroid );
 	}
 
-	m_sShipControl.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
-	m_sShipControl.m_aTurretPositions.push_back( SVector3( 0.5f, -2.7f, 0.0f ) );
+	m_sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
+	m_sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, -2.7f, 0.0f ) );
 
-	m_aEnemyShips.reserve( 10 );
+	m_aEnemyShips.reserve( 20 );
 	for ( size_t i = 0; i < m_aEnemyShips.capacity(); i++ )
 	{
 		m_aEnemyShips.emplace_back();
-		SShipControl& sEnemyShip = m_aEnemyShips.back();
+		SShipEnemy& sShipEnemy = m_aEnemyShips.back();
 
-		sEnemyShip.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
+		sShipEnemy.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
 
 		const float fScatterRadius = 40.0f;
-		sEnemyShip.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
-		sEnemyShip.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
-		sEnemyShip.m_vPos.z = 0.0f;
+		sShipEnemy.m_sShip.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
+		sShipEnemy.m_sShip.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
+		sShipEnemy.m_sShip.m_vPos.z = 0.0f;
 
-		sEnemyShip.m_fYaw = ((float)rand() / (float)RAND_MAX) * PI2;
+		sShipEnemy.m_sShip.m_fYaw = ((float)rand() / (float)RAND_MAX) * PI2;
 
-		sEnemyShip.m_fAI_Phase = ((float)rand() / (float)RAND_MAX) * PI2;
+		sShipEnemy.f0 = ((float)rand() / (float)RAND_MAX);
+		sShipEnemy.f1 = ((float)rand() / (float)RAND_MAX);
+		sShipEnemy.f2 = ((float)rand() / (float)RAND_MAX);
+		sShipEnemy.f3 = ((float)rand() / (float)RAND_MAX);
+
+		sShipEnemy.m_fPhase_DistanceToPlayer = ((float)rand() / (float)RAND_MAX) * PI2;
+
+		sShipEnemy.m_sTurret.m_fShootFreqHz = 5.0f;
+		sShipEnemy.m_sTurret.m_fBulletSpeed = 0.1f;
 	}
 }
 
@@ -102,28 +110,118 @@ void CSceneGame::Update()
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
 	{
 		// Update ship:
-		m_sShipControl.UpdateControl();
-		m_sShipControl.UpdateMatrices();
-		m_sShipControl.UpdateShoot();
+		m_sShipPlayer.Update();
+
+		// Update enemy ships:
+		//boids:
+		for ( size_t i0 = 0; i0 < m_aEnemyShips.size(); i0++ )
+		{
+			SShipEnemy& sEnemyShip0 = m_aEnemyShips[i0];
+
+			SVector2 vEnemyToPlayer( m_sShipPlayer.m_sShip.m_vPos.x - sEnemyShip0.m_sShip.m_vPos.x, m_sShipPlayer.m_sShip.m_vPos.y - sEnemyShip0.m_sShip.m_vPos.y );
+			float fEnemyToPlayerDist = SVector2::Length( vEnemyToPlayer );
+
+			SVector2 vSeparation( 0.0f, 0.0f );
+			SVector2 vAlignment( 0.0f, 0.0f );
+			SVector2 vCohesion( 0.0f, 0.0f );
+			
+			int iNeighborCount = 0;
+			SVector2 vAvgPos( 0.0f, 0.0f );
+			SVector2 vAvgMov( 0.0f, 0.0f );
+
+			for ( size_t i1 = 0; i1 < m_aEnemyShips.size(); i1++ )
+			{
+				if ( i0 == i1 ) continue;
+				SShipEnemy& sEnemyShip1 = m_aEnemyShips[i1];
+
+				SVector2 vDist( sEnemyShip1.m_sShip.m_vPos.x - sEnemyShip0.m_sShip.m_vPos.x, sEnemyShip1.m_sShip.m_vPos.y - sEnemyShip0.m_sShip.m_vPos.y );
+				float fDistSq = SVector2::LengthSq( vDist );
+				if ( fDistSq < powf( 200.0f, 2 ) )
+				{
+					if ( fDistSq < powf( 100.0f, 2 ) )
+					{
+						SVector2 vDirAway( -vDist.x, -vDist.y );
+						vSeparation += vDirAway * (1.0f / (fDistSq + 0.00001f));						
+					}
+
+					iNeighborCount++;
+					vAvgPos += SVector2( sEnemyShip1.m_sShip.m_vPos.x, sEnemyShip1.m_sShip.m_vPos.y );
+					vAvgMov += SVector2( sEnemyShip1.m_sShip.m_vMov.x, sEnemyShip1.m_sShip.m_vMov.y );
+				}
+			}
+
+			if ( iNeighborCount > 0 )
+			{
+				vAvgMov /= (float)iNeighborCount;
+				vAlignment = vAvgMov - SVector2( sEnemyShip0.m_sShip.m_vMov.x, sEnemyShip0.m_sShip.m_vMov.y );
+
+				vAvgPos /= (float)iNeighborCount;
+				vCohesion = vAvgPos - SVector2( sEnemyShip0.m_sShip.m_vPos.x, sEnemyShip0.m_sShip.m_vPos.y );
+			}
+
+			SVector2 vBoidMov =	vSeparation * 600.0f * sEnemyShip0.f0 +
+								vAlignment * 10.0f +
+								vCohesion * 0.3f;
+
+			sEnemyShip0.m_vBoidMov = SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
+		}
+
+		for ( int i = 0; i < m_aEnemyShips.size(); i++ )
+		{
+			SShipEnemy& sEnemyShip = m_aEnemyShips[i];
+
+			SVector3 vEnemyToPlayerDir( m_sShipPlayer.m_sShip.m_vPos - sEnemyShip.m_sShip.m_vPos /*- m_sShipPlayer.m_sShip.m_vDir*5.0f*/ );
+			const float fEnemyToPlayerDist = SVector3::Length( vEnemyToPlayerDir );
+			SVector3::Normalize( vEnemyToPlayerDir, vEnemyToPlayerDir );
+			
+			sEnemyShip.m_sShip.m_vMov += sEnemyShip.m_vBoidMov * 0.001f;
+
+			const float fSin_DistanceToPlayer = powf( sinf( sEnemyShip.m_fPhase_DistanceToPlayer )*0.5f+0.5f, 0.6f );
+			const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 90.0f, fSin_DistanceToPlayer))*0.04f, -1.0f, 1.0f );
+			sEnemyShip.m_sShip.m_vMov += vEnemyToPlayerDir * 0.1f * fFollowAmount;
+			
+			sEnemyShip.m_sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sEnemyShip.m_sShip.m_vMov, CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs ) );
+
+			// yaw from mov:
+			const float fYaw = atan2f( sEnemyShip.m_sShip.m_vMov.y, sEnemyShip.m_sShip.m_vMov.x );
+			sEnemyShip.m_sShip.m_fYaw = Lerp( fYaw, sEnemyShip.m_sShip.m_fYaw, CalcSmoothUpdateWeight( 1.005f, fElapsedTimeMs ) );
+
+			if ( fSin_DistanceToPlayer < 0.1f && SVector3::Dot( sEnemyShip.m_sShip.m_vDir, vEnemyToPlayerDir ) > 0.8f )
+			{
+				if ( !sEnemyShip.m_sTurret.m_bShoot )
+				{
+					sEnemyShip.m_sTurret.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+				}
+				sEnemyShip.m_sTurret.m_bShoot = true;
+			}
+			else
+			{
+				sEnemyShip.m_sTurret.m_bShoot = false;
+			}
+
+			sEnemyShip.m_fPhase_DistanceToPlayer += fElapsedTimeMs * 0.0005f;
+			if ( sEnemyShip.m_fPhase_DistanceToPlayer > PI2 ) sEnemyShip.m_fPhase_DistanceToPlayer -= PI2;
+			sEnemyShip.Update();
+		}
 	}
 
 	{
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 		float fWSlow = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
-		SVector3 vP( m_sShipControl.m_vPos + m_sShipControl.m_vDir * 5.0f + m_sShipControl.m_vMov*200.0f );
-		//vP += m_sShipControl.m_vDir * 10.0f;
+		SVector3 vP( m_sShipPlayer.m_sShip.m_vPos + m_sShipPlayer.m_sShip.m_vDir * 6.0f + m_sShipPlayer.m_sShip.m_vMov*300.0f );
+		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 500.0f, 80.0f, expf( -SVector3::Length( m_sShipControl.m_vMov ) * 2.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 800.0f, 80.0f, expf( -SVector3::Length( m_sShipPlayer.m_sShip.m_vMov ) * 2.5f ) );
 		//m_sCamera.m_vEye.z += 200.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 
-		//m_sCamera.m_vUp = m_sShipControl.m_vDir;
-		SVector2 vDir2D( m_sShipControl.m_vDir.x, m_sShipControl.m_vDir.y );
+		//SVector2 vDir2D( m_sShipPlayer.m_sShip.m_vDir.x, m_sShipPlayer.m_sShip.m_vDir.y );
+		SVector2 vDir2D( m_sShipPlayer.m_sShip.m_vMov.x, m_sShipPlayer.m_sShip.m_vMov.y ); SVector2::Normalize( vDir2D, vDir2D );
 		//SVector2::Slerp( vDir2D, vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
-		vDir2D = Lerp( vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.0006f, fElapsedTimeMs ) );
+		vDir2D = Lerp( vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 		SVector2::Normalize( vDir2D, vDir2D );
 		m_sCamera.m_vUp.x = vDir2D.x;
 		m_sCamera.m_vUp.y = vDir2D.y;
@@ -135,13 +233,13 @@ void CSceneGame::Update()
 	// log ShipAcc, ShipYaw, ShipSpeed:
 	
 
-	CEngine::GetInstance().GetAudioFrameData().m_fShipAcc = m_sShipControl.m_fAccForward + m_sShipControl.m_fAccRight;
-	CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed = m_sShipControl.m_fYawSpeed;
-	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = SVector3::Length( m_sShipControl.m_vMov ) / 0.1f;
+	CEngine::GetInstance().GetAudioFrameData().m_fShipAcc = m_sShipPlayer.m_fAccForward + m_sShipPlayer.m_fAccRight;
+	CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed = m_sShipPlayer.m_fYawSpeed;
+	CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = SVector3::Length( m_sShipPlayer.m_sShip.m_vMov ) / 0.1f;
 
 	//LOG( "ShipAcc=%.8f, ShipYawSpeed=%.8f, ShipSpeed=%.8f\n", CEngine::GetInstance().GetAudioFrameData().m_fShipAcc, CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed, CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed );
 	
-	CEngine::GetInstance().GetAudioFrameData().m_vShipPos = m_sShipControl.m_vPos;
+	CEngine::GetInstance().GetAudioFrameData().m_vShipPos = m_sShipPlayer.m_sShip.m_vPos;
 	CEngine::GetInstance().GetAudioFrameData().m_vCameraEye = m_sCamera.m_vEyeSmooth;
 	CEngine::GetInstance().GetAudioFrameData().m_vCameraLookAt = m_sCamera.m_vLookAtSmooth;
 
@@ -151,23 +249,24 @@ void CSceneGame::Update()
 
 void CSceneGame::Render()
 {
+	/*
 	{
-		SVector2 vPlayerPos2D( m_sShipControl.m_vPos.x, m_sShipControl.m_vPos.y );
+		SVector2 vPlayerPos2D( m_sShipPlayer.m_vPos.x, m_sShipPlayer.m_vPos.y );
 
 		for ( size_t i = 0; i < m_aEnemyShips.size(); i++ )
 		{
-			SShipControl& sEnemyShip = m_aEnemyShips[i];
+			SShipPlayer& sEnemyShip = m_aEnemyShips[i];
 
-			SVector2 vPlayerPos2D( m_sShipControl.m_vPos.x, m_sShipControl.m_vPos.y );
+			SVector2 vPlayerPos2D( m_sShipPlayer.m_vPos.x, m_sShipPlayer.m_vPos.y );
 			SVector2 vEnemyPos2D( sEnemyShip.m_vPos.x, sEnemyShip.m_vPos.y );
 			SVector2 vEnemyDir2D( sEnemyShip.m_vDir.x, sEnemyShip.m_vDir.y );
 			SVector2::Normalize( vEnemyDir2D, vEnemyDir2D );
 			SVector2 vEnemyToPlayer2D( vPlayerPos2D - vEnemyPos2D );
 			SVector2 vEnemyToPlayer2DNorm;
 			SVector2::Normalize( vEnemyToPlayer2DNorm, vEnemyToPlayer2D );
-			SVector2 vPlayerMovDir2D( m_sShipControl.m_vMov.x, m_sShipControl.m_vMov.y );
+			SVector2 vPlayerMovDir2D( m_sShipPlayer.m_vMov.x, m_sShipPlayer.m_vMov.y );
 			SVector2::Normalize( vPlayerMovDir2D, vPlayerMovDir2D );
-			float fPlayerSpeed = SVector2::Length( SVector2( m_sShipControl.m_vMov.x, m_sShipControl.m_vMov.y ) );
+			float fPlayerSpeed = SVector2::Length( SVector2( m_sShipPlayer.m_vMov.x, m_sShipPlayer.m_vMov.y ) );
 			
 			float fTimeToReachPlayer = 0.0f;
 			{
@@ -190,7 +289,7 @@ void CSceneGame::Render()
 			vEstimatedPlayerPos2D += SVector2( cosf( sEnemyShip.m_fAI_Phase * PI2 ) * 10.0f, sinf( sEnemyShip.m_fAI_Phase * PI2 ) * 10.0f );
 			if ( sEnemyShip.m_fAI_Phase > 1.0f ) sEnemyShip.m_fAI_Phase -= 2.0f;
 
-			/*{
+			{
 				struct SVertexShaderBasic
 				{
 					using AttribsType = SVertexPW::SAttribs;
@@ -219,7 +318,7 @@ void CSceneGame::Render()
 				sLine[0].sAttribs.fW = SVector3::Length( sLine[1].vPos - sLine[0].vPos );
 				sLine[1].sAttribs.fW = 0.0f;				
 				CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
-			}*/
+			}
 
 			SVector2 vEnemyToEstimatedPlayer2D( vEstimatedPlayerPos2D - vEnemyPos2D );
 			SVector2 vEnemyToEstimatedPlayer2DNorm;
@@ -252,6 +351,7 @@ void CSceneGame::Render()
 			m_aEnemyShips[i].UpdateShoot();
 		}
 	}
+	*/
 
 	{
 		struct SPixelShaderBasic
@@ -373,7 +473,7 @@ void CSceneGame::Render()
 	}
 
 	{
-		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_sShipControl.m_matShip, matViewProjViewPort );
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_sShipPlayer.m_sShip.m_matShip, matViewProjViewPort );
 		
 		sVertexShaderBasic.fAlpha = 0.7f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMesh().GetLineList(), CEngine::GetInstance().GetShipMesh().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
@@ -381,7 +481,7 @@ void CSceneGame::Render()
 
 	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_aEnemyShips.size(); iEnemyShipInd++ )
 	{
-		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_aEnemyShips[iEnemyShipInd].m_matShip, matViewProjViewPort );
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_aEnemyShips[iEnemyShipInd].m_sShip.m_matShip, matViewProjViewPort );
 		sVertexShaderBasic.fAlpha = 0.7f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetEnemyShipMesh().GetLineList(), CEngine::GetInstance().GetEnemyShipMesh().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
@@ -420,13 +520,13 @@ void CSceneGame::Render()
 		SMatrix matViewProjViewportPrev;
 		SMatrix::Mul( matViewProjViewportPrev, m_sCamera.m_matViewProjPrev, m_sViewportGameView.GetViewPortMatrix() );
 
-		for ( int i = -1; i < (int)m_aEnemyShips.size(); i++ )
+		for ( int iShipInd = -1; iShipInd < (int)m_aEnemyShips.size(); iShipInd++ )
 		{
-			SShipControl& sShip = (i == -1) ? m_sShipControl : m_aEnemyShips[i];
+			const STurret& sShip = (iShipInd == -1) ? m_sShipPlayer.m_sTurret : m_aEnemyShips[iShipInd].m_sTurret;
 
 			for ( int iBulletInd = 0; iBulletInd < sShip.m_aBullets.size(); iBulletInd++ )
 			{
-				const SShipControl::SBullet& sBullet = sShip.m_aBullets[iBulletInd];
+				const STurret::SBullet& sBullet = sShip.m_aBullets[iBulletInd];
 				SClipVertex<SVertexP::SAttribs> sPh0;
 				SClipVertex<SVertexP::SAttribs> sPh1;
 
@@ -495,7 +595,7 @@ void CSceneGame::Render()
 			}
 		};
 
-		float fSpacing = 60.0f;
+		float fSpacing = 50.0f;
 		int iHalfGridSize = 10/2;
 
 		SMatrix matScale;
@@ -503,7 +603,7 @@ void CSceneGame::Render()
 		SMatrix::Scale( matScale, fSpacing );
 
 		{
-			SVector3 vCenter = m_sShipControl.m_vPos / fSpacing;
+			SVector3 vCenter = m_sShipPlayer.m_sShip.m_vPos / fSpacing;
 			SVector3 vCenterQ;
 			vCenterQ.x = vCenter.x;
 			vCenterQ.y = floorf( vCenter.y );
@@ -565,7 +665,7 @@ void CSceneGame::Render()
 		}
 
 		{
-			SVector3 vCenter = m_sShipControl.m_vPos / fSpacing;
+			SVector3 vCenter = m_sShipPlayer.m_sShip.m_vPos / fSpacing;
 			SVector3 vCenterQ;
 			vCenterQ.x = floorf( vCenter.x );
 			vCenterQ.y = vCenter.y;
@@ -638,7 +738,7 @@ void CSceneGame::Render()
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 25, "AMMO    174", BGRA8{ (uint8_t)0, 70, 200, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -0 );
 
 		char szText[256];
-		float fSpeed = SVector3::Length( m_sShipControl.m_vMov ) * 1000.0f;
+		float fSpeed = SVector3::Length( m_sShipPlayer.m_sShip.m_vMov ) * 1000.0f;
 		sprintf_s( szText, "SPEED %4.1d", (int)fSpeed );
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 42, szText, BGRA8{ (uint8_t)100, 100, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -0 );
 
@@ -646,13 +746,13 @@ void CSceneGame::Render()
 	}
 
 	{
-		float fMiniMapScale = 1000.0f;
+		float fMiniMapScale = 2000.0f;
 
 		SMatrix matMiniMap;
 		{
 			SMatrix matView;
 			SMatrix::Identity( matView );
-			SMatrix::BuildLHViewMatrix( matView, SVector3( m_sShipControl.m_vPos.x, m_sShipControl.m_vPos.y, 1.0f ), SVector3( m_sShipControl.m_vPos.x, m_sShipControl.m_vPos.y, -1.0f ), m_sShipControl.m_vDir );
+			SMatrix::BuildLHViewMatrix( matView, SVector3( m_sShipPlayer.m_sShip.m_vPos.x, m_sShipPlayer.m_sShip.m_vPos.y, 1.0f ), SVector3( m_sShipPlayer.m_sShip.m_vPos.x, m_sShipPlayer.m_sShip.m_vPos.y, -1.0f ), m_sShipPlayer.m_sShip.m_vDir );
 			/*SMatrix matScale;
 			SMatrix::Identity( matScale );
 			SMatrix::Scale( matScale, fMiniMapScale );
@@ -690,20 +790,34 @@ void CSceneGame::Render()
 			}
 		} sPixelShaderBasic;
 
+		{
+			SVertexP sP;
+			sP.vPos = m_sShipPlayer.m_sShip.m_vPos;
+
+			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x22, 0xff, 0x22, 0xff );
+			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
+		}
+
+		for ( int iShipInd = 0; iShipInd < m_aEnemyShips.size(); iShipInd++ )
+		{
+			const SShipEnemy& sEnemyShip = m_aEnemyShips[iShipInd];
+			SVertexP sP;
+			sP.vPos = sEnemyShip.m_sShip.m_vPos;
+
+			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x00, 0xff, 0x99 );
+			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
+		}
+
 		for ( int iShipInd = -1; iShipInd < (int)m_aEnemyShips.size(); iShipInd++ )
 		{
-			SShipControl& sShip = (iShipInd == -1) ? m_sShipControl : m_aEnemyShips[iShipInd];
-			
+			const STurret& sShip = (iShipInd == -1) ? m_sShipPlayer.m_sTurret : m_aEnemyShips[iShipInd].m_sTurret;
+
 			SVertexP sP;
-			sP.vPos = sShip.m_vPos;
-
-			sPixelShaderBasic.sColor = ( iShipInd == -1 ) ? BGRA8( (uint8_t)0x22, 0xff, 0x22, 0xff ) : BGRA8( (uint8_t)0x11, 0x00, 0xff, 0x99 );
-			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
-
+			
 			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x99, 0xff, 0x22 );
 			for ( int iBulletInd = 0; iBulletInd < sShip.m_aBullets.size(); iBulletInd++ )
 			{
-				const SShipControl::SBullet& sBullet = sShip.m_aBullets[iBulletInd];
+				const STurret::SBullet& sBullet = sShip.m_aBullets[iBulletInd];
 				sP.vPos = sBullet.m_vPos;
 
 				CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
@@ -750,7 +864,7 @@ void CSceneGame::Render()
 			SMatrix::Scale( matScale, fSpacing );
 
 			{
-				SVector3 vCenter = m_sShipControl.m_vPos / fSpacing;
+				SVector3 vCenter = m_sShipPlayer.m_sShip.m_vPos / fSpacing;
 				SVector3 vCenterQ;
 				vCenterQ.x = vCenter.x;
 				vCenterQ.y = floorf( vCenter.y );
@@ -788,7 +902,7 @@ void CSceneGame::Render()
 			}
 
 			{
-				SVector3 vCenter = m_sShipControl.m_vPos / fSpacing;
+				SVector3 vCenter = m_sShipPlayer.m_sShip.m_vPos / fSpacing;
 				SVector3 vCenterQ;
 				vCenterQ.x = floorf( vCenter.x );
 				vCenterQ.y = vCenter.y;
@@ -835,7 +949,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	{
 	case KEY_UP:
 	{
-		m_sShipControl.m_fAccForward_ctrl = 1.0f;
+		m_sShipPlayer.m_fAccForward_ctrl = 1.0f;
 
 		fAction += 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
@@ -843,7 +957,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	return true;
 	case KEY_DOWN:
 	{
-		m_sShipControl.m_fAccForward_ctrl = -1.0f;
+		m_sShipPlayer.m_fAccForward_ctrl = -1.0f;
 
 		fAction -= 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
@@ -851,8 +965,8 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	return true;
 	case KEY_LEFT:
 	{
-		m_sShipControl.m_fYaw_ctrl = -1.0f;
-		//m_sShipControl.m_fAccRight_ctrl = -1.0f;
+		m_sShipPlayer.m_fYaw_ctrl = -1.0f;
+		//m_sShipPlayer.m_fAccRight_ctrl = -1.0f;
 
 		fClimax += 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
@@ -860,8 +974,8 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	return true;
 	case KEY_RIGHT:
 	{
-		m_sShipControl.m_fYaw_ctrl = 1.0f;
-		//m_sShipControl.m_fAccRight_ctrl = 1.0f;
+		m_sShipPlayer.m_fYaw_ctrl = 1.0f;
+		//m_sShipPlayer.m_fAccRight_ctrl = 1.0f;
 
 		fClimax -= 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
@@ -869,10 +983,10 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	return true;
 	case KEY_SPACE:
 	{
-		if ( !m_sShipControl.m_bShoot )
+		if ( !m_sShipPlayer.m_sTurret.m_bShoot )
 		{
-			m_sShipControl.m_bShoot = true;
-			m_sShipControl.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+			m_sShipPlayer.m_sTurret.m_bShoot = true;
+			m_sShipPlayer.m_sTurret.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 		}		
 	}
 	return true;
@@ -892,29 +1006,29 @@ bool CSceneGame::On_KeyUp( uint32_t key )
 	{
 	case KEY_UP:
 	{
-		m_sShipControl.m_fAccForward_ctrl = 0.0f;
+		m_sShipPlayer.m_fAccForward_ctrl = 0.0f;
 	}
 	return true;
 	case KEY_DOWN:
 	{
-		m_sShipControl.m_fAccForward_ctrl = 0.0f;
+		m_sShipPlayer.m_fAccForward_ctrl = 0.0f;
 	}
 	return true;
 	case KEY_LEFT:
 	{
-		m_sShipControl.m_fYaw_ctrl = 0.0f;
-		//m_sShipControl.m_fAccLeft_ctrl = 0.0f;
+		m_sShipPlayer.m_fYaw_ctrl = 0.0f;
+		//m_sShipPlayer.m_fAccLeft_ctrl = 0.0f;
 	}
 	return true;
 	case KEY_RIGHT:
 	{
-		m_sShipControl.m_fYaw_ctrl = 0.0f;
-		//m_sShipControl.m_fAccLeft_ctrl = 0.0f;
+		m_sShipPlayer.m_fYaw_ctrl = 0.0f;
+		//m_sShipPlayer.m_fAccLeft_ctrl = 0.0f;
 	}
 	return true;
 	case KEY_SPACE:
 	{
-		m_sShipControl.m_bShoot = false;
+		m_sShipPlayer.m_sTurret.m_bShoot = false;
 	}
 	return true;
 	}

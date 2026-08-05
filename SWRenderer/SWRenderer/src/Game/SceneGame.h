@@ -27,9 +27,9 @@ private:
 	SViewPort		m_sViewportMiniMap;
 	STextureIndexed	m_sTexHUD;
 
-	SShipControl	m_sShipControl;
+	SShipPlayer	m_sShipPlayer;
 
-	std::vector< SShipControl >	m_aEnemyShips;
+	std::vector< SShipEnemy >	m_aEnemyShips;
 
 	struct SAsteroid
 	{

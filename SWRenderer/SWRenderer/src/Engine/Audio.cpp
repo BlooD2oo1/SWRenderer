@@ -462,7 +462,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 	static float s_fEngineLFO = 0.0f;
 	static uint32_t s_uEngineNoiseSeed = 1337u;
 
-	const float fSpeed = std::max( fabsf( sAudioFrameData.m_fShipAcc ), fabsf( sAudioFrameData.m_fShipYawSpeed ) )*0.3f + sAudioFrameData.m_fShipSpeed;
+	const float fSpeed = ( std::max( fabsf( sAudioFrameData.m_fShipAcc ), fabsf( sAudioFrameData.m_fShipYawSpeed ) )*0.3f + sAudioFrameData.m_fShipSpeed ) * 10.0f;
 	const float fVolume = sqrtf( fabsf( sAudioFrameData.m_fShipAcc ) + fabsf( sAudioFrameData.m_fShipYawSpeed ) );
 
 	// Dynamic pitch targets based on ship velocity
@@ -506,7 +506,7 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		float fEngineR = ( fSubRumble * 0.55f ) + ( fTurbineR * 0.22f ) + ( fExhaustNoise * 0.15f );
 
 		// Master engine volume (scales slightly with speed)
-		float fEngineVol = 0.001f + 0.01f * fSpeed * fVolume;
+		float fEngineVol = 0.01f * fVolume;
 
 		sAudioBuffer.pData[iFrameInd * 2 + 0] = FX_Bitcrush( fEngineL, 16.0f ) * fEngineVol;
 		sAudioBuffer.pData[iFrameInd * 2 + 1] = FX_Bitcrush( fEngineR, 16.0f ) * fEngineVol;
@@ -583,5 +583,5 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		}
 	}
 
-	//Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
+	Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
 }
