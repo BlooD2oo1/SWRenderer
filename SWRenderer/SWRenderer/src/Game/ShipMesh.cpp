@@ -27,7 +27,8 @@ void CShipMesh::Create()
 		auto AddPoint =
 			[&](float x, float y, float z) -> int
 			{
-				pts.emplace_back(y, -x, z);
+				// X = elore/hatra, Y = bal/jobb, Z = fel/le
+				pts.emplace_back(x, y, z);
 				return (int)pts.size() - 1;
 			};
 
@@ -42,22 +43,22 @@ void CShipMesh::Create()
 		// =====================================================
 
 		const int nose =
-			AddPoint(0.0f, 4.8f, 0.0f);
+			AddPoint(4.8f, 0.0f, 0.0f);
 
-		const int n0 = AddPoint(-0.15f, 3.6f, -0.12f);
-		const int n1 = AddPoint( 0.15f, 3.6f, -0.12f);
-		const int n2 = AddPoint( 0.15f, 3.6f,  0.12f);
-		const int n3 = AddPoint(-0.15f, 3.6f,  0.12f);
+		const int n0 = AddPoint(3.6f, -0.15f, -0.12f);
+		const int n1 = AddPoint(3.6f,  0.15f, -0.12f);
+		const int n2 = AddPoint(3.6f,  0.15f,  0.12f);
+		const int n3 = AddPoint(3.6f, -0.15f,  0.12f);
 
-		const int m0 = AddPoint(-0.42f, 1.4f, -0.22f);
-		const int m1 = AddPoint( 0.42f, 1.4f, -0.22f);
-		const int m2 = AddPoint( 0.42f, 1.4f,  0.22f);
-		const int m3 = AddPoint(-0.42f, 1.4f,  0.22f);
+		const int m0 = AddPoint(1.4f, -0.42f, -0.22f);
+		const int m1 = AddPoint(1.4f,  0.42f, -0.22f);
+		const int m2 = AddPoint(1.4f,  0.42f,  0.22f);
+		const int m3 = AddPoint(1.4f, -0.42f,  0.22f);
 
-		const int r0 = AddPoint(-0.35f, -1.3f, -0.20f);
-		const int r1 = AddPoint( 0.35f, -1.3f, -0.20f);
-		const int r2 = AddPoint( 0.35f, -1.3f,  0.20f);
-		const int r3 = AddPoint(-0.35f, -1.3f,  0.20f);
+		const int r0 = AddPoint(-1.3f, -0.35f, -0.20f);
+		const int r1 = AddPoint(-1.3f,  0.35f, -0.20f);
+		const int r2 = AddPoint(-1.3f,  0.35f,  0.20f);
+		const int r3 = AddPoint(-1.3f, -0.35f,  0.20f);
 
 		// nose connections
 		AddEdge(nose,n0);
@@ -103,9 +104,9 @@ void CShipMesh::Create()
 		// COCKPIT
 		// =====================================================
 
-		int c0 = AddPoint(0.0f, 2.6f, 0.45f);
-		int c1 = AddPoint(0.0f, 1.8f, 0.58f);
-		int c2 = AddPoint(0.0f, 1.0f, 0.42f);
+		int c0 = AddPoint(2.6f, 0.0f, 0.45f);
+		int c1 = AddPoint(1.8f, 0.0f, 0.58f);
+		int c2 = AddPoint(1.0f, 0.0f, 0.42f);
 
 		AddEdge(nose,c0);
 		AddEdge(c0,c1);
@@ -120,22 +121,22 @@ void CShipMesh::Create()
 		auto BuildWing =
 			[&](float side, float zOffset)
 			{
-				float sx = side;
+				float sy = side;
 
 				int rootA = AddPoint(
-					0.55f*sx, 0.8f, zOffset);
+					0.8f, 0.55f * sy, zOffset);
 
 				int rootB = AddPoint(
-					0.55f*sx, -0.8f, zOffset);
+					-0.8f, 0.55f * sy, zOffset);
 
 				int tipFront = AddPoint(
-					2.8f*sx, 0.9f, zOffset);
+					0.9f, 2.8f * sy, zOffset);
 
 				int tipRear = AddPoint(
-					2.2f*sx, -1.2f, zOffset);
+					-1.2f, 2.2f * sy, zOffset);
 
 				int midOuter = AddPoint(
-					2.0f*sx, -0.2f, zOffset);
+					-0.2f, 2.0f * sy, zOffset);
 
 				// outer frame
 				AddEdge(rootA,tipFront);
@@ -159,21 +160,21 @@ void CShipMesh::Create()
 
 				// laser cannon
 				int gun0 = AddPoint(
-					2.8f * sx,
 					1.0f,
+					2.8f * sy,
 					zOffset);
 
 				int gun1 = AddPoint(
-					2.8f * sx,
 					2.0f,
+					2.8f * sy,
 					zOffset);
 
 				AddEdge(tipFront, gun0);
 				AddEdge(gun0, gun1);
 
 				// engine pod
-				const float ex = 1.35f*sx;
-				const float ey = -0.7f;
+				const float ex = -0.7f;
+				const float ey = 1.35f * sy;
 				const float ez = zOffset;
 
 				const float radius = 0.16f;
@@ -187,10 +188,10 @@ void CShipMesh::Create()
 						float(i) / 8.0f *
 						6.2831853f;
 
-					// XZ kor, Y iranyba nez
+					// YZ kor, X iranyba nez
 					int p = AddPoint(
-						ex + cosf(a) * radius,
-						ey,
+						ex,
+						ey + cosf(a) * radius,
 						ez + sinf(a) * radius);
 
 					if(i == 0)

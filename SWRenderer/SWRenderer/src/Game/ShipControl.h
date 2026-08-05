@@ -18,8 +18,8 @@ public:
 	float		m_fRoll;
 	float		m_fAccForward;
 	float		m_fAccForward_ctrl;
-	float		m_fAccLeft;
-	float		m_fAccLeft_ctrl;
+	float		m_fAccRight;
+	float		m_fAccRight_ctrl;
 	SVector3	m_vMov;
 	SVector3	m_vMovPrev;
 

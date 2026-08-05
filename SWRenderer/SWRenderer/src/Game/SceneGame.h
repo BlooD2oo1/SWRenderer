@@ -34,6 +34,7 @@ private:
 	struct SAsteroid
 	{
 		SVector3	m_vPos;
+		float		m_fSize;
 		SQuaternion	m_qRot;
 	};
 	std::vector< SAsteroid >	m_aAsteroids;

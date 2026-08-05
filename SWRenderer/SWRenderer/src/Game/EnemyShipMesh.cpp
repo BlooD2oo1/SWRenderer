@@ -26,8 +26,8 @@ void CEnemyShipMesh::Create()
 	auto AddPoint =
 		[&](float x, float y, float z) -> int
 		{
-			// Retaining coordinate transformation (y, -x, z)
-			pts.emplace_back(y, -x, z);
+			// X = elore/hatra, Y = bal/jobb, Z = fel/le
+			pts.emplace_back(x, y, z);
 			return (int)pts.size() - 1;
 		};
 
@@ -41,23 +41,23 @@ void CEnemyShipMesh::Create()
 	// FUSELAGE (Short nose, wide and low-profile rear)
 	// =====================================================
 
-	// Shortened nose tip
-	const int nose = AddPoint(0.0f, 1.5f, 0.0f);
+	// Shortened nose tip (Forward on +X)
+	const int nose = AddPoint(1.5f, 0.0f, 0.0f);
 
 	// Mid-fuselage (Rhombus ring)
-	const int mLeft  = AddPoint(-0.45f, 0.4f,  0.0f);
-	const int mRight = AddPoint( 0.45f, 0.4f,  0.0f);
-	const int mTop   = AddPoint( 0.0f,  0.4f,  0.25f);
-	const int mBot   = AddPoint( 0.0f,  0.4f, -0.15f);
+	const int mLeft  = AddPoint(0.4f, -0.45f,  0.0f);
+	const int mRight = AddPoint(0.4f,  0.45f,  0.0f);
+	const int mTop   = AddPoint(0.4f,  0.0f,   0.25f);
+	const int mBot   = AddPoint(0.4f,  0.0f,  -0.15f);
 
 	// Cockpit ridge
-	const int crest  = AddPoint(0.0f, 1.2f,  0.25f);
+	const int crest  = AddPoint(1.2f, 0.0f,  0.25f);
 
-	// Rear fuselage (Wide horizontal stance, low vertical profile for sleekness)
-	const int rLeft  = AddPoint(-0.75f, -1.2f,  0.0f);
-	const int rRight = AddPoint( 0.75f, -1.2f,  0.0f);
-	const int rTop   = AddPoint( 0.0f,  -1.2f,  0.20f);
-	const int rBot   = AddPoint( 0.0f,  -1.2f, -0.12f);
+	// Rear fuselage
+	const int rLeft  = AddPoint(-1.2f, -0.75f,  0.0f);
+	const int rRight = AddPoint(-1.2f,  0.75f,  0.0f);
+	const int rTop   = AddPoint(-1.2f,  0.0f,   0.20f);
+	const int rBot   = AddPoint(-1.2f,  0.0f,  -0.12f);
 
 	// Nose connections
 	AddEdge(nose, mLeft);
@@ -90,8 +90,8 @@ void CEnemyShipMesh::Create()
 	// CENTRAL LASER CANNON
 	// =====================================================
 
-	const int gunBase = AddPoint(0.0f, 1.5f, -0.08f);
-	const int gunTip  = AddPoint(0.0f, 1.9f, -0.08f); // Protrudes past short nose
+	const int gunBase = AddPoint(1.5f, 0.0f, -0.08f);
+	const int gunTip  = AddPoint(1.9f, 0.0f, -0.08f); // Protrudes past short nose
 
 	AddEdge(gunBase, gunTip);
 	AddEdge(mBot, gunBase);
@@ -104,15 +104,15 @@ void CEnemyShipMesh::Create()
 	auto BuildWing =
 		[&](float side)
 		{
-			float sx = side;
+			float sy = side;
 
 			// Wing root (attached to wide rear fuselage)
-			int rootFront = AddPoint(0.45f * sx,  0.4f, 0.0f);
-			int rootRear  = AddPoint(0.75f * sx, -1.0f, 0.0f);
+			int rootFront = AddPoint( 0.4f, 0.45f * sy, 0.0f);
+			int rootRear  = AddPoint(-1.0f, 0.75f * sy, 0.0f);
 
 			// Wing tip (swept forward)
-			int tipFront  = AddPoint(2.1f * sx,  1.1f, -0.05f);
-			int tipRear   = AddPoint(1.5f * sx, -0.2f,  0.0f);
+			int tipFront  = AddPoint( 1.1f, 2.1f * sy, -0.05f);
+			int tipRear   = AddPoint(-0.2f, 1.5f * sy,  0.0f);
 
 			// Wing outline
 			AddEdge(rootFront, tipFront);
@@ -134,24 +134,24 @@ void CEnemyShipMesh::Create()
 	// =====================================================
 
 	auto BuildThruster =
-		[&](float sideX)
+		[&](float sideY)
 		{
-			const float sx = sideX;
-			const float startY = -1.2f;
-			const float endY   = -1.8f;
+			const float sy     = sideY;
+			const float startX = -1.2f;
+			const float endX   = -1.8f;
 			const float halfW  = 0.18f;
 			const float halfH  = 0.08f;
 
 			// Rectangular flat exhaust nozzle
-			int n0 = AddPoint(sx - halfW, startY,  halfH);
-			int n1 = AddPoint(sx + halfW, startY,  halfH);
-			int n2 = AddPoint(sx + halfW, startY, -halfH);
-			int n3 = AddPoint(sx - halfW, startY, -halfH);
+			int n0 = AddPoint(startX, sy - halfW,  halfH);
+			int n1 = AddPoint(startX, sy + halfW,  halfH);
+			int n2 = AddPoint(startX, sy + halfW, -halfH);
+			int n3 = AddPoint(startX, sy - halfW, -halfH);
 
-			int e0 = AddPoint(sx - halfW, endY,  halfH);
-			int e1 = AddPoint(sx + halfW, endY,  halfH);
-			int e2 = AddPoint(sx + halfW, endY, -halfH);
-			int e3 = AddPoint(sx - halfW, endY, -halfH);
+			int e0 = AddPoint(endX, sy - halfW,  halfH);
+			int e1 = AddPoint(endX, sy + halfW,  halfH);
+			int e2 = AddPoint(endX, sy + halfW, -halfH);
+			int e3 = AddPoint(endX, sy - halfW, -halfH);
 
 			// Connect nozzle frame to exit rim
 			AddEdge(n0, e0); AddEdge(n1, e1);

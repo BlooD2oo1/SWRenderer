@@ -360,69 +360,78 @@ struct SMatrix
 		return out;
 	}
 
+	// DirectX Left-Handed View Matrix
 	static SMatrix& BuildLHViewMatrix( SMatrix& out, const SVector3& eye, const SVector3& target, const SVector3& up ) noexcept
 	{
-		SVector3 zaxis = eye - target;
+		SVector3 zaxis = target - eye; // Forward (+Z in LH)
 		SVector3::Normalize( zaxis, zaxis );
 		SVector3 xaxis;
-		SVector3::Cross( xaxis, up, zaxis );
+		SVector3::Cross( xaxis, up, zaxis ); // Right (+X)
 		SVector3::Normalize( xaxis, xaxis );
 		SVector3 yaxis;
-		SVector3::Cross( yaxis, zaxis, xaxis );
+		SVector3::Cross( yaxis, zaxis, xaxis ); // Up (+Y)
 
 		out.m00 = xaxis.x; out.m01 = yaxis.x; out.m02 = zaxis.x; out.m03 = 0.0f;
 		out.m10 = xaxis.y; out.m11 = yaxis.y; out.m12 = zaxis.y; out.m13 = 0.0f;
 		out.m20 = xaxis.z; out.m21 = yaxis.z; out.m22 = zaxis.z; out.m23 = 0.0f;
-		out.m30 = -SVector3::Dot( xaxis, eye ); 
-		out.m31 = -SVector3::Dot( yaxis, eye ); 
-		out.m32 = -SVector3::Dot( zaxis, eye ); 
+		out.m30 = -SVector3::Dot( xaxis, eye );
+		out.m31 = -SVector3::Dot( yaxis, eye );
+		out.m32 = -SVector3::Dot( zaxis, eye );
 		out.m33 = 1.0f;
 		return out;
 	}
 
+	// DirectX Left-Handed Orthographic Projection Matrix (Z range: [0, 1])
 	static SMatrix& BuildLHOrthoMatrix( SMatrix& out, float width, float height, float znear, float zfar ) noexcept
 	{
+		float range = 1.0f / (zfar - znear);
+
 		out.m00 = 2.0f / width;
 		out.m01 = 0.0f;
 		out.m02 = 0.0f;
 		out.m03 = 0.0f;
+
 		out.m10 = 0.0f;
 		out.m11 = 2.0f / height;
 		out.m12 = 0.0f;
 		out.m13 = 0.0f;
+
 		out.m20 = 0.0f;
 		out.m21 = 0.0f;
-		out.m22 = 1.0f / (zfar - znear);
+		out.m22 = range;
 		out.m23 = 0.0f;
+
 		out.m30 = 0.0f;
 		out.m31 = 0.0f;
-		out.m32 = -znear / (zfar - znear);
+		out.m32 = -znear * range;
 		out.m33 = 1.0f;
 		return out;
 	}
 
+	// DirectX Left-Handed Perspective Projection Matrix (Z range: [0, 1])
 	static SMatrix& BuildLHProjectionMatrix( SMatrix& out, float fovY, float aspect, float znear, float zfar ) noexcept
 	{
-		const float f = 1.0f / std::tan(fovY * 0.5f);
+		const float h = 1.0f / std::tan(fovY * 0.5f);
+		const float range = zfar / (zfar - znear);
 
-		out.m00 = f / aspect;
+		out.m00 = h / aspect;
 		out.m01 = 0.0f;
 		out.m02 = 0.0f;
 		out.m03 = 0.0f;
 
 		out.m10 = 0.0f;
-		out.m11 = f;
+		out.m11 = h;
 		out.m12 = 0.0f;
 		out.m13 = 0.0f;
 
 		out.m20 = 0.0f;
 		out.m21 = 0.0f;
-		out.m22 = (zfar + znear) / (znear - zfar);
-		out.m23 = -1.0f;
+		out.m22 = range;
+		out.m23 = 1.0f;
 
 		out.m30 = 0.0f;
 		out.m31 = 0.0f;
-		out.m32 = (2.0f * zfar * znear) / (znear - zfar);
+		out.m32 = -znear * range;
 		out.m33 = 0.0f;
 
 		return out;

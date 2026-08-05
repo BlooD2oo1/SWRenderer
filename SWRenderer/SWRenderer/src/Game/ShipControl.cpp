@@ -11,8 +11,8 @@ void SShipControl::Clear()
 	m_fRoll = 0.0f;
 	m_fAccForward = 0.0f;
 	m_fAccForward_ctrl = 0.0f;
-	m_fAccLeft = 0.0f;
-	m_fAccLeft_ctrl = 0.0f;
+	m_fAccRight = 0.0f;
+	m_fAccRight_ctrl = 0.0f;
 	m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 	m_vMovPrev = SVector3( 0.0f, 0.0f, 0.0f );
 
@@ -39,13 +39,13 @@ void SShipControl::UpdateControl()
 
 	m_fYawSpeed = SmoothConverge( m_fYawSpeed, m_fYaw_ctrl, 1.01f, 1.01f, fElapsedTimeMs );
 	m_fAccForward = SmoothConverge( m_fAccForward, m_fAccForward_ctrl, 1.01f, 1.001f, fElapsedTimeMs );
-	m_fAccLeft = SmoothConverge( m_fAccLeft, m_fAccLeft_ctrl, 1.001f, 1.01f, fElapsedTimeMs );
+	m_fAccRight = SmoothConverge( m_fAccRight, m_fAccRight_ctrl, 1.001f, 1.01f, fElapsedTimeMs );
 
 	m_fYaw += m_fYawSpeed * 0.004f * fElapsedTimeMs;
 	SVector3 vShipDir( cosf( m_fYaw ), sinf( m_fYaw ), 0.0f );
-	SVector3 vShipLeft( -vShipDir.y, vShipDir.x, 0.0f );
+	SVector3 vShipRight( -vShipDir.y, vShipDir.x, 0.0f );
 	m_vMov += vShipDir * m_fAccForward * 0.00005f * fElapsedTimeMs;
-	m_vMov += vShipLeft * m_fAccLeft * 0.00005f * fElapsedTimeMs;
+	m_vMov += vShipRight * m_fAccRight * 0.00005f * fElapsedTimeMs;
 
 	// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
 	/*SVector3 vMovDir( m_vDir );
