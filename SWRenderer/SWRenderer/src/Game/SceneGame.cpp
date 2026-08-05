@@ -72,17 +72,25 @@ void CSceneGame::Create()
 		m_aAsteroids.push_back( sAsteroid );
 	}
 
+	m_sShipControl.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
+	m_sShipControl.m_aTurretPositions.push_back( SVector3( 0.5f, -2.7f, 0.0f ) );
+
 	m_aEnemyShips.reserve( 10 );
 	for ( size_t i = 0; i < m_aEnemyShips.capacity(); i++ )
 	{
 		m_aEnemyShips.emplace_back();
 		SShipControl& sEnemyShip = m_aEnemyShips.back();
+
+		sEnemyShip.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
+
 		const float fScatterRadius = 40.0f;
 		sEnemyShip.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sEnemyShip.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sEnemyShip.m_vPos.z = 0.0f;
 
-		sEnemyShip.m_fYaw = ((float)rand() / (float)RAND_MAX) * 2.0f * PI;
+		sEnemyShip.m_fYaw = ((float)rand() / (float)RAND_MAX) * PI2;
+
+		sEnemyShip.m_fAI_Phase = ((float)rand() / (float)RAND_MAX) * PI2;
 	}
 }
 
@@ -174,7 +182,13 @@ void CSceneGame::Render()
 			}
 
 			float fEstimatedPlayerDistance = fPlayerSpeed * fTimeToReachPlayer;
+			//fEstimatedPlayerDistance = std::max( 0.0f, fEstimatedPlayerDistance-20.0f );
 			SVector2 vEstimatedPlayerPos2D = vPlayerPos2D + vPlayerMovDir2D * fEstimatedPlayerDistance;
+
+			
+			sEnemyShip.m_fAI_Phase += CEngine::GetInstance().GetElapsedTimeMs() * 0.005f;
+			vEstimatedPlayerPos2D += SVector2( cosf( sEnemyShip.m_fAI_Phase * PI2 ) * 10.0f, sinf( sEnemyShip.m_fAI_Phase * PI2 ) * 10.0f );
+			if ( sEnemyShip.m_fAI_Phase > 1.0f ) sEnemyShip.m_fAI_Phase -= 2.0f;
 
 			/*{
 				struct SVertexShaderBasic
@@ -339,19 +353,19 @@ void CSceneGame::Render()
 		SVertexPC sLine[2];
 
 		sLine[0].vPos = SVector3( 0.0f, 0.0f, 0.0f );
-		sLine[1].vPos = SVector3( 10.0f, 0.0f, 0.0f );
+		sLine[1].vPos = SVector3( 1.0f, 0.0f, 0.0f );
 		sLine[0].sAttribs.vColor = SVector4( 0.0f, 0.0f, 1.0f, 1.0f );
 		sLine[1].sAttribs.vColor = SVector4( 0.0f, 0.0f, 1.0f, 0.5f );
 		CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 
 		sLine[0].vPos = SVector3( 0.0f, 0.0f, 0.0f );
-		sLine[1].vPos = SVector3( 0.0f, 10.0f, 0.0f );
+		sLine[1].vPos = SVector3( 0.0f, 1.0f, 0.0f );
 		sLine[0].sAttribs.vColor = SVector4( 0.0f, 1.0f, 0.0f, 1.0f );
 		sLine[1].sAttribs.vColor = SVector4( 0.0f, 1.0f, 0.0f, 0.5f );
 		CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 
 		sLine[0].vPos = SVector3( 0.0f, 0.0f, 0.0f );
-		sLine[1].vPos = SVector3( 0.0f, 0.0f, 10.0f );
+		sLine[1].vPos = SVector3( 0.0f, 0.0f, 1.0f );
 		sLine[0].sAttribs.vColor = SVector4( 1.0f, 0.0f, 0.0f, 1.0f );
 		sLine[1].sAttribs.vColor = SVector4( 1.0f, 0.0f, 0.0f, 0.5f );
 		CGraphics::GetInstance().DrawLine3D( sLine[0], sLine[1], m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );

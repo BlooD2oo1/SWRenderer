@@ -32,6 +32,8 @@ public:
 	SMatrix		m_matShip;
 	SMatrix		m_matShipPrev;
 
+	std::vector< SVector3 >	m_aTurretPositions;
+	int			m_iBulletCounter;
 	struct SBullet
 	{
 		SVector3	m_vPos;
@@ -43,4 +45,6 @@ public:
 	std::vector< SBullet >		m_aBullets;
 	bool		m_bShoot;
 	uint64_t	m_iLastBulletTimeStampNs;
+
+	float		m_fAI_Phase;
 };

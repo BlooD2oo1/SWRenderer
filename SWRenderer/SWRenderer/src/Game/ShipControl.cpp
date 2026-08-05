@@ -24,6 +24,8 @@ void SShipControl::Clear()
 	SMatrix::Identity( m_matShip );
 	SMatrix::Identity( m_matShipPrev );
 
+	m_aTurretPositions.clear();
+	m_iBulletCounter = 0;
 	m_aBullets.clear();
 	m_bShoot = false;
 	m_iLastBulletTimeStampNs = 0;
@@ -44,8 +46,8 @@ void SShipControl::UpdateControl()
 	m_fYaw += m_fYawSpeed * 0.004f * fElapsedTimeMs;
 	SVector3 vShipDir( cosf( m_fYaw ), sinf( m_fYaw ), 0.0f );
 	SVector3 vShipRight( -vShipDir.y, vShipDir.x, 0.0f );
-	m_vMov += vShipDir * m_fAccForward * 0.00005f * fElapsedTimeMs;
-	m_vMov += vShipRight * m_fAccRight * 0.00005f * fElapsedTimeMs;
+	m_vMov += vShipDir * m_fAccForward * 0.00015f * fElapsedTimeMs;
+	m_vMov += vShipRight * m_fAccRight * 0.00015f * fElapsedTimeMs;
 
 	// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
 	/*SVector3 vMovDir( m_vDir );
@@ -56,10 +58,13 @@ void SShipControl::UpdateControl()
 	vMovRight = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovRight, CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs ) );
 	m_vMov = vMovDir + vMovRight;*/
 
-	m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_vMov, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
+	//m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_vMov, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
+	// minel gyorsabban mozgunk annal nagyobb legyen a legellenallas:
+
+	m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), m_vMov, CalcSmoothUpdateWeight( 1.0002f + SVector3::LengthSq( m_vMov ) * 0.05f, fElapsedTimeMs ) );
 
 	//m_fRoll = m_fYaw*0.5f;
-	m_fRoll = Lerp( -m_fYawSpeed, m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
+	m_fRoll = Lerp( -m_fYawSpeed, m_fRoll, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 	//m_fRoll = SmoothConverge( m_fRoll, -m_fYaw * 3.5f, 1.0002f, 1.0002f, fElapsedTimeMs );
 
 	m_vPos += m_vMov * fElapsedTimeMs;
@@ -85,47 +90,30 @@ void SShipControl::UpdateShoot()
 {
 	if ( m_bShoot )
 	{
-		SVector3 vGunPos0 = SVector3( 0.5f, 2.7f, 0.0f );
-		SVector3 vGunPos1 = SVector3( 0.5f, -2.7f, 0.0f );
-
-		SVector3 vGunPos0World;
-		SVector3 vGunPos0WorldPrev;
-		SVector3 vGunPos1World;
-		SVector3 vGunPos1WorldPrev;
-
 		SVector3 vGunDir( m_vDir );
 		SVector3 vGunDirPrev( m_vDirPrev );
 
 		SVector3 vGunMov( m_vMov );
 		SVector3 vGunMovPrev( m_vMovPrev );
 
-		SMatrix::TransformCoord( vGunPos0World, vGunPos0, m_matShip );
-		SMatrix::TransformCoord( vGunPos0WorldPrev, vGunPos0, m_matShipPrev );
-		SMatrix::TransformCoord( vGunPos1World, vGunPos1, m_matShip );
-		SMatrix::TransformCoord( vGunPos1WorldPrev, vGunPos1, m_matShipPrev );
-
-
 		const float fShootFreqHz = 20.0f;
 		const uint64_t iShootPeriodNs = (uint64_t)(1.0f / fShootFreqHz * 1000.0f * 1000.0f * 1000.0f);
 
-		static bool bGunPos = false;
 		uint64_t iTNs = m_iLastBulletTimeStampNs;
 		for ( ; iTNs < CEngine::GetInstance().GetTimeStampNs(); iTNs += iShootPeriodNs )
 		{
-			//LOG( "TimeStamp-iTNs=%fms\n", ((double)CEngine::GetInstance().GetTimeStampNs()/1000.0/1000.0)-((double)iTNs/1000.0/1000.0) );
+			SVector3 vGunPosWorld;
+			SVector3 vGunPosWorldPrev;
+			{
+				SVector3 vGunPos = m_aTurretPositions[m_iBulletCounter%m_aTurretPositions.size()];
+				SMatrix::TransformCoord( vGunPosWorld, vGunPos, m_matShip );
+				SMatrix::TransformCoord( vGunPosWorldPrev, vGunPos, m_matShipPrev );
+			}
 
 			float fFrameW = (float)(iTNs - m_iLastBulletTimeStampNs) / (float)(CEngine::GetInstance().GetTimeStampNs() - m_iLastBulletTimeStampNs);
 
 			SShipControl::SBullet sBullet;
-			if ( bGunPos )
-			{
-				sBullet.m_vPos = Lerp( vGunPos0WorldPrev, vGunPos0World, fFrameW );
-			}
-			else
-			{
-				sBullet.m_vPos = Lerp( vGunPos1WorldPrev, vGunPos1World, fFrameW );
-			}
-			bGunPos = !bGunPos;
+			sBullet.m_vPos = Lerp( vGunPosWorldPrev, vGunPosWorld, fFrameW );
 
 			SVector3 vBulletDir = Lerp( vGunDirPrev, vGunDir, fFrameW );
 			sBullet.m_vMov = Lerp( vGunMovPrev, vGunMov, fFrameW ) + vBulletDir * 0.1f;
@@ -136,7 +124,7 @@ void SShipControl::UpdateShoot()
 
 			sBullet.m_fTime = 3000.0f;
 			sBullet.m_fTimer = 0.0f;
-			m_aBullets.push_back( sBullet );
+			m_aBullets.push_back( sBullet );			
 
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
@@ -147,6 +135,8 @@ void SShipControl::UpdateShoot()
 			sAudioEvent.fPhase = 0.0f;			
 			sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
 			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+			m_iBulletCounter++;
 		}
 
 		m_iLastBulletTimeStampNs = iTNs;
