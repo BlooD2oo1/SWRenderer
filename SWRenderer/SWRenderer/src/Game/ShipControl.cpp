@@ -41,7 +41,7 @@ void STurret::Clear()
 	m_iBulletCounter = 0;
 
 	m_fShootFreqHz = 20.0f;
-	m_fBulletSpeed = 0.4f;
+	m_fBulletSpeed = 0.2f;
 
 	m_aBullets.clear();
 	m_bShoot = false;
@@ -134,6 +134,11 @@ void SShipPlayer::Clear()
 
 	m_sShip.Clear();
 	m_sTurret.Clear();
+
+	m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
+	m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
+	m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, -2.7f, 0.0f ) );
+	m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
 }
 
 void SShipPlayer::Update()
@@ -147,8 +152,8 @@ void SShipPlayer::Update()
 	m_sShip.m_fYaw += m_fYawSpeed * 0.004f * fElapsedTimeMs;
 	SVector3 vShipDir( cosf( m_sShip.m_fYaw ), sinf( m_sShip.m_fYaw ), 0.0f );
 	SVector3 vShipRight( -vShipDir.y, vShipDir.x, 0.0f );
-	m_sShip.m_vMov += vShipDir * m_fAccForward * 0.0002f * fElapsedTimeMs;
-	m_sShip.m_vMov += vShipRight * m_fAccRight * 0.0002f * fElapsedTimeMs;
+	m_sShip.m_vMov += vShipDir * m_fAccForward * 0.0001f * fElapsedTimeMs;
+	m_sShip.m_vMov += vShipRight * m_fAccRight * 0.0001f * fElapsedTimeMs;
 
 	// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
 	/*SVector3 vMovDir( m_vDir );
@@ -177,6 +182,7 @@ void SShipEnemy::Clear()
 {
 	m_vBoidMov = SVector3( 0.0f, 0.0f, 0.0f );
 	m_fPhase_DistanceToPlayer = 0.0f;
+	m_fHP = 100.0f;
 }
 
 void SShipEnemy::Update()

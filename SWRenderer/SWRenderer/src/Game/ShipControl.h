@@ -100,8 +100,11 @@ struct SShipEnemy
 	SShip		m_sShip;
 	STurret		m_sTurret;
 
+	float		m_fHP;
+
 	SVector3	m_vBoidMov;
 	float		m_fPhase_DistanceToPlayer;
+
 	float		f0;
 	float		f1;
 	float		f2;

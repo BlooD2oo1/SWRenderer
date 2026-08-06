@@ -9,8 +9,8 @@
 constexpr int WIDTH = 320;
 constexpr int HEIGHT = 200;
 
-constexpr int iPixelSizeX = 6;
-constexpr int iPixelSizeY = 6;
+constexpr int iPixelSizeX = 8;
+constexpr int iPixelSizeY = 8;
 
 uint32_t* Graphics_Init(HWND hwnd);
 void Graphics_Present(HWND hwnd, uint64_t iRenderTimeNs );

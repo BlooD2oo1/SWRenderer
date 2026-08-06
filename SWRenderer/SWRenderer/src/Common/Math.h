@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "Common/Globals.h"
+#include "Common/Vector.h"
 
 template< class T, class T2 >
 constexpr T	Lerp( const T& f0, const T& f1, const T2 fX )
@@ -49,6 +50,34 @@ static constexpr uint32_t Hash(uint32_t x, uint32_t y)
 static constexpr float Rand(uint32_t x, uint32_t y)
 {
     return (Hash(x, y) & 0xffffff) * (1.0f / 16777215.0f);
+}
+
+static bool SegmentSphereTest( const SVector2& v0, const SVector2& v1, const SVector2& vCenter, float fRadiusSq, float& fT )
+{
+    SVector2 d = v1 - v0;
+    SVector2 f = v0 - vCenter;
+    float a = SVector2::Dot(d, d);
+    float b = 2.0f * SVector2::Dot(f, d);
+    float c = SVector2::Dot(f, f) - fRadiusSq;
+    float discriminant = b * b - 4 * a * c;
+    if (discriminant < 0)
+    {
+        return false; // No intersection
+    }
+    discriminant = sqrtf(discriminant);
+    float t1 = (-b - discriminant) / (2.0f * a);
+    float t2 = (-b + discriminant) / (2.0f * a);
+    if (t1 >= 0 && t1 <= 1)
+    {
+        fT = t1;
+        return true;
+    }
+    if (t2 >= 0 && t2 <= 1)
+    {
+        fT = t2;
+        return true;
+    }
+    return false;
 }
 
 static constexpr float Smooth(float t)
