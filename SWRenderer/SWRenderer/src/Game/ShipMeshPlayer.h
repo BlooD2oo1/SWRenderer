@@ -3,11 +3,11 @@
 #include "Common/Vector.h"
 #include "Engine/Graphics.h"
 
-class CEnemyShipMesh
+class CShipMeshPlayer
 {
 public:
-	CEnemyShipMesh();
-	~CEnemyShipMesh();
+	CShipMeshPlayer();
+	~CShipMeshPlayer();
 
 	void Create();
 	void Clear();

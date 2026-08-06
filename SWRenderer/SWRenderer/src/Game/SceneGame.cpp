@@ -58,7 +58,7 @@ void CSceneGame::Create()
 		sAsteroid.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.z = 0.0f;
-		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f ) * 3.0f;
+		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f ) * 5.0f;
 
 		// uniform distribution of quaternions:
 		const float u1 = ((float)rand() / (float)RAND_MAX);
@@ -94,7 +94,7 @@ void CSceneGame::Create()
 
 		sShipEnemy.m_fPhase_DistanceToPlayer = ((float)rand() / (float)RAND_MAX) * PI2;
 
-		sShipEnemy.m_sTurret.m_fShootFreqHz = 5.0f;
+		sShipEnemy.m_sTurret.m_fShootFreqHz = 10.0f;
 		sShipEnemy.m_sTurret.m_fBulletSpeed = 0.1f;
 	}
 }
@@ -138,7 +138,7 @@ void CSceneGame::Update()
 					if ( fDistSq < powf( 100.0f, 2 ) )
 					{
 						SVector2 vDirAway( -vDist.x, -vDist.y );
-						vSeparation += vDirAway * (1.0f / (fDistSq + 0.00001f));						
+						vSeparation += vDirAway * (1.0f / (fDistSq + 0.00001f));
 					}
 
 					iNeighborCount++;
@@ -156,7 +156,7 @@ void CSceneGame::Update()
 				vCohesion = vAvgPos - SVector2( sEnemyShip0.m_sShip.m_vPos.x, sEnemyShip0.m_sShip.m_vPos.y );
 			}
 
-			SVector2 vBoidMov =	vSeparation * 600.0f * sEnemyShip0.f0 +
+			SVector2 vBoidMov =	vSeparation * 600.0f +// * sEnemyShip0.f0 +
 								vAlignment * 10.0f +
 								vCohesion * 0.3f;
 
@@ -167,17 +167,25 @@ void CSceneGame::Update()
 		{
 			SShipEnemy& sEnemyShip = m_aEnemyShips[i];
 
-			SVector3 vEnemyToPlayerDir( m_sShipPlayer.m_sShip.m_vPos - sEnemyShip.m_sShip.m_vPos /*- m_sShipPlayer.m_sShip.m_vDir*5.0f*/ );
+			SVector3 vEnemyToPlayerDir( m_sShipPlayer.m_sShip.m_vPos - sEnemyShip.m_sShip.m_vPos /*- m_sShipPlayer.m_sShip.m_vDir*10.0f*/ );
 			const float fEnemyToPlayerDist = SVector3::Length( vEnemyToPlayerDir );
 			SVector3::Normalize( vEnemyToPlayerDir, vEnemyToPlayerDir );
+			const float fSin_DistanceToPlayer = powf( sinf( sEnemyShip.m_fPhase_DistanceToPlayer )*0.5f+0.5f, 0.5f );
+			const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_DistanceToPlayer))*0.02f, -0.4f, 1.0f );
+			SVector3 vFollowMov = vEnemyToPlayerDir * fFollowAmount;
 			
 			sEnemyShip.m_sShip.m_vMov += sEnemyShip.m_vBoidMov * 0.001f;
-
-			const float fSin_DistanceToPlayer = powf( sinf( sEnemyShip.m_fPhase_DistanceToPlayer )*0.5f+0.5f, 0.5f );
-			const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_DistanceToPlayer))*0.04f, -0.2f, 1.0f );
-			sEnemyShip.m_sShip.m_vMov += vEnemyToPlayerDir * 0.22f * fFollowAmount;
+			sEnemyShip.m_sShip.m_vMov += vFollowMov * 0.1f;
 			
-			sEnemyShip.m_sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sEnemyShip.m_sShip.m_vMov, CalcSmoothUpdateWeight( 1.05f, fElapsedTimeMs ) );
+			sEnemyShip.m_sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sEnemyShip.m_sShip.m_vMov, CalcSmoothUpdateWeight( 1.02f, fElapsedTimeMs ) );
+			//float fSpeedWeight = 1.02f + SVector3::LengthSq( sEnemyShip.m_sShip.m_vMov ) * 0.1f;
+			//sEnemyShip.m_sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sEnemyShip.m_sShip.m_vMov, CalcSmoothUpdateWeight( fSpeedWeight, fElapsedTimeMs ) );
+
+			float l = SVector3::Length( sEnemyShip.m_sShip.m_vMov );
+			if ( l > 0.0001f )
+			{
+				sEnemyShip.m_sShip.m_vMov = sEnemyShip.m_sShip.m_vMov * (1.0f / l) * Clamp( l, 0.0f, 0.15f );
+			}
 
 			// yaw from mov:
 			const float fYaw = atan2f( sEnemyShip.m_sShip.m_vMov.y, sEnemyShip.m_sShip.m_vMov.x );
@@ -215,7 +223,7 @@ void CSceneGame::Update()
 					sAudioEvent.type = SAudioEvent::ClickDown;
 					sAudioEvent.fVolume = 0.2f;
 					sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-					sAudioEvent.iLifeTimeNs = 1000 * 1000 * 100;
+					sAudioEvent.iLifeTimeNs = 1000 * 1000 * 1000;
 					sAudioEvent.iSampleCounter = 0;
 					sAudioEvent.fPhase = 0.0f;	
 					sAudioEvent.sClick.iButton = 1;
@@ -242,7 +250,7 @@ void CSceneGame::Update()
 		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 800.0f, 80.0f, expf( -SVector3::Length( m_sShipPlayer.m_sShip.m_vMov ) * 2.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 1200.0f, 80.0f, expf( -SVector3::Length( m_sShipPlayer.m_sShip.m_vMov ) * 2.5f ) );
 		//m_sCamera.m_vEye.z += 200.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
@@ -401,14 +409,27 @@ void CSceneGame::Render()
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_sShipPlayer.m_sShip.m_matShip, matViewProjViewPort );
 		
 		sVertexShaderBasic.fAlpha = 0.7f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMesh().GetLineList(), CEngine::GetInstance().GetShipMesh().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+		//CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshPlayer().GetLineList(), CEngine::GetInstance().GetShipMeshPlayer().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMesh().m_pVertices, CEngine::GetInstance().GetShipMesh().m_pIndices, CEngine::GetInstance().GetShipMesh().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+	}
+
+	{
+		SMatrix matShip;
+		SMatrix::BuildEulerXYZ( matShip, 0.5f, 0.5f, 2.1f );
+		SMatrix::Scale( matShip, 80.0f );
+
+		matShip.m32 = -800.0f;
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matShip, matViewProjViewPort );
+
+		sVertexShaderBasic.fAlpha = 0.2f;
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshDestroyer().GetLineList(), CEngine::GetInstance().GetShipMeshDestroyer().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_aEnemyShips.size(); iEnemyShipInd++ )
 	{
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_aEnemyShips[iEnemyShipInd].m_sShip.m_matShip, matViewProjViewPort );
 		sVertexShaderBasic.fAlpha = 0.7f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetEnemyShipMesh().GetLineList(), CEngine::GetInstance().GetEnemyShipMesh().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshScout().GetLineList(), CEngine::GetInstance().GetShipMeshScout().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	for ( size_t iAsteroidInd = 0; iAsteroidInd < m_aAsteroids.size(); iAsteroidInd++ )
@@ -479,8 +500,11 @@ void CSceneGame::Render()
 						SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
 						float fL = SVector2::Length( vL );
 
-						float fAlpha = 1.0f - sBullet.m_fTimer / sBullet.m_fTime;
-						sPixelShaderBasic.sColor = BGRA8( 0.0f, fAlpha, 1.0f, fAlpha );
+						float fAlpha = sBullet.m_fTimer / sBullet.m_fTime;
+						fAlpha *= fAlpha * fAlpha;
+						fAlpha *= fAlpha * fAlpha;
+						fAlpha = 1.0f - fAlpha;
+						sPixelShaderBasic.sColor = BGRA8( 0.0f, fAlpha, 1.0f, 1.0f );
 
 						if ( fL > 1.5f )
 						{
@@ -521,7 +545,7 @@ void CSceneGame::Render()
 		};
 
 		float fSpacing = 50.0f;
-		int iHalfGridSize = 10/2;
+		int iHalfGridSize = 16/2;
 
 		SMatrix matScale;
 		SMatrix::Identity(matScale);
@@ -729,7 +753,7 @@ void CSceneGame::Render()
 			SVertexP sP;
 			sP.vPos = sEnemyShip.m_sShip.m_vPos;
 
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x00, 0xff, 0x99 );
+			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x00, 0xff, 0xbb );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
@@ -754,7 +778,7 @@ void CSceneGame::Render()
 			const SAsteroid& sAsteroid = m_aAsteroids[iAsteroidInd];
 			SVertexP sP;
 			sP.vPos = sAsteroid.m_vPos;
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x99, 0x99, 0x99, 0x88 );
+			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x99, 0x99, 0x99, 0x55 );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 

@@ -3,8 +3,10 @@
 #include "Common/Globals.h"
 #include "Engine/Graphics.h"
 #include "Engine/Audio.h"
-#include "Game/ShipMesh.h"
-#include "Game/EnemyShipMesh.h"
+#include "Engine/Mesh.h"
+#include "Game/ShipMeshPlayer.h"
+#include "Game/ShipMeshScout.h"
+#include "Game/ShipMeshDestroyer.h"
 #include "Game/AsteroidMesh.h"
 #include "Game/SceneMainMenu.h"
 #include "Game/SceneCredits.h"
@@ -61,9 +63,11 @@ public:
 	float				GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
 	SAudioFrameData&	GetAudioFrameData() { return m_sAudioFrameData; }
 
-	const CShipMesh&		GetShipMesh() const { return m_cShipMesh; }
-	const CEnemyShipMesh&	GetEnemyShipMesh() const { return m_cEnemyShipMesh; }
-	const CAsteroidMesh&	GetAsteroidMesh() const { return m_cAsteroidMesh; }
+	const CShipMeshPlayer&		GetShipMeshPlayer() const { return m_cShipMeshPlayer; }
+	const CShipMeshScout&		GetShipMeshScout() const { return m_cShipMeshScout; }
+	const CShipMeshDestroyer&	GetShipMeshDestroyer() const { return m_cShipMeshDestroyer; }
+	const CAsteroidMesh&		GetAsteroidMesh() const { return m_cAsteroidMesh; }
+	const SMesh&				GetShipMesh() const { return m_sMeshShip; }
 
 
 	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
@@ -86,9 +90,11 @@ private:
 	CSceneCredits	m_cSceneCredits;
 	CSceneGame		m_cSceneGame;
 
-	CShipMesh		m_cShipMesh;
-	CEnemyShipMesh	m_cEnemyShipMesh;
-	CAsteroidMesh	m_cAsteroidMesh;
+	CShipMeshPlayer		m_cShipMeshPlayer;
+	CShipMeshScout		m_cShipMeshScout;
+	CShipMeshDestroyer	m_cShipMeshDestroyer;
+	CAsteroidMesh		m_cAsteroidMesh;
+	SMesh				m_sMeshShip;
 
 	STextureIndexed	m_sTexFont_KarenFat_13x16;
 	STextureIndexed	m_sTexFont_TinyPixie2_6x6;

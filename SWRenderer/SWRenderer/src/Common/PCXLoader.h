@@ -1,5 +1,4 @@
-#ifndef PCX_LOADER_H
-#define PCX_LOADER_H
+#pragma once
 
 #include <cstdint>
 #include <cstdio>
@@ -169,5 +168,3 @@ inline bool PCX_LoadFromFile(const char* szFilename, STextureIndexed& outPcx)
 
 	return true;
 }
-
-#endif // PCX_LOADER_H

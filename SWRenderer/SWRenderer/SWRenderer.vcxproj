@@ -92,14 +92,16 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\Engine\Audio.cpp" />
     <ClCompile Include="src\Engine\Engine.cpp" />
     <ClCompile Include="src\Engine\Graphics.cpp" />
+    <ClCompile Include="src\Engine\Mesh.cpp" />
     <ClCompile Include="src\Game\AsteroidMesh.cpp" />
     <ClCompile Include="src\Game\Camera.cpp" />
-    <ClCompile Include="src\Game\EnemyShipMesh.cpp" />
     <ClCompile Include="src\Game\SceneCredits.cpp" />
     <ClCompile Include="src\Game\SceneGame.cpp" />
     <ClCompile Include="src\Game\SceneMainMenu.cpp" />
     <ClCompile Include="src\Game\ShipControl.cpp" />
-    <ClCompile Include="src\Game\ShipMesh.cpp" />
+    <ClCompile Include="src\Game\ShipMeshDestroyer.cpp" />
+    <ClCompile Include="src\Game\ShipMeshPlayer.cpp" />
+    <ClCompile Include="src\Game\ShipMeshScout.cpp" />
     <ClCompile Include="src\winAudio.cpp" />
     <ClCompile Include="src\winGraphics.cpp" />
     <ClCompile Include="src\winmain.cpp" />
@@ -110,6 +112,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Common\Log.h" />
     <ClInclude Include="src\Common\Math.h" />
     <ClInclude Include="src\Common\PCXLoader.h" />
+    <ClInclude Include="src\Common\PLYLoader.h" />
     <ClInclude Include="src\Common\RingBuffer.h" />
     <ClInclude Include="src\Common\Threading.h" />
     <ClInclude Include="src\Common\Time.h" />
@@ -117,14 +120,16 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Engine\Audio.h" />
     <ClInclude Include="src\Engine\Engine.h" />
     <ClInclude Include="src\Engine\Graphics.h" />
+    <ClInclude Include="src\Engine\Mesh.h" />
     <ClInclude Include="src\Game\AsteroidMesh.h" />
     <ClInclude Include="src\Game\Camera.h" />
-    <ClInclude Include="src\Game\EnemyShipMesh.h" />
     <ClInclude Include="src\Game\SceneCredits.h" />
     <ClInclude Include="src\Game\SceneGame.h" />
     <ClInclude Include="src\Game\SceneMainMenu.h" />
     <ClInclude Include="src\Game\ShipControl.h" />
-    <ClInclude Include="src\Game\ShipMesh.h" />
+    <ClInclude Include="src\Game\ShipMeshDestroyer.h" />
+    <ClInclude Include="src\Game\ShipMeshPlayer.h" />
+    <ClInclude Include="src\Game\ShipMeshScout.h" />
     <ClInclude Include="src\winAudio.h" />
     <ClInclude Include="src\winGraphics.h" />
   </ItemGroup>

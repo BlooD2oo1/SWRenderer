@@ -583,5 +583,5 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 		}
 	}
 
-	Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
+	//Music( sAudioBuffer, sAudioFrameData.m_fMusic_Action, sAudioFrameData.m_fMusic_Climax );
 }

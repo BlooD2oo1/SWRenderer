@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Common/Time.h"
 #include "Common/PCXLoader.h"
+#include "Common/PLYLoader.h"
 
 CEngine* CEngine::m_pThis = nullptr;
 
@@ -32,9 +33,11 @@ void CEngine::Clear()
 	m_cSceneCredits.Clear();
 	m_cSceneGame.Clear();
 
-	m_cShipMesh.Clear();
+	m_cShipMeshPlayer.Clear();
+	m_cShipMeshScout.Clear();
+	m_cShipMeshDestroyer.Clear();
 	m_cAsteroidMesh.Clear();
-	m_cEnemyShipMesh.Clear();
+	m_sMeshShip.Clear();
 
 	m_sTexFont_KarenFat_13x16.Clear();
 	m_sTexFont_TinyPixie2_6x6.Clear();
@@ -49,9 +52,16 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 
 	CGraphics::GetInstance().Create( sFrameBuffer );
 
-	m_cShipMesh.Create();
-	m_cEnemyShipMesh.Create();
+	m_cShipMeshPlayer.Create();
+	m_cShipMeshScout.Create();
+	m_cShipMeshDestroyer.Create();
 	m_cAsteroidMesh.Create();
+
+	PLY_LoadFromFile( "data/ShipPlayer.ply", m_sMeshShip );
+	//PLY_SaveFromLineList( "data/m_cShipMeshPlayer.ply", m_cShipMeshPlayer.GetLineList(), m_cShipMeshPlayer.GetLineListCount()*2 );
+	//PLY_SaveFromLineList( "data/m_cShipMeshScout.ply", m_cShipMeshScout.GetLineList(), m_cShipMeshScout.GetLineListCount()*2 );
+	//PLY_SaveFromLineList( "data/m_cShipMeshDestroyer.ply", m_cShipMeshDestroyer.GetLineList(), m_cShipMeshDestroyer.GetLineListCount()*2 );
+	//PLY_SaveFromLineList( "data/m_cAsteroidMesh.ply", m_cAsteroidMesh.GetLineList(), m_cAsteroidMesh.GetLineListCount()*2 );
 
 	m_cSceneMainMenu.Create();
 	m_cSceneCredits.Create();

@@ -28,9 +28,6 @@
     <ClCompile Include="src\Game\SceneMainMenu.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="src\Game\ShipMesh.cpp">
-      <Filter>src\Game</Filter>
-    </ClCompile>
     <ClCompile Include="src\Game\SceneGame.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
@@ -67,6 +64,18 @@
     <ClCompile Include="src\Game\SceneCredits.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\ShipMeshPlayer.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\ShipMeshScout.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game\ShipMeshDestroyer.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Mesh.cpp">
+      <Filter>src\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\winAudio.h">
@@ -88,9 +97,6 @@
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\AsteroidMesh.h">
-      <Filter>src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\ShipMesh.h">
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Engine.h">
@@ -131,6 +137,21 @@
     </ClInclude>
     <ClInclude Include="src\Game\SceneCredits.h">
       <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\ShipMeshDestroyer.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\ShipMeshPlayer.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\ShipMeshScout.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\PLYLoader.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Mesh.h">
+      <Filter>src\Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

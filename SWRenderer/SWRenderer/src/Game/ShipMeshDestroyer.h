@@ -3,12 +3,11 @@
 #include "Common/Vector.h"
 #include "Engine/Graphics.h"
 
-class CShipMesh
+class CShipMeshDestroyer
 {
 public:
-	CShipMesh();
-	~CShipMesh();
-
+	CShipMeshDestroyer();
+	~CShipMeshDestroyer();
 	void Create();
 	void Clear();
 

@@ -1,24 +1,24 @@
-#include "ShipMesh.h"
+#include "ShipMeshPlayer.h"
 
 #include <vector>
 
-CShipMesh::CShipMesh()
+CShipMeshPlayer::CShipMeshPlayer()
 {
 	m_pLineList = nullptr;
 }
 
-CShipMesh::~CShipMesh()
+CShipMeshPlayer::~CShipMeshPlayer()
 {
 	Clear();
 }
 
-void CShipMesh::Clear()
+void CShipMeshPlayer::Clear()
 {
 	SAFE_DELETE_ARRAY( m_pLineList );
 	m_iLineListCount = 0;
 }
 
-void CShipMesh::Create()
+void CShipMeshPlayer::Create()
 {
 	{
 		std::vector<SVector3> pts;
@@ -43,7 +43,7 @@ void CShipMesh::Create()
 		// =====================================================
 
 		const int nose =
-			AddPoint(4.8f, 0.0f, 0.0f);
+			AddPoint(5.5f, 0.0f, 0.0f);
 
 		const int n0 = AddPoint(3.6f, -0.15f, -0.12f);
 		const int n1 = AddPoint(3.6f,  0.15f, -0.12f);

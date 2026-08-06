@@ -145,7 +145,9 @@ void SShipPlayer::Update()
 {
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
 
-	m_fYawSpeed = SmoothConverge( m_fYawSpeed, m_fYaw_ctrl, 1.01f, 1.01f, fElapsedTimeMs );
+	float fYawMultiplier = m_sTurret.m_bShoot ? 0.5f : 1.0f;
+
+	m_fYawSpeed = SmoothConverge( m_fYawSpeed, m_fYaw_ctrl * fYawMultiplier, 1.01f, 1.01f, fElapsedTimeMs );
 	m_fAccForward = SmoothConverge( m_fAccForward, m_fAccForward_ctrl, 1.01f, 1.01f, fElapsedTimeMs );
 	m_fAccRight = SmoothConverge( m_fAccRight, m_fAccRight_ctrl, 1.001f, 1.01f, fElapsedTimeMs );
 

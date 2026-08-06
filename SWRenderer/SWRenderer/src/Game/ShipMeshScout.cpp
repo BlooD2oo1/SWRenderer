@@ -1,24 +1,24 @@
-#include "EnemyShipMesh.h"
+#include "ShipMeshScout.h"
 
 #include <vector>
 
-CEnemyShipMesh::CEnemyShipMesh()
+CShipMeshScout::CShipMeshScout()
 {
 	m_pLineList = nullptr;
 }
 
-CEnemyShipMesh::~CEnemyShipMesh()
+CShipMeshScout::~CShipMeshScout()
 {
 	Clear();
 }
 
-void CEnemyShipMesh::Clear()
+void CShipMeshScout::Clear()
 {
 	SAFE_DELETE_ARRAY( m_pLineList );
 	m_iLineListCount = 0;
 }
 
-void CEnemyShipMesh::Create()
+void CShipMeshScout::Create()
 {
 	std::vector<SVector3> pts;
 	std::vector<std::pair<int, int>> edges;
