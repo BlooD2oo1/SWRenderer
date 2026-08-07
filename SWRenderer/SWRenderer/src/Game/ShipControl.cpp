@@ -95,7 +95,8 @@ void STurret::Update()
 			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 1500;
 			sAudioEvent.iSampleCounter = 0;
 			sAudioEvent.fPhase = 0.0f;			
-			sAudioEvent.sGunShot.vPos = sBullet.m_vPos;
+			sAudioEvent.sGun.vPos = sBullet.m_vPos;
+			sAudioEvent.sGun.fPitch = 400.0f + (rand() % 1000 - 500) * 0.1f;
 			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
 			m_iBulletCounter++;

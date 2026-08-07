@@ -97,8 +97,9 @@ struct SAudioEvent
 		struct
 		{
 			SVector3 vPos;
+			float fPitch;
 
-		} sGunShot;
+		} sGun;
 	};
 };
 

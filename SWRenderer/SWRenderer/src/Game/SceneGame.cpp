@@ -201,11 +201,20 @@ void CSceneGame::Update()
 				SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
 				SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 				float fT = 0.0f;
-				if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sEnemyShip.m_sShip.m_vPos.x, sEnemyShip.m_sShip.m_vPos.y ), 2.0f, fT ) )
+				if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sEnemyShip.m_sShip.m_vPos.x, sEnemyShip.m_sShip.m_vPos.y ), 10.0f, fT ) )
 				{
-					sBullet.m_vMov *= 0.3f;
 					sEnemyShip.m_sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.5f;
 					sEnemyShip.m_fHP -= 14.0f;
+					
+					SVector2 vNormalDir( vBulletPos - SVector2( sEnemyShip.m_sShip.m_vPos.x, sEnemyShip.m_sShip.m_vPos.y ) );
+					SVector2::Normalize( vNormalDir, vNormalDir );
+
+					SVector2 vBulletMov( sBullet.m_vMov.x, sBullet.m_vMov.y );
+					SVector2 vBulletMovReflected = vBulletMov - vNormalDir * SVector2::Dot( vBulletMov, vNormalDir ) * 2.0f;
+					sBullet.m_vMov.x = vBulletMovReflected.x;
+					sBullet.m_vMov.y = vBulletMovReflected.y;
+
+					sBullet.m_vMov *= 0.8f;
 
 					SAudioEvent sAudioEvent;
 					sAudioEvent.type = SAudioEvent::GunHit;
@@ -215,6 +224,8 @@ void CSceneGame::Update()
 					sAudioEvent.iSampleCounter = 0;
 					sAudioEvent.fPhase = 0.0f;	
 					sAudioEvent.sClick.iButton = 1;
+					sAudioEvent.sGun.vPos = sBullet.m_vPos;
+					sAudioEvent.sGun.fPitch = 200.0f;
 					CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 				}				
 			}
@@ -227,12 +238,14 @@ void CSceneGame::Update()
 
 				SAudioEvent sAudioEvent;
 				sAudioEvent.type = SAudioEvent::GunHit;
-				sAudioEvent.fVolume = 0.25f;
+				sAudioEvent.fVolume = 0.2f;
 				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 2000;
 				sAudioEvent.iSampleCounter = 0;
 				sAudioEvent.fPhase = 0.0f;	
 				sAudioEvent.sClick.iButton = 1;
+				sAudioEvent.sGun.vPos = sEnemyShip.m_sShip.m_vPos;
+				sAudioEvent.sGun.fPitch = 200.0f;
 				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 			}
 
