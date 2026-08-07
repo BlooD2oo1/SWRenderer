@@ -73,6 +73,7 @@ struct SAudioEvent
 		ClickUp,
 		MenuSelect,
 		GunShot,
+		GunHit,
 	} type;
 
 	float fVolume;

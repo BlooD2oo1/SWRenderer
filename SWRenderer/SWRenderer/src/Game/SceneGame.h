@@ -4,6 +4,8 @@
 #include "Engine/Graphics.h"
 #include "Game/Camera.h"
 #include "Game/ShipControl.h"
+#include "Game/Starfield.h"
+#include "Game/Grid.h"
 
 class CSceneGame
 {
@@ -39,7 +41,7 @@ private:
 	};
 	std::vector< SAsteroid >	m_aAsteroids;
 
-	SVertexPC*		m_pStars;
-	uint32_t		m_iStarsCount;
+	CStarfield		m_cStarfield;
+	CGrid			m_cGrid;
 	
 };

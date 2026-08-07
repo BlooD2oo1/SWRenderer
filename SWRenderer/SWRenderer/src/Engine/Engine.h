@@ -59,10 +59,10 @@ public:
 	float				GetElapsedTimeMs() const { return m_fElapsedTimeMs; }
 	SAudioFrameData&	GetAudioFrameData() { return m_sAudioFrameData; }
 
-	const SMesh&		GetShipMeshPlayer() const { return m_sMeshShipPlayer; }
-	const SMesh&		GetShipMeshScout() const { return m_sMeshShipScout; }
-	const SMesh&		GetShipMeshDestroyer() const { return m_sMeshShipDestroyer; }
-	const SMesh&		GetAsteroidMesh() const { return m_sMeshAsteroid; }
+	const SMesh&		GetMeshShipPlayer() const { return m_sMeshShipPlayer; }
+	const SMesh&		GetMeshShipScout() const { return m_sMeshShipScout; }
+	const SMesh&		GetMeshShipDestroyer() const { return m_sMeshShipDestroyer; }
+	const SMesh&		GetMeshAsteroid() const { return m_sMeshAsteroid; }
 
 	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
 	const STextureIndexed& GetFontTex_TinyPixie2_6x6() const { return m_sTexFont_TinyPixie2_6x6; }

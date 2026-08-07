@@ -526,13 +526,30 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 
 			if ( sAudioEvent.type == SAudioEvent::GunShot )
 			{
-				float fFreqHz = 200.0f * expf( -fTimeW * 12.0f ) + 50.0f;
+				float fFreqHz = 500.0f * expf( -fTimeW * 12.0f ) + 50.0f;
 
 				sAudioEvent.fPhase += fFreqHz / (float)sAudioBuffer.iSampleRate;
 				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
 
 				float fEnv = Env_ExpDecay( fTimeW, 14.0f );
 				float fPulsePWM = 0.125f + 0.05f * sinf( fTimeW * 40.0f );
+				float fLaserTone = Osc_Pulse( sAudioEvent.fPhase, fPulsePWM );
+
+				uint32_t uNoiseSeed = (uint32_t)( sAudioEvent.iSampleCounter * 1664525u + iEvent * 1013904223u );
+				float fNoiseBurst = Osc_8BitNoise( uNoiseSeed ) * Env_ExpDecay( fTimeW, 45.0f );
+
+				float fRawSample = fLaserTone * 0.75f + fNoiseBurst * 0.45f;
+				fSampleOut = FX_Bitcrush( fRawSample, 12.0f ) * fEnv;
+			}
+			if ( sAudioEvent.type == SAudioEvent::GunHit )
+			{
+				float fFreqHz = 100.0f * expf( -fTimeW * 12.0f ) + 50.0f;
+
+				sAudioEvent.fPhase += fFreqHz / (float)sAudioBuffer.iSampleRate;
+				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
+
+				float fEnv = Env_ExpDecay( fTimeW, 4.0f );
+				float fPulsePWM = 0.125f + 0.05f * sinf( fTimeW * 140.0f );
 				float fLaserTone = Osc_Pulse( sAudioEvent.fPhase, fPulsePWM );
 
 				uint32_t uNoiseSeed = (uint32_t)( sAudioEvent.iSampleCounter * 1664525u + iEvent * 1013904223u );

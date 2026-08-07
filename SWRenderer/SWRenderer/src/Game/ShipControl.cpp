@@ -40,7 +40,7 @@ void STurret::Clear()
 	m_aTurretPositions.clear();
 	m_iBulletCounter = 0;
 
-	m_fShootFreqHz = 20.0f;
+	m_fShootFreqHz = 30.0f;
 	m_fBulletSpeed = 0.2f;
 
 	m_aBullets.clear();
@@ -90,7 +90,7 @@ void STurret::Update()
 
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
-			sAudioEvent.fVolume = 0.1f;
+			sAudioEvent.fVolume = 0.06f;
 			sAudioEvent.iTimeStampNs = iTNs;
 			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 1500;
 			sAudioEvent.iSampleCounter = 0;
