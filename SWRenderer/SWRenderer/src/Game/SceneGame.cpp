@@ -201,10 +201,10 @@ void CSceneGame::Update()
 				SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
 				SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 				float fT = 0.0f;
-				if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sEnemyShip.m_sShip.m_vPos.x, sEnemyShip.m_sShip.m_vPos.y ), 10.0f, fT ) )
+				if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sEnemyShip.m_sShip.m_vPos.x, sEnemyShip.m_sShip.m_vPos.y ), 5.0f, fT ) )
 				{
-					sEnemyShip.m_sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.5f;
-					sEnemyShip.m_fHP -= 14.0f;
+					sEnemyShip.m_sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.05f;
+					sEnemyShip.m_fHP -= 12.0f;
 					
 					SVector2 vNormalDir( vBulletPos - SVector2( sEnemyShip.m_sShip.m_vPos.x, sEnemyShip.m_sShip.m_vPos.y ) );
 					SVector2::Normalize( vNormalDir, vNormalDir );
@@ -213,6 +213,9 @@ void CSceneGame::Update()
 					SVector2 vBulletMovReflected = vBulletMov - vNormalDir * SVector2::Dot( vBulletMov, vNormalDir ) * 2.0f;
 					sBullet.m_vMov.x = vBulletMovReflected.x;
 					sBullet.m_vMov.y = vBulletMovReflected.y;
+					// drop out from the sphere, use fT to find the intersection point:
+					sBullet.m_vPos.x = vBulletPosPrev.x + (vBulletPos.x - vBulletPosPrev.x) * fT + vNormalDir.x * 0.1f;
+					sBullet.m_vPos.y = vBulletPosPrev.y + (vBulletPos.y - vBulletPosPrev.y) * fT + vNormalDir.y * 0.1f;
 
 					sBullet.m_vMov *= 0.8f;
 

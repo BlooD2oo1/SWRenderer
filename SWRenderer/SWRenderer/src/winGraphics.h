@@ -6,11 +6,11 @@
 #define NOMINMAX
 #include <windows.h>
 
-constexpr int WIDTH = 640;
-constexpr int HEIGHT = 480;
+constexpr int WIDTH = 320;
+constexpr int HEIGHT = 200;
 
-constexpr int iPixelSizeX = 2;
-constexpr int iPixelSizeY = 2;
+constexpr int iPixelSizeX = 6;
+constexpr int iPixelSizeY = 6;
 
 uint32_t* Graphics_Init(HWND hwnd);
 void Graphics_Present(HWND hwnd, uint64_t iRenderTimeNs );

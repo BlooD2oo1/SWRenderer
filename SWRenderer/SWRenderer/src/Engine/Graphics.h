@@ -44,21 +44,14 @@ struct SFrameBuffer
 	SFrameBuffer()
 		: pData( nullptr ), iWidth( 0 ), iHeight( 0 )
 	{
-		vClipScaleInHom00 = SVector2( 1.0f, 1.0f );
-		vClipScaleInHom11 = SVector2( 1.0f, 1.0f );
 	}
 	SFrameBuffer( BGRA8* pData, int iWidth, int iHeight )
 		: pData( pData ), iWidth( iWidth ), iHeight( iHeight )
 	{
-		//vClipScaleInHom = SVector2( 1.0f - 0.5f/(float)iWidth, 1.0f - 0.5f/(float)iHeight );
-		vClipScaleInHom00 = SVector2( 150.0f, 150.0f );
-		vClipScaleInHom11 = SVector2( 160.0f, 160.0f );
 	}
 	BGRA8*		pData = nullptr;
 	int			iWidth = 0;
 	int			iHeight = 0;
-	SVector2	vClipScaleInHom00;
-	SVector2	vClipScaleInHom11;
 };
 
 struct SViewPort
@@ -723,44 +716,48 @@ bool CGraphics::ClipLineXY( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& 
 		{
 		case 1:
 			{
-				float d0 = vPh0.vPos.x - vPh0.vPos.w * sViewPort.Get00().x;
-				float d1 = vPh1.vPos.x - vPh1.vPos.w * sViewPort.Get00().x;
+				float fVP = sViewPort.Get00().x;
+				float d0 = vPh0.vPos.x - vPh0.vPos.w * fVP;
+				float d1 = vPh1.vPos.x - vPh1.vPos.w * fVP;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.x = vTemp.vPos.w * sViewPort.Get00().x;
+				vTemp.vPos.x = vTemp.vPos.w * fVP;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
 
 		case 2:
 			{
-				float d0 = vPh0.vPos.w * sViewPort.Get11().x - vPh0.vPos.x;
-				float d1 = vPh1.vPos.w * sViewPort.Get11().x - vPh1.vPos.x;
+				float fVP = sViewPort.Get11().x-0.001f;
+				float d0 = vPh0.vPos.w * fVP - vPh0.vPos.x;
+				float d1 = vPh1.vPos.w * fVP - vPh1.vPos.x;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.x = vTemp.vPos.w * sViewPort.Get11().x;
+				vTemp.vPos.x = vTemp.vPos.w * fVP;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
 
 		case 4:
 			{
-				float d0 = vPh0.vPos.y - vPh0.vPos.w * sViewPort.Get00().y;
-				float d1 = vPh1.vPos.y - vPh1.vPos.w * sViewPort.Get00().y;
+				float fVP = sViewPort.Get00().y;
+				float d0 = vPh0.vPos.y - vPh0.vPos.w * fVP;
+				float d1 = vPh1.vPos.y - vPh1.vPos.w * fVP;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.y = vTemp.vPos.w * sViewPort.Get00().y;
+				vTemp.vPos.y = vTemp.vPos.w * fVP;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
 
 		default:
 			{
-				float d0 = vPh0.vPos.w * sViewPort.Get11().y - vPh0.vPos.y;
-				float d1 = vPh1.vPos.w * sViewPort.Get11().y - vPh1.vPos.y;
+				float fVP = sViewPort.Get11().y-0.001f;
+				float d0 = vPh0.vPos.w * fVP - vPh0.vPos.y;
+				float d1 = vPh1.vPos.w * fVP - vPh1.vPos.y;
 				float t = d0 / (d0 - d1);
 				vTemp.vPos = vPh0.vPos + (vPh1.vPos - vPh0.vPos) * t;
-				vTemp.vPos.y = vTemp.vPos.w * sViewPort.Get11().y;
+				vTemp.vPos.y = vTemp.vPos.w * fVP;
 				vTemp.Lerp(vPh0, vPh1, t);
 			}
 			break;
