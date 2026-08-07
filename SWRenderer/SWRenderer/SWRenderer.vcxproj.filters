@@ -31,9 +31,6 @@
     <ClCompile Include="src\Game\SceneGame.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="src\Game\AsteroidMesh.cpp">
-      <Filter>src\Game</Filter>
-    </ClCompile>
     <ClCompile Include="src\Game\ShipControl.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
@@ -64,15 +61,6 @@
     <ClCompile Include="src\Game\SceneCredits.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
-    <ClCompile Include="src\Game\ShipMeshPlayer.cpp">
-      <Filter>src\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game\ShipMeshScout.cpp">
-      <Filter>src\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game\ShipMeshDestroyer.cpp">
-      <Filter>src\Game</Filter>
-    </ClCompile>
     <ClCompile Include="src\Engine\Mesh.cpp">
       <Filter>src\Engine</Filter>
     </ClCompile>
@@ -94,9 +82,6 @@
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\SceneGame.h">
-      <Filter>src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\AsteroidMesh.h">
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Engine.h">
@@ -136,15 +121,6 @@
       <Filter>src\Common</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\SceneCredits.h">
-      <Filter>src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\ShipMeshDestroyer.h">
-      <Filter>src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\ShipMeshPlayer.h">
-      <Filter>src\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game\ShipMeshScout.h">
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Common\PLYLoader.h">

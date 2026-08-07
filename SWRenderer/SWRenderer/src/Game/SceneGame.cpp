@@ -409,8 +409,7 @@ void CSceneGame::Render()
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_sShipPlayer.m_sShip.m_matShip, matViewProjViewPort );
 		
 		sVertexShaderBasic.fAlpha = 0.7f;
-		//CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshPlayer().GetLineList(), CEngine::GetInstance().GetShipMeshPlayer().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMesh().m_pVertices, CEngine::GetInstance().GetShipMesh().m_pIndices, CEngine::GetInstance().GetShipMesh().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshPlayer().m_pVertices, CEngine::GetInstance().GetShipMeshPlayer().m_pIndices, CEngine::GetInstance().GetShipMeshPlayer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	{
@@ -422,14 +421,14 @@ void CSceneGame::Render()
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matShip, matViewProjViewPort );
 
 		sVertexShaderBasic.fAlpha = 0.2f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshDestroyer().GetLineList(), CEngine::GetInstance().GetShipMeshDestroyer().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshDestroyer().m_pVertices, CEngine::GetInstance().GetShipMeshDestroyer().m_pIndices, CEngine::GetInstance().GetShipMeshDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_aEnemyShips.size(); iEnemyShipInd++ )
 	{
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_aEnemyShips[iEnemyShipInd].m_sShip.m_matShip, matViewProjViewPort );
 		sVertexShaderBasic.fAlpha = 0.7f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshScout().GetLineList(), CEngine::GetInstance().GetShipMeshScout().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetShipMeshScout().m_pVertices, CEngine::GetInstance().GetShipMeshScout().m_pIndices, CEngine::GetInstance().GetShipMeshScout().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	for ( size_t iAsteroidInd = 0; iAsteroidInd < m_aAsteroids.size(); iAsteroidInd++ )
@@ -446,7 +445,7 @@ void CSceneGame::Render()
 			SMatrix::Scale( matAsteroid, sAsteroid.m_fSize );
 			SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matAsteroid, matViewProjViewPort );
 			sVertexShaderBasic.fAlpha = 0.7f;
-			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetAsteroidMesh().GetLineList(), CEngine::GetInstance().GetAsteroidMesh().GetLineListCount(), m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetAsteroidMesh().m_pVertices, CEngine::GetInstance().GetAsteroidMesh().m_pIndices, CEngine::GetInstance().GetAsteroidMesh().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 		}
 	}
 	
