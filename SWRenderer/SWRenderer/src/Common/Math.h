@@ -9,7 +9,22 @@ constexpr T	Lerp( const T& f0, const T& f1, const T2 fX )
 { 
 	//return ( T )( fA * ( 1.0f - fW ) + fB * fW );
 	return (T)( f0 + fX * ( f1-f0 ) );
+}
 
+constexpr float	LerpAngle( const float f0, const float f1, const float fX )
+{
+
+    float fDelta = f1 - f0;
+    if ( fDelta > PI )
+    {
+        fDelta -= 2.0f * PI;
+    }
+    else if ( fDelta < -PI )
+    {
+        fDelta += 2.0f * PI;
+    }
+	return f0 + fX * fDelta;
+    
 }
 
 template< class T >
