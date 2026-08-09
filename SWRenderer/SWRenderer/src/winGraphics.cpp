@@ -49,7 +49,7 @@ uint32_t* Graphics_Init(HWND hwnd)
 	return pFramebuffer;	
 }
 
-void Graphics_Present(HWND hwnd, uint64_t iRenderTimeNs )
+void Graphics_Present(HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs )
 {
 	{
 		SetStretchBltMode(hDCPresent, COLORONCOLOR);  // nearest neighbour
@@ -57,11 +57,14 @@ void Graphics_Present(HWND hwnd, uint64_t iRenderTimeNs )
 	}
 
 	{
-		wchar_t msg[256];
-		swprintf(msg, 256, L" Render(%dx%d) %.3f ms (%.2f fps)", WIDTH, HEIGHT, (double)iRenderTimeNs/1000000.0, 1000000000.0/(double)iRenderTimeNs);
 		SetBkMode(hDCPresent, TRANSPARENT);
 		SetTextColor(hDCPresent, RGB(255, 255, 255));
+
+		wchar_t msg[256];
+		swprintf(msg, 256, L"Update %.3f ms (%.2f fps)", (double)iUpdateTimeNs/1000000.0, 1000000000.0/(double)iUpdateTimeNs );
 		TextOut(hDCPresent, 0, 0, msg, (int)wcslen(msg));
+		swprintf(msg, 256, L"Render(%dx%d) %.3f ms (%.2f fps)", WIDTH, HEIGHT, (double)iRenderTimeNs/1000000.0, 1000000000.0/(double)iRenderTimeNs);
+		TextOut(hDCPresent, 0, 20, msg, (int)wcslen(msg));
 	}
 
 	{

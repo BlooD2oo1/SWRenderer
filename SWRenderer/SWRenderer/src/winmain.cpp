@@ -213,10 +213,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	timeBeginPeriod(1);
 #endif
 
-	//float fElapsedTimeMs = 0.0f;
-	//float fRenderTimeMs = 0.0f;
 	uint64_t iElapsedTimeNs = 0;
-	uint64_t iRenderTimeNs = 0;
 
 	while (g_bRunning)
 	{
@@ -230,7 +227,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 		{
 			wchar_t title[256];
-			swprintf(title, 256, L" SWRenderer - %dx%d %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, (double)iElapsedTimeNs/1000000.0, 1000000000.0/(double)iElapsedTimeNs);
+			swprintf(title, 256, L" SWRenderer %dx%d %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, (double)iElapsedTimeNs/1000000.0, 1000000000.0/(double)iElapsedTimeNs);
 			SetWindowText(hwnd, title);
 		}
 
@@ -244,15 +241,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			DispatchMessage(&msg);
 		}
 
+		CPerf cPerfUpdate;
+		cPerfUpdate.BeginPerf();		
 		CEngine::GetInstance().Update();
+		uint64_t iUpdateTimeNs = cPerfUpdate.EndPerfNs();
 
 		CPerf cPerfRender;
 		cPerfRender.BeginPerf();
 		CEngine::GetInstance().Render();
-		//Sleep( 10 );
-		iRenderTimeNs = cPerfRender.EndPerfNs();
+		uint64_t iRenderTimeNs = cPerfRender.EndPerfNs();
 
-		Graphics_Present(hwnd, iRenderTimeNs);
+		Graphics_Present(hwnd, iUpdateTimeNs, iRenderTimeNs);
 
 #ifdef FRAME_CAP
 		// frameTime is measured by CPerf; we'll use chrono for the wait so it's independent of the perf helper.

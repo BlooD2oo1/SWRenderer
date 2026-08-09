@@ -16,6 +16,8 @@ void CActors::Clear()
 {
 	m_iPlayerShipInd = iIndInvalid;
 	m_aShips.clear();
+
+	m_mapShipHashGrid.clear();
 }
 
 void CActors::Create()
@@ -66,8 +68,40 @@ void CActors::Update()
 	_updateShips();
 }
 
+inline void GetHash( int& iHashX, int& iHashY, const SVector2& vPos, float fMaxDist )
+{
+	iHashX = (int)floorf( vPos.x / fMaxDist );
+	iHashY = (int)floorf( vPos.y / fMaxDist );
+}
+inline uint32_t GetHash( const SVector2& vPos, float fMaxDist )
+{
+	int iHashX;
+	int iHashY;
+	GetHash( iHashX, iHashY, vPos, fMaxDist );
+	uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
+	return iHash;
+}
+
+uint32_t GetHash( int iHashX, int iHashY )
+{
+	uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
+	return iHash;
+}
+
 void CActors::_updateBoids()
 {
+	const float fMaxDist = 100.0f;
+
+#define HASH
+#ifdef HASH	
+	m_mapShipHashGrid.clear();
+	for ( size_t i = 0; i < GetShipCount(); i++ )
+	{
+		SShip& sShip = GetShip( i );
+		uint32_t iHash = GetHash( SVector2( sShip.m_sBoid.m_vPos.x, sShip.m_sBoid.m_vPos.y ), fMaxDist );
+		m_mapShipHashGrid[iHash].push_back( (uint32_t)i );
+	}
+#endif
 	for ( size_t i0 = 0; i0 < GetShipCount(); i0++ )
 	{
 		if ( i0 == m_iPlayerShipInd ) continue;
@@ -82,7 +116,45 @@ void CActors::_updateBoids()
 		int iNeighborCount = 0;
 		SVector2 vAvgPos( 0.0f, 0.0f );
 		SVector2 vAvgMov( 0.0f, 0.0f );
-
+#ifdef HASH
+		int iHashX0;
+		int iHashY0;
+		GetHash( iHashX0, iHashY0, SVector2( sShip0.m_sBoid.m_vPos.x, sShip0.m_sBoid.m_vPos.y ), fMaxDist );
+		for ( int x = -1; x <= 1; x++ )
+		{
+			for ( int y = -1; y <= 1; y++ )
+			{
+				int iHashX = iHashX0 + x;
+				int iHashY = iHashY0 + y;
+				uint32_t iHash = GetHash( iHashX, iHashY );
+				auto it = m_mapShipHashGrid.find( iHash );
+				if ( it != m_mapShipHashGrid.end() )
+				{
+					const std::vector< uint32_t >& aShipInds = it->second;
+					for ( size_t j = 0; j < aShipInds.size(); j++ )
+					{
+						uint32_t i1 = aShipInds[j];
+						if ( i0 == i1 ) continue;
+						SShip& sShip1 = GetShip( i1 );
+						SBoid& sBoid1 = sShip1.m_sBoid;
+						SVector2 vDist( sBoid1.m_vPos.x - sBoid0.m_vPos.x, sBoid1.m_vPos.y - sBoid0.m_vPos.y );
+						float fDistSq = SVector2::LengthSq( vDist );
+						if ( fDistSq < powf( fMaxDist, 2 ) )
+						{
+							if ( fDistSq < powf( fMaxDist/2.0f, 2 ) )
+							{
+								SVector2 vDirAway( -vDist.x, -vDist.y );
+								vSeparation += vDirAway * (1.0f / (fDistSq + 0.00001f));
+							}
+							iNeighborCount++;
+							vAvgPos += SVector2( sBoid1.m_vPos.x, sBoid1.m_vPos.y );
+							vAvgMov += SVector2( sBoid1.m_vMov.x, sBoid1.m_vMov.y );
+						}
+					}
+				}
+			}
+		}
+#else
 		for ( size_t i1 = 0; i1 < GetShipCount(); i1++ )
 		{
 			if ( i0 == i1 ) continue;
@@ -104,6 +176,7 @@ void CActors::_updateBoids()
 				vAvgMov += SVector2( sBoid1.m_vMov.x, sBoid1.m_vMov.y );
 			}
 		}
+#endif
 
 		if ( iNeighborCount > 0 )
 		{
@@ -116,7 +189,7 @@ void CActors::_updateBoids()
 
 		SVector2 vBoidMov =	vSeparation * 600.0f +// * sEnemyShip0.f0 +
 			vAlignment * 10.0f +
-			vCohesion * 0.3f;
+			vCohesion * 1.3f;
 
 		sBoid0.m_vBoidMov = SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
 	}
@@ -195,7 +268,7 @@ void CActors::_updateShips()
 				{
 					sShip.m_sTurret.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 				}
-				sShip.m_sTurret.m_bShoot = true;
+				//sShip.m_sTurret.m_bShoot = true;
 			}
 			else
 			{

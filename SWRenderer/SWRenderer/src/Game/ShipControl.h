@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Common/Vector.h"
+#include <unordered_map>
 
 static const uint32_t iIndInvalid = 0xFFFFFFFF;
 
@@ -119,4 +120,6 @@ private:
 private:
 	uint32_t				m_iPlayerShipInd;
 	std::vector< SShip >	m_aShips;
+
+	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapShipHashGrid;
 };

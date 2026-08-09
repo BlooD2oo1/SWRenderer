@@ -13,5 +13,5 @@ constexpr int iPixelSizeX = 6;
 constexpr int iPixelSizeY = 6;
 
 uint32_t* Graphics_Init(HWND hwnd);
-void Graphics_Present(HWND hwnd, uint64_t iRenderTimeNs );
+void Graphics_Present(HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs );
 void Graphics_Shotdown();
