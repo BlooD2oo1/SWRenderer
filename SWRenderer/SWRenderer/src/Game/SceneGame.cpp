@@ -93,51 +93,44 @@ static float fClimax = 0.0f;
 void CSceneGame::Update()
 {
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
-	{
-		m_cActors.Update();
 
-
-	}
+	m_cActors.Update();
 
 	{
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		const SBoid& sBoidPlayer = m_cActors.GetBoidPlayer();
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 		float fWSlow = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
-		SVector3 vP( sBoidPlayer.m_vPos + sShipPlayer.m_vDir * 6.0f + sBoidPlayer.m_vMov*300.0f );
+		SVector3 vP( sShipPlayer.m_sBoid.m_vPos + sShipPlayer.m_vDir * 6.0f + sShipPlayer.m_sBoid.m_vMov*300.0f );
 		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 1200.0f, 100.0f, expf( -SVector3::Length( sBoidPlayer.m_vMov ) * 1.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 1200.0f, 100.0f, expf( -SVector3::Length( sShipPlayer.m_sBoid.m_vMov ) * 1.5f ) );
 		//m_sCamera.m_vEye.z += 200.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 
 		//SVector2 vDir2D( m_sShipPlayer.m_sShip.m_vDir.x, m_sShipPlayer.m_sShip.m_vDir.y );
-		SVector2 vDir2D( sBoidPlayer.m_vMov.x, sBoidPlayer.m_vMov.y ); SVector2::Normalize( vDir2D, vDir2D );
+		SVector2 vDir2D( sShipPlayer.m_sBoid.m_vMov.x, sShipPlayer.m_sBoid.m_vMov.y ); SVector2::Normalize( vDir2D, vDir2D );
 		//SVector2::Slerp( vDir2D, vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 		vDir2D = Lerp( vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs ) );
 		SVector2::Normalize( vDir2D, vDir2D );
 		m_sCamera.m_vUp.x = vDir2D.x;
 		m_sCamera.m_vUp.y = vDir2D.y;
-
-
 		
 		m_sCamera.UpdateMatrices();
 	}	
 	
 	{
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		const SBoid& sBoidPlayer = m_cActors.GetBoidPlayer();
 
 		CEngine::GetInstance().GetAudioFrameData().m_fShipAcc = sShipPlayer.m_fAccForward + sShipPlayer.m_fAccRight;
 		CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed = sShipPlayer.m_fYawSpeed;
-		CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = SVector3::Length( sBoidPlayer.m_vMov ) / 0.1f;
+		CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = SVector3::Length( sShipPlayer.m_sBoid.m_vMov ) / 0.1f;
 
 		//LOG( "ShipAcc=%.8f, ShipYawSpeed=%.8f, ShipSpeed=%.8f\n", CEngine::GetInstance().GetAudioFrameData().m_fShipAcc, CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed, CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed );
 	
-		CEngine::GetInstance().GetAudioFrameData().m_vShipPos = sBoidPlayer.m_vPos;
+		CEngine::GetInstance().GetAudioFrameData().m_vShipPos = sShipPlayer.m_sBoid.m_vPos;
 		CEngine::GetInstance().GetAudioFrameData().m_vCameraEye = m_sCamera.m_vEyeSmooth;
 		CEngine::GetInstance().GetAudioFrameData().m_vCameraLookAt = m_sCamera.m_vLookAtSmooth;
 
@@ -154,10 +147,7 @@ void CSceneGame::Render()
 
 	m_cStarfield.Render( m_sCamera, m_sViewportGameView );
 
-	const SShip& sShipPlayer = m_cActors.GetShipPlayer();
-	const SBoid& sBoidPlayer = m_cActors.GetBoidPlayer();
-
-	m_cGrid.RenderToScene( 50.0f, 16/2, m_sCamera.m_matViewProj, m_sViewportGameView, sBoidPlayer.m_vPos );
+	m_cGrid.RenderToScene( 50.0f, 16/2, m_sCamera.m_matViewProj, m_sViewportGameView, m_cActors.GetShipPlayer().m_sBoid.m_vPos );
 
 	m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
@@ -227,7 +217,7 @@ void CSceneGame::Render()
 	};
 
 	{
-		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipPlayer.m_matShip, matViewProjViewPort );
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_cActors.GetShipPlayer().m_matShip, matViewProjViewPort );
 		
 		sVertexShaderBasic.fAlpha = 0.7f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipPlayer().m_pVertices, CEngine::GetInstance().GetMeshShipPlayer().m_pIndices, CEngine::GetInstance().GetMeshShipPlayer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
@@ -245,9 +235,9 @@ void CSceneGame::Render()
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipDestroyer().m_pVertices, CEngine::GetInstance().GetMeshShipDestroyer().m_pIndices, CEngine::GetInstance().GetMeshShipDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
-	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_cActors.GetShipEnemyCount(); iEnemyShipInd++ )
+	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_cActors.GetShipCount(); iEnemyShipInd++ )
 	{
-		SShip& sShipEnemy = m_cActors.GetShipEnemy( iEnemyShipInd );
+		SShip& sShipEnemy = m_cActors.GetShip( iEnemyShipInd );
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipEnemy.m_matShip, matViewProjViewPort );
 		sVertexShaderBasic.fAlpha = 0.5f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipScout().m_pVertices, CEngine::GetInstance().GetMeshShipScout().m_pIndices, CEngine::GetInstance().GetMeshShipScout().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
@@ -287,13 +277,14 @@ void CSceneGame::Render()
 		SMatrix matViewProjViewportPrev;
 		SMatrix::Mul( matViewProjViewportPrev, m_sCamera.m_matViewProjPrev, m_sViewportGameView.GetViewPortMatrix() );
 
-		for ( size_t iTurretInd = 0; iTurretInd < m_cActors.GetTurretCount(); iTurretInd++ )
+		for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 		{
-			const STurret& sTurret = m_cActors.GetTurret( iTurretInd );
+			const SShip& sShip = m_cActors.GetShip( iShipInd );
 
-			for ( int iBulletInd = 0; iBulletInd < sTurret.m_aBullets.size(); iBulletInd++ )
+			for ( int iBulletInd = 0; iBulletInd < sShip.m_sTurret.m_aBullets.size(); iBulletInd++ )
 			{
-				const STurret::SBullet& sBullet = sTurret.m_aBullets[iBulletInd];
+				const STurret::SBullet& sBullet = sShip.m_sTurret.m_aBullets[iBulletInd];
+
 				SClipVertex<SVertexP::SAttribs> sPh0;
 				SClipVertex<SVertexP::SAttribs> sPh1;
 
@@ -354,7 +345,7 @@ void CSceneGame::Render()
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 25, "AMMO    174", BGRA8{ (uint8_t)0, 70, 200, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -0 );
 
 		char szText[256];
-		float fSpeed = SVector3::Length( sBoidPlayer.m_vMov ) * 1000.0f;
+		float fSpeed = SVector3::Length( m_cActors.GetShipPlayer().m_sBoid.m_vMov ) * 1000.0f;
 		sprintf_s( szText, "SPEED %4.1d", (int)fSpeed );
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 42, szText, BGRA8{ (uint8_t)100, 100, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -0 );
 
@@ -372,7 +363,7 @@ void CSceneGame::Render()
 		{
 			SMatrix matView;
 			SMatrix::Identity( matView );
-			SMatrix::BuildLHViewMatrix( matView, SVector3( sBoidPlayer.m_vPos.x, sBoidPlayer.m_vPos.y, 1.0f ), SVector3( sBoidPlayer.m_vPos.x, sBoidPlayer.m_vPos.y, -1.0f ), sShipPlayer.m_vDir );
+			SMatrix::BuildLHViewMatrix( matView, SVector3( m_cActors.GetShipPlayer().m_sBoid.m_vPos.x, m_cActors.GetShipPlayer().m_sBoid.m_vPos.y, 1.0f ), SVector3( m_cActors.GetShipPlayer().m_sBoid.m_vPos.x, m_cActors.GetShipPlayer().m_sBoid.m_vPos.y, -1.0f ), m_cActors.GetShipPlayer().m_vDir );
 			/*SMatrix matScale;
 			SMatrix::Identity( matScale );
 			SMatrix::Scale( matScale, fMiniMapScale );
@@ -412,33 +403,32 @@ void CSceneGame::Render()
 
 		{
 			SVertexP sP;
-			sP.vPos = sBoidPlayer.m_vPos;
+			sP.vPos = m_cActors.GetShipPlayer().m_sBoid.m_vPos;
 
 			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x22, 0xff, 0x22, 0xff );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
-		for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_cActors.GetShipEnemyCount(); iEnemyShipInd++ )
+		for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 		{
-			SShip& sShipEnemy = m_cActors.GetShipEnemy( iEnemyShipInd );
-			SBoid& sBoidEnemy = m_cActors.GetBoidEnemy( iEnemyShipInd );
+			SShip& sShip = m_cActors.GetShip( iShipInd );
 			SVertexP sP;
-			sP.vPos = sBoidEnemy.m_vPos;
+			sP.vPos = sShip.m_sBoid.m_vPos;
 
 			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x00, 0xff, 0xbb );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
-		for ( size_t iTurretInd = 0; iTurretInd < m_cActors.GetTurretCount(); iTurretInd++ )
+		for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 		{
-			const STurret& sTurret = m_cActors.GetTurret( iTurretInd );
+			const SShip& sShip = m_cActors.GetShip( iShipInd );
 
 			SVertexP sP;
 			
 			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x99, 0xff, 0x22 );
-			for ( int iBulletInd = 0; iBulletInd < sTurret.m_aBullets.size(); iBulletInd++ )
+			for ( int iBulletInd = 0; iBulletInd < sShip.m_sTurret.m_aBullets.size(); iBulletInd++ )
 			{
-				const STurret::SBullet& sBullet = sTurret.m_aBullets[iBulletInd];
+				const STurret::SBullet& sBullet = sShip.m_sTurret.m_aBullets[iBulletInd];
 				sP.vPos = sBullet.m_vPos;
 
 				CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
@@ -454,7 +444,7 @@ void CSceneGame::Render()
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
-		m_cGrid.RenderToMiniMap( 50.0f*5.0f, 10/2, matMiniMap, m_sViewportMiniMap, sBoidPlayer.m_vPos );
+		m_cGrid.RenderToMiniMap( 50.0f*5.0f, 10/2, matMiniMap, m_sViewportMiniMap, m_cActors.GetShipPlayer().m_sBoid.m_vPos );
 	}
 }
 
@@ -502,11 +492,11 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	return true;
 	case KEY_SPACE:
 	{
-		STurret& sTurret = m_cActors.GetTurretPlayer();
-		if ( !sTurret.m_bShoot )
+		SShip& sShipPlayer = m_cActors.GetShipPlayer();
+		if ( !sShipPlayer.m_sTurret.m_bShoot )
 		{
-			sTurret.m_bShoot = true;
-			sTurret.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+			sShipPlayer.m_sTurret.m_bShoot = true;
+			sShipPlayer.m_sTurret.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 		}		
 	}
 	return true;
@@ -552,8 +542,8 @@ bool CSceneGame::On_KeyUp( uint32_t key )
 	return true;
 	case KEY_SPACE:
 	{
-		STurret& sTurret = m_cActors.GetTurretPlayer();
-		sTurret.m_bShoot = false;
+		SShip& sShipPlayer = m_cActors.GetShipPlayer();
+		sShipPlayer.m_sTurret.m_bShoot = false;
 	}
 	return true;
 	}

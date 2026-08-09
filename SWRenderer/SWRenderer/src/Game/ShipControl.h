@@ -3,6 +3,8 @@
 #include <vector>
 #include "Common/Vector.h"
 
+static const uint32_t iIndInvalid = 0xFFFFFFFF;
+
 struct SShip;
 struct SBoid;
 struct STurret
@@ -14,7 +16,7 @@ struct STurret
 
 	void Clear();
 
-	void Update( const SShip& sShip, const SBoid& sBoid );
+	void Update( const SShip& sShip );
 
 	std::vector< SVector3 >	m_aTurretPositions;
 	int			m_iBulletCounter;
@@ -65,11 +67,10 @@ struct SShip
 
 	void Clear();
 
-	void Update( SBoid& sBoid );
+	void Update();
 
-	static const uint32_t m_iIndInvalid = 0xFFFFFFFF;
-	uint32_t	m_iBoidInd;
-	uint32_t	m_iTurretInd;
+	SBoid		m_sBoid;
+	STurret		m_sTurret;
 
 	float		m_fYaw;
 	float		m_fRoll;
@@ -104,28 +105,18 @@ public:
 	void Update();
 	void Render();
 
-	SShip& AddEnemyShip();
+	uint32_t AddShip();
 
-	SShip& GetShipPlayer() { return m_sShipPlayer; }
-	SBoid& GetBoidPlayer() { return m_aBoids[m_sShipPlayer.m_iBoidInd]; }
-	STurret& GetTurretPlayer() { return m_aTurrets[m_sShipPlayer.m_iTurretInd]; }
+	SShip& GetShipPlayer() { return m_aShips[m_iPlayerShipInd]; }
 
-	size_t GetShipEnemyCount() const { return m_aShipEnemies.size(); }
-	SShip& GetShipEnemy( size_t i ) { return m_aShipEnemies[i]; }
-	SBoid& GetBoidEnemy( size_t i ) { return m_aBoids[m_aShipEnemies[i].m_iBoidInd]; }
-
-	size_t GetTurretCount() const { return m_aTurrets.size(); }
-	STurret& GetTurret( size_t i ) { return m_aTurrets[i]; }
+	size_t GetShipCount() const { return m_aShips.size(); }
+	SShip& GetShip( size_t i ) { return m_aShips[i]; }
 
 private:
-	void _updatePlayer();
 	void _updateBoids();
-	void _updateEnemies();
 	void _updateShips();
 
 private:
-	SShip					m_sShipPlayer;
-	std::vector< SShip >	m_aShipEnemies;
-	std::vector< SBoid >	m_aBoids;
-	std::vector< STurret >	m_aTurrets;
+	uint32_t				m_iPlayerShipInd;
+	std::vector< SShip >	m_aShips;
 };
