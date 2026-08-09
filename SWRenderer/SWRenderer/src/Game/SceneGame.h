@@ -29,9 +29,10 @@ private:
 	SViewPort		m_sViewportMiniMap;
 	STextureIndexed	m_sTexHUD;
 
-	SShipPlayer	m_sShipPlayer;
+	CStarfield		m_cStarfield;
+	CGrid			m_cGrid;
 
-	std::vector< SShipEnemy >	m_aEnemyShips;
+	CActors			m_cActors;
 
 	struct SAsteroid
 	{
@@ -40,8 +41,5 @@ private:
 		SQuaternion	m_qRot;
 	};
 	std::vector< SAsteroid >	m_aAsteroids;
-
-	CStarfield		m_cStarfield;
-	CGrid			m_cGrid;
 	
 };
