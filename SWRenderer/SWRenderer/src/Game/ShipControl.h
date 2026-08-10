@@ -39,29 +39,6 @@ struct STurret
 	uint64_t					m_iLastBulletTimeStampNs;
 };
 
-struct SBoid
-{
-	SBoid()
-	{
-		Clear();
-	}
-
-	void Clear()
-	{
-		m_vPos = SVector3( 0.0f, 0.0f, 0.0f );
-		m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
-		m_vMovPrev = SVector3( 0.0f, 0.0f, 0.0f );
-		m_vBoidMov = SVector3( 0.0f, 0.0f, 0.0f );
-	}
-
-	SVector3	m_vPos;
-
-	SVector3	m_vMov;
-	SVector3	m_vMovPrev;
-
-	SVector3	m_vBoidMov;
-};
-
 struct SShip
 {
 	SShip();
@@ -70,12 +47,16 @@ struct SShip
 
 	void Update();
 
-	SBoid		m_sBoid;
 	STurret		m_sTurret;
 
 	float		m_fYaw;
 	float		m_fRoll;
 
+	
+	SVector3	m_vPos;	
+	SVector3	m_vBoidMov;
+	SVector3	m_vMov;
+	SVector3	m_vMovPrev;
 	SVector3	m_vDir;
 	SVector3	m_vDirPrev;
 	SVector3	m_vUp;
@@ -84,6 +65,7 @@ struct SShip
 	SMatrix		m_matShipPrev;	
 
 	float		m_fHP;
+	float		m_fDamageTimerMs;
 	float		m_fPhase_DistanceToPlayer;
 
 	float		m_fYawSpeed;
@@ -92,6 +74,13 @@ struct SShip
 	float		m_fAccForward_ctrl;
 	float		m_fAccRight;
 	float		m_fAccRight_ctrl;
+};
+
+struct SAsteroid
+{
+	SVector3	m_vPos;
+	float		m_fSize;
+	SQuaternion	m_qRot;
 };
 
 class CActors
@@ -106,20 +95,27 @@ public:
 	void Update();
 	void Render();
 
-	uint32_t AddShip();
+	uint32_t	AddShip();
 
-	SShip& GetShipPlayer() { return m_aShips[m_iPlayerShipInd]; }
+	SShip&		GetShipPlayer() { return m_aShips[m_iPlayerShipInd]; }
 
-	size_t GetShipCount() const { return m_aShips.size(); }
-	SShip& GetShip( size_t i ) { return m_aShips[i]; }
+	size_t		GetShipCount() const { return m_aShips.size(); }
+	SShip&		GetShip( size_t i ) { return m_aShips[i]; }
+
+	size_t				GetAsteroidCount() const { return m_aAsteroids.size(); }
+	const SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
 
 private:
+	void _updateHashGrids();
 	void _updateBoids();
 	void _updateShips();
 
 private:
-	uint32_t				m_iPlayerShipInd;
-	std::vector< SShip >	m_aShips;
+	uint32_t					m_iPlayerShipInd;
+	std::vector< SShip >		m_aShips;
+	std::vector< SAsteroid >	m_aAsteroids;
 
-	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapShipHashGrid;
+	const float					m_fHashGridSize;
+	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapHashGridShips;
+	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapHashGridAsteroids;
 };

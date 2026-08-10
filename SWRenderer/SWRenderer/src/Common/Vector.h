@@ -219,6 +219,14 @@ struct SVector4
 		: x(v.x), y(v.y), z(v.z), w(_w)
 	{}
 
+	inline SVector4& operator+=(const SVector4& rhs) noexcept { x += rhs.x; y += rhs.y; z += rhs.z; w += rhs.w; return *this; }
+	inline SVector4& operator-=(const SVector4& rhs) noexcept { x -= rhs.x; y -= rhs.y; z -= rhs.z; w -= rhs.w; return *this; }
+	inline SVector4& operator*=(const SVector4& rhs) noexcept { x *= rhs.x; y *= rhs.y; z *= rhs.z; w *= rhs.w; return *this; }
+	inline SVector4& operator/=(const SVector4& rhs) noexcept { x /= rhs.x; y /= rhs.y; z /= rhs.z; w /= rhs.w; return *this; }
+
+	inline SVector4& operator*=(float s) noexcept { x *= s; y *= s; z *= s; w *= s; return *this; }
+	inline SVector4& operator/=(float s) noexcept { float invS = 1.0f / s; x *= invS; y *= invS; z *= invS; w *= invS; return *this; }
+
 	constexpr static float Dot( const SVector4& a, const SVector4& b ) noexcept
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
