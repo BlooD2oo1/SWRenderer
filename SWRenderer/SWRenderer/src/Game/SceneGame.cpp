@@ -194,7 +194,7 @@ void CSceneGame::Render()
 		sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
 		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.6f, 0.5f ) * 0.33f;
 		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
-		sVertexShaderBasic.fAlpha = 0.2f;
+		sVertexShaderBasic.fAlpha = 0.3f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipDestroyer().m_pVertices, CEngine::GetInstance().GetMeshShipDestroyer().m_pIndices, CEngine::GetInstance().GetMeshShipDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 

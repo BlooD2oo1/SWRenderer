@@ -299,7 +299,7 @@ void CActors::_updateShips()
 				{
 					sShip.m_sTurret.m_iLastBulletTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 				}
-				//sShip.m_sTurret.m_bShoot = true;
+				sShip.m_sTurret.m_bShoot = true;
 			}
 			else
 			{
@@ -322,10 +322,10 @@ void CActors::_updateShips()
 			SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
 			SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 			float fT = 0.0f;
-			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), 5.0f, fT ) )
+			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), 7.0f, fT ) )
 			{
 				sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.05f;
-				sShip.m_fHP -= 12.0f;
+				sShip.m_fHP -= 34.0f;
 				sShip.m_fDamageTimerMs = 500.0f;
 
 				/*SVector2 vNormalDir( vBulletPos - SVector2( sShip.m_vPos.x, sShip.m_vPos.y ) );
