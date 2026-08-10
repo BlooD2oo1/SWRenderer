@@ -144,20 +144,25 @@ void CSceneGame::Render()
 		}
 	}*/
 
+	SMatrix matViewProjViewPort;
 	struct SVertexShaderBasic
 	{
 		using AttribsType = SVertexPC::SAttribs;
 		SMatrix matWorldViewProjViewPort;
-		SVector4 vColorMul;
+		SVector3 vColor0;
+		SVector3 vColor1;
+		SVector3 vColor2;
+		float fAlpha;
 		void Execute( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
 		{
 			SVector4 vPhSrc( in.vPos, 1.0f );
 			SMatrix::Mul( out.vPos, vPhSrc, matWorldViewProjViewPort );
-			out.sAttribs.vColor = in.sAttribs.vColor;
-			out.sAttribs.vColor *= vColorMul;
+			out.sAttribs.vColor = SVector4( 0.0f, 0.0f, 0.0f, fAlpha );
+			*(SVector3*)&out.sAttribs.vColor += *(SVector3*)&vColor0 * in.sAttribs.vColor.x;
+			*(SVector3*)&out.sAttribs.vColor += *(SVector3*)&vColor1 * in.sAttribs.vColor.y;
+			*(SVector3*)&out.sAttribs.vColor += *(SVector3*)&vColor2 * in.sAttribs.vColor.z;
 		}
-	} sVertexShaderBasic;
-	SMatrix matViewProjViewPort;
+	} sVertexShaderBasic;	
 	SMatrix::Mul( matViewProjViewPort, m_sCamera.m_matViewProj, m_sViewportGameView.GetViewPortMatrix() );
 
 	struct SPixelShaderBasic
@@ -171,7 +176,10 @@ void CSceneGame::Render()
 	{
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, m_cActors.GetShipPlayer().m_matShip, matViewProjViewPort );
 		
-		sVertexShaderBasic.vColorMul = SVector4( 1.0f, 1.0f, 1.0f, 0.5f );
+		sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
+		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.6f, 1.0f ) * 0.33f;
+		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
+		sVertexShaderBasic.fAlpha = 0.8f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipPlayer().m_pVertices, CEngine::GetInstance().GetMeshShipPlayer().m_pIndices, CEngine::GetInstance().GetMeshShipPlayer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
@@ -183,25 +191,58 @@ void CSceneGame::Render()
 		matShip.m32 = -800.0f;
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matShip, matViewProjViewPort );
 
-		sVertexShaderBasic.vColorMul = SVector4( 1.0f, 1.0f, 1.0f, 0.2f );
+		sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
+		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.6f, 0.5f ) * 0.33f;
+		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
+		sVertexShaderBasic.fAlpha = 0.2f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipDestroyer().m_pVertices, CEngine::GetInstance().GetMeshShipDestroyer().m_pIndices, CEngine::GetInstance().GetMeshShipDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
-	for ( size_t iEnemyShipInd = 0; iEnemyShipInd < m_cActors.GetShipCount(); iEnemyShipInd++ )
+	for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 	{
-		SShip& sShipEnemy = m_cActors.GetShip( iEnemyShipInd );
+		if ( iShipInd == m_cActors.GetShipPlayerInd() )
+		{
+			continue;
+		}
+
+		SShip& sShipEnemy = m_cActors.GetShip( iShipInd );
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipEnemy.m_matShip, matViewProjViewPort );
-		sVertexShaderBasic.vColorMul = SVector4( 1.0f, 1.0f, 1.0f, 0.3f );
+
+		sVertexShaderBasic.vColor0 = SVector3( 0.3f, 0.4f, 1.0f ) * 0.33f;
+		sVertexShaderBasic.vColor1 = SVector3( 0.2f, 0.5f, 1.0f ) * 0.33f;
+		sVertexShaderBasic.vColor2 = SVector3( 0.3f, 0.6f, 0.6f ) * 0.33f;
+		sVertexShaderBasic.fAlpha = 0.6f;
+
 		if ( sShipEnemy.m_fDamageTimerMs > 0.0f )
 		{
-			sVertexShaderBasic.vColorMul.x = 0.1f;
-			sVertexShaderBasic.vColorMul.y = 0.1f;
-			sVertexShaderBasic.vColorMul.z = 1.0f;
-			sVertexShaderBasic.vColorMul.w = 1.2f;
+			sVertexShaderBasic.vColor0.x = 0.1f;
+			sVertexShaderBasic.vColor0.y = 0.1f;
+			sVertexShaderBasic.vColor0.z = 1.0f;
+			sVertexShaderBasic.vColor1.x = 0.1f;
+			sVertexShaderBasic.vColor1.y = 0.1f;
+			sVertexShaderBasic.vColor1.z = 1.0f;
+			sVertexShaderBasic.vColor2.x = 0.1f;
+			sVertexShaderBasic.vColor2.y = 0.1f;
+			sVertexShaderBasic.vColor2.z = 1.0f;
+			sVertexShaderBasic.fAlpha = 1.0f;
 		}
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipScout().m_pVertices, CEngine::GetInstance().GetMeshShipScout().m_pIndices, CEngine::GetInstance().GetMeshShipScout().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
+
+	struct SVertexShaderAsteroid
+	{
+		using AttribsType = SVertexPC::SAttribs;
+		SMatrix matWorldViewProjViewPort;
+		SVector4 vColor0;
+		SVector4 vColor1;
+		void Execute( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
+		{
+			SVector4 vPhSrc( in.vPos, 1.0f );
+			SMatrix::Mul( out.vPos, vPhSrc, matWorldViewProjViewPort );
+			out.sAttribs.vColor = Lerp( vColor0, vColor1, in.sAttribs.vColor.x );
+		}
+	} sVertexShaderAsteroid;
 	for ( size_t iAsteroidInd = 0; iAsteroidInd < m_cActors.GetAsteroidCount(); iAsteroidInd++ )
 	{
 		const SAsteroid& sAsteroid = m_cActors.GetAsteroid(iAsteroidInd);
@@ -214,9 +255,10 @@ void CSceneGame::Render()
 			matAsteroid.m31 = sAsteroid.m_vPos.y;
 			matAsteroid.m32 = sAsteroid.m_vPos.z;
 			SMatrix::Scale( matAsteroid, sAsteroid.m_fSize );
-			SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matAsteroid, matViewProjViewPort );
-			sVertexShaderBasic.vColorMul = SVector4( 1.0f, 1.0f, 1.0f, 0.7f );
-			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshAsteroid().m_pVertices, CEngine::GetInstance().GetMeshAsteroid().m_pIndices, CEngine::GetInstance().GetMeshAsteroid().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+			SMatrix::Mul( sVertexShaderAsteroid.matWorldViewProjViewPort, matAsteroid, matViewProjViewPort );
+			sVertexShaderAsteroid.vColor0 = SVector4( 1.0f, 0.7f, 0.6f, 0.5f );
+			sVertexShaderAsteroid.vColor1 = SVector4( 1.0f, 0.8f, 0.4f, 0.6f );
+			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshAsteroid().m_pVertices, CEngine::GetInstance().GetMeshAsteroid().m_pIndices, CEngine::GetInstance().GetMeshAsteroid().m_iIndexCount/2, m_sViewportGameView, sVertexShaderAsteroid, SPixelShaderBasic(), SBlendFuncAdditive() );
 		}
 	}
 	

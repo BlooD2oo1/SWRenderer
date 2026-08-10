@@ -3,6 +3,8 @@
 #include "Common/Globals.h"
 #include "Engine/Engine.h"
 
+#define HASH
+
 CActors::CActors()
 	: m_fHashGridSize( 100.0f )
 {
@@ -39,7 +41,7 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_fBulletSpeed = 0.2f;
 	}
 
-	for ( int i = 0;i < 200; i++ )
+	for ( int i = 0;i < 10; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
@@ -65,7 +67,7 @@ void CActors::Create()
 
 	}
 
-	m_aAsteroids.reserve( 500 );
+	m_aAsteroids.reserve( 1000 );
 	for ( size_t i = 0; i < m_aAsteroids.capacity(); i++ )
 	{
 		SAsteroid sAsteroid;
@@ -73,7 +75,7 @@ void CActors::Create()
 		sAsteroid.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.z = 0.0f;
-		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f ) * 5.0f;
+		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f ) * 20.0f;
 
 		// uniform distribution of quaternions:
 		const float u1 = ((float)rand() / (float)RAND_MAX);
@@ -86,6 +88,14 @@ void CActors::Create()
 
 		m_aAsteroids.push_back( sAsteroid );
 	}
+
+	m_mapHashGridAsteroids.clear();
+	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
+	{
+		const SAsteroid& sAsteroid = GetAsteroid( i );
+		uint32_t iHash = _getHash( SVector2( sAsteroid.m_vPos.x, sAsteroid.m_vPos.y ), m_fHashGridSize );
+		m_mapHashGridAsteroids[iHash].push_back( (uint32_t)i );
+	}
 }
 
 void CActors::Update()
@@ -95,46 +105,15 @@ void CActors::Update()
 	_updateShips();
 }
 
-inline void GetHash( int& iHashX, int& iHashY, const SVector2& vPos, float fMaxDist )
-{
-	iHashX = (int)floorf( vPos.x / fMaxDist );
-	iHashY = (int)floorf( vPos.y / fMaxDist );
-}
-inline uint32_t GetHash( const SVector2& vPos, float fMaxDist )
-{
-	int iHashX;
-	int iHashY;
-	GetHash( iHashX, iHashY, vPos, fMaxDist );
-	uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
-	return iHash;
-}
-
-uint32_t GetHash( int iHashX, int iHashY )
-{
-	uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
-	return iHash;
-}
-
-#define HASH
 void CActors::_updateHashGrids()
 {
-#ifdef HASH	
 	m_mapHashGridShips.clear();
 	for ( size_t i = 0; i < GetShipCount(); i++ )
 	{
 		SShip& sShip = GetShip( i );
-		uint32_t iHash = GetHash( SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), m_fHashGridSize );
+		uint32_t iHash = _getHash( SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), m_fHashGridSize );
 		m_mapHashGridShips[iHash].push_back( (uint32_t)i );
 	}
-
-	m_mapHashGridAsteroids.clear();
-	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
-	{
-		const SAsteroid& sAsteroid = GetAsteroid( i );
-		uint32_t iHash = GetHash( SVector2( sAsteroid.m_vPos.x, sAsteroid.m_vPos.y ), m_fHashGridSize );
-		m_mapHashGridAsteroids[iHash].push_back( (uint32_t)i );
-	}
-#endif
 }
 
 void CActors::_updateBoids()
@@ -154,17 +133,17 @@ void CActors::_updateBoids()
 		int iNeighborCount = 0;
 		SVector2 vAvgPos( 0.0f, 0.0f );
 		SVector2 vAvgMov( 0.0f, 0.0f );
-#ifdef HASH
+
 		int iHashX0;
 		int iHashY0;
-		GetHash( iHashX0, iHashY0, SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y ), m_fHashGridSize );
+		_getHash( iHashX0, iHashY0, SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y ), m_fHashGridSize );
 		for ( int x = -1; x <= 1; x++ )
 		{
 			for ( int y = -1; y <= 1; y++ )
 			{
 				int iHashX = iHashX0 + x;
 				int iHashY = iHashY0 + y;
-				uint32_t iHash = GetHash( iHashX, iHashY );
+				uint32_t iHash = _getHash( iHashX, iHashY );
 				{
 					auto it = m_mapHashGridShips.find( iHash );
 					if ( it != m_mapHashGridShips.end() )
@@ -208,14 +187,14 @@ void CActors::_updateBoids()
 							{
 								if ( fDistSq < sAsteroid1.m_fSize * sAsteroid1.m_fSize )
 								{
-									sShip0.m_fHP -= 1.0f * fElapsedTimeMs;
+									sShip0.m_fHP -= 0.4f * fElapsedTimeMs;
 									sShip0.m_fDamageTimerMs = 500.0f;
 								}
 
 								SVector2 vDirAway( -vDist.x, -vDist.y );
 								float fPower = (1.0f - fDistSqSeparation);
 								fPower *= fPower * fPower * fPower;
-								fPower *= 0.05f;
+								fPower *= 0.1f;
 								vSeparation += vDirAway * fPower;
 							}
 						}
@@ -223,28 +202,6 @@ void CActors::_updateBoids()
 				}
 			}
 		}
-#else
-		for ( size_t i1 = 0; i1 < GetShipCount(); i1++ )
-		{
-			if ( i0 == i1 ) continue;
-			SShip& sShip1 = GetShip( i1 );
-
-			SVector2 vDist( sShip1.m_vPos.x - sShip0.m_vPos.x, sShip1.m_vPos.y - sShip0.m_vPos.y );
-			float fDistSq = SVector2::LengthSq( vDist );
-			if ( fDistSq < powf( 100.0f, 2 ) )
-			{
-				if ( fDistSq < powf( 50.0f, 2 ) )
-				{
-					SVector2 vDirAway( -vDist.x, -vDist.y );
-					vSeparation += vDirAway * (1.0f / (fDistSq + 0.00001f));
-				}
-
-				iNeighborCount++;
-				vAvgPos += SVector2( sShip1.m_vPos.x, sShip1.m_vPos.y );
-				vAvgMov += SVector2( sShip1.m_vMov.x, sShip1.m_vMov.y );
-			}
-		}
-#endif
 
 		if ( iNeighborCount > 0 )
 		{
@@ -371,7 +328,7 @@ void CActors::_updateShips()
 				sShip.m_fHP -= 12.0f;
 				sShip.m_fDamageTimerMs = 500.0f;
 
-				SVector2 vNormalDir( vBulletPos - SVector2( sShip.m_vPos.x, sShip.m_vPos.y ) );
+				/*SVector2 vNormalDir( vBulletPos - SVector2( sShip.m_vPos.x, sShip.m_vPos.y ) );
 				SVector2::Normalize( vNormalDir, vNormalDir );
 
 				SVector2 vBulletMov( sBullet.m_vMov.x, sBullet.m_vMov.y );
@@ -382,19 +339,21 @@ void CActors::_updateShips()
 				sBullet.m_vPos.x = vBulletPosPrev.x + (vBulletPos.x - vBulletPosPrev.x) * fT + vNormalDir.x * 0.1f;
 				sBullet.m_vPos.y = vBulletPosPrev.y + (vBulletPos.y - vBulletPosPrev.y) * fT + vNormalDir.y * 0.1f;
 
-				sBullet.m_vMov *= 0.8f;
+				sBullet.m_vMov *= 0.8f;*/
 
 				SAudioEvent sAudioEvent;
 				sAudioEvent.type = SAudioEvent::GunHit;
 				sAudioEvent.fVolume = 0.15f;
 				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 200;
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 500;
 				sAudioEvent.iSampleCounter = 0;
 				sAudioEvent.fPhase = 0.0f;	
 				sAudioEvent.sClick.iButton = 1;
 				sAudioEvent.sGun.vPos = sBullet.m_vPos;
-				sAudioEvent.sGun.fPitch = 200.0f;
+				sAudioEvent.sGun.fPitch = 600.0f;
 				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+				sBullet.m_fTime = sBullet.m_fTimer;
 			}				
 		}
 
@@ -412,10 +371,23 @@ void CActors::_updateShips()
 			sAudioEvent.sGun.fPitch = 200.0f;
 			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
-			sShip.m_vPos.x = ((float)rand() / (float)RAND_MAX) * 40.0f * 2.0f - 40.0f;
-			sShip.m_vPos.y = ((float)rand() / (float)RAND_MAX) * 40.0f * 2.0f - 40.0f;
-			sShip.m_fHP = 100.0f;
+			//sShip.m_vPos.x = ((float)rand() / (float)RAND_MAX) * 40.0f * 2.0f - 40.0f;
+			//sShip.m_vPos.y = ((float)rand() / (float)RAND_MAX) * 40.0f * 2.0f - 40.0f;
+			//sShip.m_fHP = 100.0f;
+			sShip.m_bDead = true;
 		}
+	}
+
+	for ( size_t i = 0; i < GetShipCount(); )
+	{
+		SShip& sShip = GetShip( i );
+		if ( sShip.m_bDead )
+		{
+			m_aShips[i] = m_aShips.back();
+			m_aShips.pop_back();
+			continue;
+		}
+		i++;
 	}
 
 	for ( size_t i = 0; i < GetShipCount(); i++ )
@@ -462,6 +434,7 @@ void SShip::Clear()
 
 	m_fHP = 100.0f;
 	m_fDamageTimerMs = 0.0f;
+	m_bDead = false;
 	m_fPhase_DistanceToPlayer = 0.0f;
 
 	m_fYawSpeed = 0.0f;

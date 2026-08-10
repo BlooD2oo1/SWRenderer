@@ -66,6 +66,7 @@ struct SShip
 
 	float		m_fHP;
 	float		m_fDamageTimerMs;
+	bool		m_bDead;
 	float		m_fPhase_DistanceToPlayer;
 
 	float		m_fYawSpeed;
@@ -98,6 +99,7 @@ public:
 	uint32_t	AddShip();
 
 	SShip&		GetShipPlayer() { return m_aShips[m_iPlayerShipInd]; }
+	uint32_t	GetShipPlayerInd() { return m_iPlayerShipInd; }
 
 	size_t		GetShipCount() const { return m_aShips.size(); }
 	SShip&		GetShip( size_t i ) { return m_aShips[i]; }
@@ -109,6 +111,25 @@ private:
 	void _updateHashGrids();
 	void _updateBoids();
 	void _updateShips();
+
+	inline void _getHash( int& iHashX, int& iHashY, const SVector2& vPos, float fMaxDist )
+	{
+		iHashX = (int)floorf( vPos.x / fMaxDist );
+		iHashY = (int)floorf( vPos.y / fMaxDist );
+	}
+	inline uint32_t _getHash( const SVector2& vPos, float fMaxDist )
+	{
+		int iHashX;
+		int iHashY;
+		_getHash( iHashX, iHashY, vPos, fMaxDist );
+		uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
+		return iHash;
+	}
+	uint32_t _getHash( int iHashX, int iHashY )
+	{
+		uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
+		return iHash;
+	}
 
 private:
 	uint32_t					m_iPlayerShipInd;
