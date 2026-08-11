@@ -85,7 +85,7 @@ void CSceneMainMenu::Render()
 		}
 	}
 
-	CGraphics::GetInstance().DrawText( 280, 200 - 8, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), 6, 6, -2 );
+	CGraphics::GetInstance().DrawText( 280, 200 - 7, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -2 );
 }
 
 bool CSceneMainMenu::On_KeyDown( uint32_t key )

@@ -24,8 +24,98 @@ void CSceneCredits::Update()
 
 void CSceneCredits::Render()
 {
-	// todo text:
-	CGraphics::GetInstance().DrawText( 10, 10, "TODO", BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_KarenFat_13x16(), 13, 16 );
+	int iCursorY = 24;
+	int iFrameBufferWidth = CGraphics::GetInstance().GetFrameBuffer().iWidth;
+	int iSpacing = -1;
+	{
+		const char* pText = "Game Design & Programming:";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 9;
+		int iFontHeight = 13;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, iSpacing );
+		iCursorY += iFontHeight + 4 + 2;
+	}
+
+	{
+		const char* pText = "Tamas Melykuti";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4 + 12;
+	}
+
+	{
+		const char* pText = "Graphics, Sound & Music:";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 9;
+		int iFontHeight = 13;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4 + 2;
+	}
+
+	{
+		const char* pText = "Tamas Melykuti";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4 + 12;
+	}
+
+	{
+		const char* pText = "Special Thanks:";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 9;
+		int iFontHeight = 13;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4 + 2;
+	}
+
+	{
+		const char* pText = "Dad";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4;
+	}
+
+	{
+		const char* pText = "Tomszi";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 80, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4;
+	}
+
+	{
+		const char* pText = "Robert Nagy";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4;
+	}
+
+	{
+		const char* pText = "Marcell Baranyai";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4;
+	}
+
+	{
+		const char* pText = "Janos Turanszki";
+		size_t iLen = strlen( pText );
+		int iFontWidth = 6;
+		int iFontHeight = 6;
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		iCursorY += iFontHeight + 4;
+	}
 }
 
 bool CSceneCredits::On_KeyDown( uint32_t key )
