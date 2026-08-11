@@ -3,6 +3,7 @@
 #include "Engine/Engine.h"
 
 CSceneGame::CSceneGame()
+	: m_cActors( *this )
 {
 	Clear();
 }
@@ -47,6 +48,8 @@ void CSceneGame::Update()
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
 
 	m_cActors.Update();
+	
+	m_cEffects.Update();
 
 	{
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
@@ -100,6 +103,8 @@ void CSceneGame::Render()
 	m_cStarfield.Render( m_sCamera, m_sViewportGameView );
 
 	m_cGrid.RenderToScene( 100.0f, 6/2, m_sCamera.m_matViewProj, m_sViewportGameView, m_cActors.GetShipPlayer().m_vPos );
+
+	m_cEffects.Render( m_sCamera, m_sViewportGameView );
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 

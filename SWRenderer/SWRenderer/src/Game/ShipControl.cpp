@@ -5,8 +5,9 @@
 
 #define HASH
 
-CActors::CActors()
-	: m_fHashGridSize( 100.0f )
+CActors::CActors( CSceneGame& sSceneGame )
+	: m_sSceneGame( sSceneGame )
+	, m_fHashGridSize( 100.0f )
 {
 	Clear();
 }
@@ -33,7 +34,7 @@ void CActors::Create()
 	{
 		m_iPlayerShipInd = AddShip();
 		SShip& sShipPlayer = GetShip( m_iPlayerShipInd );
-		sShipPlayer.m_vMov.x = 0.05f;
+		//sShipPlayer.m_vMov.x = 0.05f;
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, -2.7f, 0.0f ) );
@@ -80,6 +81,7 @@ void CActors::Create()
 		sAsteroid.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.z = 0.0f;
+
 		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f );
 		sAsteroid.m_fSize *= sAsteroid.m_fSize;
 		sAsteroid.m_eModel = ( sAsteroid.m_fSize > 0.8f ) ? SAsteroid::ModelBig : (((rand() % 2) == 0 ) ? SAsteroid::Model01 : SAsteroid::Model02);
@@ -92,11 +94,7 @@ void CActors::Create()
 		sAsteroid.m_qRot.w = sqrtf( 1.0f - u1 ) * sinf( 2.0f * PI * u2 );
 		sAsteroid.m_qRot.x = sqrtf( 1.0f - u1 ) * cosf( 2.0f * PI * u2 );
 		sAsteroid.m_qRot.y = sqrtf( u1 ) * sinf( 2.0f * PI * u3 );
-		sAsteroid.m_qRot.z = sqrtf( u1 ) * cosf( 2.0f * PI * u3 );
-
-
-
-		
+		sAsteroid.m_qRot.z = sqrtf( u1 ) * cosf( 2.0f * PI * u3 );		
 
 		m_aAsteroids.push_back( sAsteroid );
 	}
@@ -379,27 +377,30 @@ void CActors::_updateShips()
 				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
 				sBullet.m_fTime = sBullet.m_fTimer;
+
+				if ( sShip.m_fHP <= 0.0f )
+				{
+					SAudioEvent sAudioEvent;
+					sAudioEvent.type = SAudioEvent::GunHit;
+					sAudioEvent.fVolume = 0.2f;
+					sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+					sAudioEvent.iLifeTimeNs = 1000 * 1000 * 2000;
+					sAudioEvent.iSampleCounter = 0;
+					sAudioEvent.fPhase = 0.0f;	
+					sAudioEvent.sClick.iButton = 1;
+					sAudioEvent.sGun.vPos = sShip.m_vPos;
+					sAudioEvent.sGun.fPitch = 200.0f;
+					CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+					SEffect_ShipExplosion& sEffect = m_sSceneGame.GetEffects().CreateShipExplosion();
+					sEffect.m_vPos = sShip.m_vPos;
+					sEffect.m_vMovShip = sShip.m_vMov;
+					sEffect.m_vMovBullet = sBullet.m_vMov;
+					sEffect.Create();
+
+					sShip.m_bDead = true;
+				}
 			}				
-		}
-
-		if ( sShip.m_fHP <= 0.0f )
-		{
-			SAudioEvent sAudioEvent;
-			sAudioEvent.type = SAudioEvent::GunHit;
-			sAudioEvent.fVolume = 0.2f;
-			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 2000;
-			sAudioEvent.iSampleCounter = 0;
-			sAudioEvent.fPhase = 0.0f;	
-			sAudioEvent.sClick.iButton = 1;
-			sAudioEvent.sGun.vPos = sShip.m_vPos;
-			sAudioEvent.sGun.fPitch = 200.0f;
-			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
-
-			//sShip.m_vPos.x = ((float)rand() / (float)RAND_MAX) * 40.0f * 2.0f - 40.0f;
-			//sShip.m_vPos.y = ((float)rand() / (float)RAND_MAX) * 40.0f * 2.0f - 40.0f;
-			//sShip.m_fHP = 100.0f;
-			sShip.m_bDead = true;
 		}
 	}
 

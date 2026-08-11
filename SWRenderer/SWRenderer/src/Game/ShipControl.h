@@ -95,10 +95,11 @@ struct SAsteroid
 	EModel		m_eModel;
 };
 
+class CSceneGame;
 class CActors
 {
 public:
-	CActors();
+	CActors( CSceneGame& sSceneGame );
 	~CActors();
 
 	void Clear();
@@ -143,6 +144,9 @@ private:
 	}
 
 private:
+
+	CSceneGame&					m_sSceneGame;
+
 	uint32_t					m_iPlayerShipInd;
 	std::vector< SShip >		m_aShips;
 	std::vector< SAsteroid >	m_aAsteroids;

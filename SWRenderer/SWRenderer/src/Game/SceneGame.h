@@ -23,6 +23,8 @@ public:
 	bool On_KeyDown( uint32_t key );
 	bool On_KeyUp( uint32_t key );
 
+	CEffects& GetEffects() { return m_cEffects; }
+
 private:
 
 	SCamera			m_sCamera;
