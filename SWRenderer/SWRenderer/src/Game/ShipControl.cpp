@@ -44,7 +44,7 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_vColor = SVector3( 1.0f, 0.7f, 0.9f ) * 0.6f;
 	}
 
-	for ( int i = 0;i < 30; i++ )
+	for ( int i = 0;i < 300; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
@@ -197,8 +197,7 @@ void CActors::_updateBoids()
 							{
 								if ( fDistSq < sAsteroid1.m_fSize * sAsteroid1.m_fSize )
 								{
-									sShip0.m_fHP -= 0.4f * fElapsedTimeMs;
-									sShip0.m_fDamageTimerMs = 500.0f;
+									_onDamageShipByCollision( sShip0, 0.4f * fElapsedTimeMs );
 								}
 
 								SVector2 vDirAway( -vDist.x, -vDist.y );
@@ -348,8 +347,8 @@ void CActors::_updateShips()
 			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), 7.0f, fT ) )
 			{
 				sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.05f;
-				sShip.m_fHP -= 34.0f;
-				sShip.m_fDamageTimerMs = 500.0f;
+
+				_onDamageShipByBullet( sShip, 34.0f, sBullet.m_vMov );
 
 				/*SVector2 vNormalDir( vBulletPos - SVector2( sShip.m_vPos.x, sShip.m_vPos.y ) );
 				SVector2::Normalize( vNormalDir, vNormalDir );
@@ -377,29 +376,6 @@ void CActors::_updateShips()
 				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
 				sBullet.m_fTime = sBullet.m_fTimer;
-
-				if ( sShip.m_fHP <= 0.0f )
-				{
-					SAudioEvent sAudioEvent;
-					sAudioEvent.type = SAudioEvent::GunHit;
-					sAudioEvent.fVolume = 0.2f;
-					sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-					sAudioEvent.iLifeTimeNs = 1000 * 1000 * 2000;
-					sAudioEvent.iSampleCounter = 0;
-					sAudioEvent.fPhase = 0.0f;	
-					sAudioEvent.sClick.iButton = 1;
-					sAudioEvent.sGun.vPos = sShip.m_vPos;
-					sAudioEvent.sGun.fPitch = 200.0f;
-					CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
-
-					SEffect_ShipExplosion& sEffect = m_sSceneGame.GetEffects().CreateShipExplosion();
-					sEffect.m_vPos = sShip.m_vPos;
-					sEffect.m_vMovShip = sShip.m_vMov;
-					sEffect.m_vMovBullet = sBullet.m_vMov;
-					sEffect.Create();
-
-					sShip.m_bDead = true;
-				}
 			}				
 		}
 	}
@@ -420,6 +396,76 @@ void CActors::_updateShips()
 	{
 		SShip& sShip = GetShip( i );
 		sShip.Update();
+	}
+}
+
+void CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet )
+{
+	if ( fDamage <= 0.0f )
+	{
+		return;
+	}
+
+	sShip.m_fHP -= fDamage;
+
+	sShip.m_fDamageTimerMs = 500.0f;
+
+	if ( sShip.m_fHP <= 0.0f && !sShip.m_bDead )
+	{
+		SAudioEvent sAudioEvent;
+		sAudioEvent.type = SAudioEvent::GunHit;
+		sAudioEvent.fVolume = 0.2f;
+		sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+		sAudioEvent.iLifeTimeNs = 1000 * 1000 * 2000;
+		sAudioEvent.iSampleCounter = 0;
+		sAudioEvent.fPhase = 0.0f;	
+		sAudioEvent.sClick.iButton = 1;
+		sAudioEvent.sGun.vPos = sShip.m_vPos;
+		sAudioEvent.sGun.fPitch = 200.0f;
+		CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+		SEffect_ShipExplosion& sEffect = m_sSceneGame.GetEffects().CreateShipExplosion();
+		sEffect.m_vPos = sShip.m_vPos;
+		sEffect.m_vMovShip = sShip.m_vMov;
+		sEffect.m_vMovBullet = vMovBullet;
+		sEffect.Create();
+		
+		sShip.m_bDead = true;
+	}
+}
+
+void CActors::_onDamageShipByCollision( SShip& sShip, float fDamage )
+{
+	if ( fDamage <= 0.0f )
+	{
+		return;
+	}
+
+	sShip.m_fHP -= fDamage;
+
+	sShip.m_fDamageTimerMs = 500.0f;
+
+	if ( sShip.m_fHP <= 0.0f && !sShip.m_bDead )
+	{
+		SAudioEvent sAudioEvent;
+		sAudioEvent.type = SAudioEvent::GunHit;
+		sAudioEvent.fVolume = 0.2f;
+		sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+		sAudioEvent.iLifeTimeNs = 1000 * 1000 * 2000;
+		sAudioEvent.iSampleCounter = 0;
+		sAudioEvent.fPhase = 0.0f;	
+		sAudioEvent.sClick.iButton = 1;
+		sAudioEvent.sGun.vPos = sShip.m_vPos;
+		sAudioEvent.sGun.fPitch = 200.0f;
+		CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+		SEffect_ShipExplosion& sEffect = m_sSceneGame.GetEffects().CreateShipExplosion();
+		sEffect.m_vPos = sShip.m_vPos;
+		sEffect.m_vMovShip = sShip.m_vMov;
+		sEffect.m_vMovBullet = SVector3( 0.0f, 0.0f, 0.0f );
+		sEffect.Create();
+
+		sShip.m_bDead = true;
 	}
 }
 
@@ -585,4 +631,15 @@ void STurret::Update( const SShip& sShip )
 
 		++iBulletInd;
 	}
+}
+
+////////////////////////////////////////////////////////////////
+
+void SLaserGun::Clear()
+{
+	m_vGunPosition = SVector3( 0.0f, 0.0f, 0.0f );
+
+	m_vColor = SVector3( 1.0f, 1.0f, 1.0f );
+
+	m_bShoot = false;
 }

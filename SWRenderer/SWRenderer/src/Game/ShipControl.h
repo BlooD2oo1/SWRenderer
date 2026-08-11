@@ -7,7 +7,6 @@
 static const uint32_t iIndInvalid = 0xFFFFFFFF;
 
 struct SShip;
-struct SBoid;
 struct STurret
 {
 	STurret()
@@ -37,9 +36,20 @@ struct STurret
 
 	std::vector< SBullet >		m_aBullets;
 	bool						m_bShoot;
-	uint64_t					m_iLastBulletTimeStampNs;
+	uint64_t					m_iLastBulletTimeStampNs;	
+};
 
+struct SLaserGun
+{
+	SLaserGun()
+	{
+		Clear();
+	}
+	void Clear();
 	
+	SVector3					m_vGunPosition;
+	SVector3					m_vColor;
+	bool						m_bShoot;
 };
 
 struct SShip
@@ -51,6 +61,7 @@ struct SShip
 	void Update();
 
 	STurret		m_sTurret;
+	SLaserGun	m_sLaserGun;
 
 	float		m_fYaw;
 	float		m_fRoll;
@@ -123,6 +134,9 @@ private:
 	void _updateHashGrids();
 	void _updateBoids();
 	void _updateShips();
+
+	void _onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet );
+	void _onDamageShipByCollision( SShip& sShip, float fDamage );
 
 	inline void _getHash( int& iHashX, int& iHashY, const SVector2& vPos, float fMaxDist )
 	{

@@ -55,12 +55,12 @@ void CSceneGame::Update()
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
-		float fWSlow = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
+		float fWSlow = CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs );
 		SVector3 vP( sShipPlayer.m_vPos + sShipPlayer.m_vDir * 5.0f + sShipPlayer.m_vMov*200.0f );
 		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 1200.0f, 100.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 1800.0f, 100.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
 		//m_sCamera.m_vEye.z += 200.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );

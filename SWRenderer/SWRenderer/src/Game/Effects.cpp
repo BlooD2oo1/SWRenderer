@@ -51,7 +51,7 @@ void SEffect_ShipExplosion::Create()
 {
 	m_aParticles.clear();
 
-	for ( size_t i = 0; i < 40; i++ )
+	for ( size_t i = 0; i < 30; i++ )
 	{
 		SParticle sParticle;
 		sParticle.m_vPos = m_vPos;
