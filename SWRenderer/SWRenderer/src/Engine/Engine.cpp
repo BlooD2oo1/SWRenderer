@@ -21,6 +21,8 @@ CEngine::~CEngine()
 
 void CEngine::Clear()
 {
+	srand(1);
+
 	m_iFrameInd = 0;
 	m_iTimeStampNs = 0;
 	m_iTimeStampPrevNs = 0;
