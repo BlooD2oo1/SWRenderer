@@ -22,7 +22,7 @@ void CStarfield::Create()
 {
 	Clear();
 
-	m_iStarsCount = 1000;
+	m_iStarsCount = 2000;
 	m_pStars = new SVertexPC[m_iStarsCount];
 	for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 	{
