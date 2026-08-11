@@ -113,6 +113,10 @@ struct SVector3
 		: x(_x), y(_y), z(_z)
 	{}
 
+	constexpr SVector3( const SVector2& v, float _z) noexcept
+		: x(v.x), y(v.y), z(_z)
+	{}
+
 	inline SVector3& operator+=(const SVector3& rhs) noexcept { x += rhs.x; y += rhs.y; z += rhs.z; return *this; }
 	inline SVector3& operator-=(const SVector3& rhs) noexcept { x -= rhs.x; y -= rhs.y; z -= rhs.z; return *this; }
 	inline SVector3& operator*=(const SVector3& rhs) noexcept { x *= rhs.x; y *= rhs.y; z *= rhs.z; return *this; }

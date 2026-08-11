@@ -276,18 +276,23 @@ void CActors::_updateShips()
 		}
 		else
 		{
-			SVector2 vField( 0.0f, 0.0f );
-			GetField( vField, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), SVector2( sShipPlayer.m_vPos.x, sShipPlayer.m_vPos.y ), SVector2( sShipPlayer.m_vDir.x, sShipPlayer.m_vDir.y ) );
-
 			SVector3 vEnemyToPlayerDir( sShipPlayer.m_vPos - sShip.m_vPos );
 			const float fEnemyToPlayerDist = SVector3::Length( vEnemyToPlayerDir );
 			SVector3::Normalize( vEnemyToPlayerDir, vEnemyToPlayerDir );
 			const float fSin_DistanceToPlayer = powf( sinf( sShip.m_fPhase_DistanceToPlayer )*0.5f+0.5f, 0.5f );
+
+			SVector2 vField( 0.0f, 0.0f );
+			GetField( vField, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), SVector2( sShipPlayer.m_vPos.x, sShipPlayer.m_vPos.y ), SVector2( sShipPlayer.m_vDir.x, sShipPlayer.m_vDir.y ) );
+
 			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_DistanceToPlayer))*0.02f, -0.4f, 1.0f );
 			const float fFollowAmount = 0.18f;
 			SVector3 vFollowMov = SVector3( vField.x, vField.y, 0.0f );
 
-			SVector3 vMov = sShip.m_vBoidMov * 0.001f + vFollowMov * fFollowAmount;
+			// ha allunk az urhajoval ne alljanak kukan egy helybe
+			SVector2 vRotateFollowMov( -vEnemyToPlayerDir.y, vEnemyToPlayerDir.x );
+			SVector2::Normalize( vRotateFollowMov, vRotateFollowMov );
+
+			SVector3 vMov = sShip.m_vBoidMov * 0.001f + vFollowMov * fFollowAmount + SVector3( vRotateFollowMov, 0.0f ) * 0.05f;
 
 			sShip.m_vMov = Lerp( vMov, sShip.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 

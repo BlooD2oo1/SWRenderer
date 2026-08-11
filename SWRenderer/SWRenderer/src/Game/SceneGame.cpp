@@ -53,7 +53,7 @@ void CSceneGame::Update()
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 		float fWSlow = CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs );
-		SVector3 vP( sShipPlayer.m_vPos + sShipPlayer.m_vDir * 6.0f + sShipPlayer.m_vMov*300.0f );
+		SVector3 vP( sShipPlayer.m_vPos + sShipPlayer.m_vDir * 5.0f + sShipPlayer.m_vMov*200.0f );
 		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
