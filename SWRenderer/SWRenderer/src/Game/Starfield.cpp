@@ -54,7 +54,7 @@ void CStarfield::Render( const SCamera& sCamera, const SViewPort& sViewport )
 	SMatrix::Mul( matViewProjViewportPrev, sCamera.m_matViewProjPrev, sViewport.GetViewPortMatrix() );
 
 	float fAlpha = 1.0f;
-	const int iSteps = 2;
+	const int iSteps = 3;
 	for ( int j =0; j < iSteps; j++ )
 	{
 		float fStarBoxSize = powf( (float)(j+1), 3.0f ) * 200.0f;
