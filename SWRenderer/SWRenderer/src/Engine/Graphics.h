@@ -317,6 +317,7 @@ void CGraphics::RasterizePixel( int x, int y, BGRA8 sColor, const TBlendFunc& sB
 	sBlendFunc.Execute( m_sFrameBuffer.pData[y * m_sFrameBuffer.iWidth + x], sColor );
 }
 
+#define RASTERIZE_LINE_OPT
 template<class TAttribs, class TPixelShader, class TBlendFunc>
 void CGraphics::RasterizeLineFlat( const SVector2& v0o, const SVector2& v1o, const TAttribs& sAttribs, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
 {
@@ -342,6 +343,32 @@ void CGraphics::RasterizeLineFlat( const SVector2& v0o, const SVector2& v1o, con
 	int iXStart = (int)(v0.x+0.5f);
 	int iXEnd = (int)(v1.x+0.5f);
 
+#ifdef RASTERIZE_LINE_OPT
+	const auto pixelColor = sPixelShader.Execute( sAttribs );
+
+	const float invVx = 1.0f / v.x;
+	const float stepY = v.y * invVx;
+
+	const float fXStart = (float)iXStart + 0.5f;
+	float fY = v0.y + (fXStart - v0.x) * stepY;
+
+	if ( bSwizzle )
+	{
+		for ( int iX = iXStart; iX < iXEnd; ++iX )
+		{
+			RasterizePixel( (int)fY, iX, pixelColor, sBlendFunc );
+			fY += stepY;
+		}
+	}
+	else
+	{
+		for ( int iX = iXStart; iX < iXEnd; ++iX )
+		{
+			RasterizePixel( iX, (int)fY, pixelColor, sBlendFunc );
+			fY += stepY;
+		}
+	}
+#else
 	for ( int iX = iXStart; iX < iXEnd; iX++ )
 	{
 		float fY = v.y * ( ((float)iX+0.5f) - v0.x ) / v.x + v0.y;
@@ -355,6 +382,7 @@ void CGraphics::RasterizeLineFlat( const SVector2& v0o, const SVector2& v1o, con
 
 		RasterizePixel( x, y, sPixelShader.Execute( sAttribs ), sBlendFunc );
 	}
+#endif
 }
 
 template<class TAttribs, class TPixelShader, class TBlendFunc>
@@ -388,6 +416,52 @@ void CGraphics::RasterizeLine( const SVector2& vPos0, TAttribs sAttribs0, float 
 	int iXStart = (int)(v0.x+0.5f);
 	int iXEnd = (int)(v1.x+0.5f);
 
+#ifdef RASTERIZE_LINE_OPT
+	const float invVx = 1.0f / v.x;
+	const float invW0 = 1.0f / fW0;
+	const float invW1 = 1.0f / fW1;
+
+	const float stepT = invVx;
+	const float stepY = v.y * invVx;
+	const float da    = -stepT * invW0;
+	const float db    =  stepT * invW1;
+
+	const float fXStart = (float)iXStart + 0.5f;
+	const float t0      = (fXStart - v0.x) * invVx;
+
+	float fY = v0.y + v.y * t0;
+	float a  = (1.0f - t0) * invW0;
+	float b  = t0 * invW1;
+
+	if ( bSwizzle )
+	{
+		for ( int iX = iXStart; iX < iXEnd; ++iX )
+		{
+			TAttribs sAttribs;
+			TAttribs::LerpPerspective( sAttribs, sAttribs0, sAttribs1, a, b );
+
+			RasterizePixel( (int)fY, iX, sPixelShader.Execute( sAttribs ), sBlendFunc );
+
+			fY += stepY;
+			a  += da;
+			b  += db;
+		}
+	}
+	else
+	{
+		for ( int iX = iXStart; iX < iXEnd; ++iX )
+		{
+			TAttribs sAttribs;
+			TAttribs::LerpPerspective( sAttribs, sAttribs0, sAttribs1, a, b );
+
+			RasterizePixel( iX, (int)fY, sPixelShader.Execute( sAttribs ), sBlendFunc );
+
+			fY += stepY;
+			a  += da;
+			b  += db;
+		}
+	}
+#else
 	for ( int iX = iXStart; iX < iXEnd; iX++ )
 	{
 		float t = (((float)iX + 0.5f) - v0.x) / v.x;
@@ -409,6 +483,7 @@ void CGraphics::RasterizeLine( const SVector2& vPos0, TAttribs sAttribs0, float 
 
 		RasterizePixel( x, y, sPixelShader.Execute( sAttribs ), sBlendFunc );
 	}
+#endif
 }
 
 template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
