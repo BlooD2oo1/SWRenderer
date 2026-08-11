@@ -1,6 +1,7 @@
 #include "Audio.h"
 #include "Common/Globals.h"
 #include "Common/Time.h"
+#include "Common/Log.h"
 
 // ============================================================================
 // ENVELOPE HELPERS (ZERO-BOUNDED EXPONENTIAL DECAY)
@@ -404,11 +405,19 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 	}
 
 	{
+		
 		SAudioEvent sTemp;
 		while ( m_ringAudioEvents.Pop( sTemp ) )
 		{
-			m_aAudioEvents.push_back( sTemp );
+			
+			// limit hogy ne szaggasson be. todo: jobb megoldas, pl prioritas vagy kameratavolsag alapu
+			if ( m_aAudioEvents.size() < 200 )
+			{
+				m_aAudioEvents.push_back( sTemp );
+			}			
 		}
+
+		//LOG( "AudioEventCount = %d\n", m_aAudioEvents.size() );
 	}
 
 	SAudioFrameData sAudioFrameData;

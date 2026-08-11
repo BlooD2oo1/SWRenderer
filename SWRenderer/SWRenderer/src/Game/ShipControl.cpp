@@ -44,7 +44,7 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_vColor = SVector3( 1.0f, 0.7f, 0.9f ) * 0.6f;
 	}
 
-	for ( int i = 0;i < 300; i++ )
+	for ( int i = 0;i < 30; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
@@ -408,7 +408,7 @@ void CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3
 
 	sShip.m_fHP -= fDamage;
 
-	sShip.m_fDamageTimerMs = 500.0f;
+	sShip.m_fDamageTimerMs = 200.0f;
 
 	if ( sShip.m_fHP <= 0.0f && !sShip.m_bDead )
 	{
@@ -443,7 +443,7 @@ void CActors::_onDamageShipByCollision( SShip& sShip, float fDamage )
 
 	sShip.m_fHP -= fDamage;
 
-	sShip.m_fDamageTimerMs = 500.0f;
+	sShip.m_fDamageTimerMs = 200.0f;
 
 	if ( sShip.m_fHP <= 0.0f && !sShip.m_bDead )
 	{
