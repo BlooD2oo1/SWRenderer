@@ -101,7 +101,7 @@ void CSceneGame::Render()
 
 	m_cGrid.RenderToScene( 50.0f, 16/2, m_sCamera.m_matViewProj, m_sViewportGameView, m_cActors.GetShipPlayer().m_vPos );
 
-	m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
+	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
 	/*{
 		struct SVertexShaderBasic
@@ -250,15 +250,16 @@ void CSceneGame::Render()
 		{
 			SMatrix matAsteroid;
 			SMatrix::Identity( matAsteroid );
-			//SQuaternion::ToMatrix( matAsteroid, sAsteroid.m_qRot );
+			SQuaternion::ToMatrix( matAsteroid, sAsteroid.m_qRot );
 			matAsteroid.m30 = sAsteroid.m_vPos.x;
 			matAsteroid.m31 = sAsteroid.m_vPos.y;
 			matAsteroid.m32 = sAsteroid.m_vPos.z;
 			SMatrix::Scale( matAsteroid, sAsteroid.m_fSize );
 			SMatrix::Mul( sVertexShaderAsteroid.matWorldViewProjViewPort, matAsteroid, matViewProjViewPort );
-			sVertexShaderAsteroid.vColor0 = SVector4( 1.0f, 0.7f, 0.6f, 0.5f );
-			sVertexShaderAsteroid.vColor1 = SVector4( 1.0f, 0.8f, 0.4f, 0.6f );
-			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshAsteroid().m_pVertices, CEngine::GetInstance().GetMeshAsteroid().m_pIndices, CEngine::GetInstance().GetMeshAsteroid().m_iIndexCount/2, m_sViewportGameView, sVertexShaderAsteroid, SPixelShaderBasic(), SBlendFuncAdditive() );
+			sVertexShaderAsteroid.vColor0 = SVector4( 1.0f, 0.6f, 0.6f, 0.3f );
+			sVertexShaderAsteroid.vColor1 = SVector4( 1.0f, 0.9f, 0.4f, 0.6f );
+			const SMesh& sMeshAsteroid = ((iAsteroidInd%2) == 0 ) ? CEngine::GetInstance().GetMeshAsteroid01() : CEngine::GetInstance().GetMeshAsteroid02();
+			CGraphics::GetInstance().DrawLineList3D( sMeshAsteroid.m_pVertices, sMeshAsteroid.m_pIndices, sMeshAsteroid.m_iIndexCount/2, m_sViewportGameView, sVertexShaderAsteroid, SPixelShaderBasic(), SBlendFuncAdditive() );
 		}
 	}
 	

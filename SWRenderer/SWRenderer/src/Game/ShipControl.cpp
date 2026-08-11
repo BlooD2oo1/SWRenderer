@@ -41,7 +41,7 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_fBulletSpeed = 0.2f;
 	}
 
-	for ( int i = 0;i < 10; i++ )
+	for ( int i = 0;i < 100; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
@@ -253,10 +253,19 @@ void CActors::_updateShips()
 			sShip.m_fAccRight = SmoothConverge( sShip.m_fAccRight, sShip.m_fAccRight_ctrl, 1.001f, 1.01f, fElapsedTimeMs );
 
 			sShip.m_fYaw += sShip.m_fYawSpeed * 0.004f * fElapsedTimeMs;
-			SVector3 vShipDir( cosf( sShip.m_fYaw ), sinf( sShip.m_fYaw ), 0.0f );
-			SVector3 vShipRight( -vShipDir.y, vShipDir.x, 0.0f );
-			sShip.m_vMov += vShipDir * sShip.m_fAccForward * 0.0001f * fElapsedTimeMs;
+			SVector3 vShipForward( cosf( sShip.m_fYaw ), sinf( sShip.m_fYaw ), 0.0f );
+			SVector3 vShipRight( -vShipForward.y, vShipForward.x, 0.0f );
+			sShip.m_vMov += vShipForward * sShip.m_fAccForward * 0.0001f * fElapsedTimeMs;
 			sShip.m_vMov += vShipRight * sShip.m_fAccRight * 0.0001f * fElapsedTimeMs;
+
+			// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
+			/*SVector3 vMovForward( sShip.m_vDir );
+			vMovForward = vMovForward * SVector3::Dot( sShip.m_vMov, vMovForward );
+			SVector3 vMovRight( -sShip.m_vDir.y, sShip.m_vDir.x, 0.0f );
+			vMovRight = vMovRight * SVector3::Dot( sShip.m_vMov, vMovRight );
+			vMovForward = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovForward, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
+			vMovRight = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovRight, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
+			sShip.m_vMov = vMovForward + vMovRight;*/
 
 			float fSpeedWeight = 1.00005f + SVector3::LengthSq( sShip.m_vMov ) * 0.05f * fabsf( sShip.m_fAccForward );
 			sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sShip.m_vMov, CalcSmoothUpdateWeight( fSpeedWeight, fElapsedTimeMs ) );
@@ -275,7 +284,7 @@ void CActors::_updateShips()
 			SVector3::Normalize( vEnemyToPlayerDir, vEnemyToPlayerDir );
 			const float fSin_DistanceToPlayer = powf( sinf( sShip.m_fPhase_DistanceToPlayer )*0.5f+0.5f, 0.5f );
 			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_DistanceToPlayer))*0.02f, -0.4f, 1.0f );
-			const float fFollowAmount = 0.25f;
+			const float fFollowAmount = 0.18f;
 			SVector3 vFollowMov = SVector3( vField.x, vField.y, 0.0f );
 
 			SVector3 vMov = sShip.m_vBoidMov * 0.001f + vFollowMov * fFollowAmount;
