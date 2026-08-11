@@ -33,15 +33,17 @@ void CActors::Create()
 	{
 		m_iPlayerShipInd = AddShip();
 		SShip& sShipPlayer = GetShip( m_iPlayerShipInd );
+		sShipPlayer.m_vMov.x = 0.05f;
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, -2.7f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_fShootFreqHz = 30.0f;
 		sShipPlayer.m_sTurret.m_fBulletSpeed = 0.2f;
+		sShipPlayer.m_sTurret.m_vColor = SVector3( 1.0f, 0.7f, 0.9f ) * 0.6f;
 	}
 
-	for ( int i = 0;i < 100; i++ )
+	for ( int i = 0;i < 30; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
@@ -49,11 +51,14 @@ void CActors::Create()
 		sShipEnemy.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
 		sShipEnemy.m_sTurret.m_fShootFreqHz = 10.0f;
 		sShipEnemy.m_sTurret.m_fBulletSpeed = 0.1f;
+		sShipEnemy.m_sTurret.m_vColor = SVector3( 0.0f, 1.0f, 1.0f ) * 0.6f;
 
 		const float fScatterRadius = 40.0f;
 		sShipEnemy.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sShipEnemy.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sShipEnemy.m_vPos.z = 0.0f;
+
+		sShipEnemy.m_vPos.x += -150.0f;
 
 
 		sShipEnemy.m_fYaw = ((float)rand() / (float)RAND_MAX) * PI2;
@@ -75,7 +80,10 @@ void CActors::Create()
 		sAsteroid.m_vPos.x = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.y = ((float)rand() / (float)RAND_MAX) * fScatterRadius * 2.0f - fScatterRadius;
 		sAsteroid.m_vPos.z = 0.0f;
-		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f ) * 20.0f;
+		sAsteroid.m_fSize = ( ((float)rand() / (float)RAND_MAX) * 0.5f + 0.5f );
+		sAsteroid.m_fSize *= sAsteroid.m_fSize;
+		sAsteroid.m_eModel = ( sAsteroid.m_fSize > 0.8f ) ? SAsteroid::ModelBig : (((rand() % 2) == 0 ) ? SAsteroid::Model01 : SAsteroid::Model02);
+		sAsteroid.m_fSize *= 20.0f;
 
 		// uniform distribution of quaternions:
 		const float u1 = ((float)rand() / (float)RAND_MAX);
@@ -85,6 +93,10 @@ void CActors::Create()
 		sAsteroid.m_qRot.x = sqrtf( 1.0f - u1 ) * cosf( 2.0f * PI * u2 );
 		sAsteroid.m_qRot.y = sqrtf( u1 ) * sinf( 2.0f * PI * u3 );
 		sAsteroid.m_qRot.z = sqrtf( u1 ) * cosf( 2.0f * PI * u3 );
+
+
+
+		
 
 		m_aAsteroids.push_back( sAsteroid );
 	}
@@ -259,13 +271,12 @@ void CActors::_updateShips()
 			sShip.m_vMov += vShipRight * sShip.m_fAccRight * 0.0001f * fElapsedTimeMs;
 
 			// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
-			/*SVector3 vMovForward( sShip.m_vDir );
+			SVector3 vMovForward( sShip.m_vDir );
 			vMovForward = vMovForward * SVector3::Dot( sShip.m_vMov, vMovForward );
 			SVector3 vMovRight( -sShip.m_vDir.y, sShip.m_vDir.x, 0.0f );
 			vMovRight = vMovRight * SVector3::Dot( sShip.m_vMov, vMovRight );
-			vMovForward = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovForward, CalcSmoothUpdateWeight( 1.0002f, fElapsedTimeMs ) );
-			vMovRight = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovRight, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
-			sShip.m_vMov = vMovForward + vMovRight;*/
+			vMovRight = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovRight, CalcSmoothUpdateWeight( 1.0f + fabsf( sShip.m_fAccForward ) * 0.0005f, fElapsedTimeMs ) );
+			sShip.m_vMov = vMovForward + vMovRight;
 
 			float fSpeedWeight = 1.00005f + SVector3::LengthSq( sShip.m_vMov ) * 0.05f * fabsf( sShip.m_fAccForward );
 			sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sShip.m_vMov, CalcSmoothUpdateWeight( fSpeedWeight, fElapsedTimeMs ) );
@@ -487,6 +498,7 @@ void STurret::Clear()
 
 	m_fShootFreqHz = 1.0f;
 	m_fBulletSpeed = 0.1f;
+	m_vColor = SVector3( 1.0f, 1.0f, 1.0f );
 
 	m_aBullets.clear();
 	m_bShoot = false;

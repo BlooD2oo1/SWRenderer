@@ -64,10 +64,12 @@ public:
 	const SMesh&		GetMeshShipDestroyer() const { return m_sMeshShipDestroyer; }
 	const SMesh&		GetMeshAsteroid01() const { return m_sMeshAsteroid01; }
 	const SMesh&		GetMeshAsteroid02() const { return m_sMeshAsteroid02; }
+	const SMesh&		GetMeshAsteroidBig() const { return m_sMeshAsteroidBig; }
 
 	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
 	const STextureIndexed& GetFontTex_TinyPixie2_6x6() const { return m_sTexFont_TinyPixie2_6x6; }
 	const STextureIndexed& GetFontTex_Habbo_9x13() const { return m_sTexFont_Habbo_9x13; }
+	const STextureIndexed& GetFontTex_Tiny_6x5() const { return m_sTexFont_Tiny_6x5; }
 
 private:
 
@@ -90,9 +92,11 @@ private:
 	SMesh				m_sMeshShipDestroyer;
 	SMesh				m_sMeshAsteroid01;
 	SMesh				m_sMeshAsteroid02;
+	SMesh				m_sMeshAsteroidBig;
 
 	STextureIndexed	m_sTexFont_KarenFat_13x16;
 	STextureIndexed	m_sTexFont_TinyPixie2_6x6;
 	STextureIndexed	m_sTexFont_Habbo_9x13;
+	STextureIndexed	m_sTexFont_Tiny_6x5;
 
 };

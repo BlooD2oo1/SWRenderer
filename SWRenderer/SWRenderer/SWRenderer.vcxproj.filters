@@ -70,6 +70,9 @@
     <ClCompile Include="src\Game\Grid.cpp">
       <Filter>src\Game</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\Effects.cpp">
+      <Filter>src\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\winAudio.h">
@@ -139,6 +142,9 @@
       <Filter>src\Game</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\Grid.h">
+      <Filter>src\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Effects.h">
       <Filter>src\Game</Filter>
     </ClInclude>
   </ItemGroup>

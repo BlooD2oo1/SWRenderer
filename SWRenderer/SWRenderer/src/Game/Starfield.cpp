@@ -22,7 +22,7 @@ void CStarfield::Create()
 {
 	Clear();
 
-	m_iStarsCount = 2000;
+	m_iStarsCount = 1000;
 	m_pStars = new SVertexPC[m_iStarsCount];
 	for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 	{
@@ -31,9 +31,9 @@ void CStarfield::Create()
 		m_pStars[i].vPos.z = ((float)rand()/(float)RAND_MAX);
 
 		float a = ((float)rand()/(float)RAND_MAX);
-		a = powf( a, 40.0f );
-		a = a * 0.8f + 0.2f;
-		m_pStars[i].sAttribs.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.6f, a*2.0f );
+		a = powf( a, 16.0f );
+		a = a * 0.9f + 0.1f;
+		m_pStars[i].sAttribs.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.5f, a*2.0f );
 	}
 }
 

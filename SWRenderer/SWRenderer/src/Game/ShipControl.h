@@ -33,10 +33,13 @@ struct STurret
 
 	float						m_fShootFreqHz;
 	float						m_fBulletSpeed;
+	SVector3					m_vColor;
 
 	std::vector< SBullet >		m_aBullets;
 	bool						m_bShoot;
 	uint64_t					m_iLastBulletTimeStampNs;
+
+	
 };
 
 struct SShip
@@ -79,9 +82,17 @@ struct SShip
 
 struct SAsteroid
 {
+	enum EModel
+	{
+		Model01,
+		Model02,
+		ModelBig,
+	};
+
 	SVector3	m_vPos;
 	float		m_fSize;
 	SQuaternion	m_qRot;
+	EModel		m_eModel;
 };
 
 class CActors

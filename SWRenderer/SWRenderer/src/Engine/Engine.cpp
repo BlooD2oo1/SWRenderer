@@ -38,10 +38,12 @@ void CEngine::Clear()
 	m_sMeshShipDestroyer.Clear();
 	m_sMeshAsteroid01.Clear();
 	m_sMeshAsteroid02.Clear();
+	m_sMeshAsteroidBig.Clear();
 
 	m_sTexFont_KarenFat_13x16.Clear();
 	m_sTexFont_TinyPixie2_6x6.Clear();
 	m_sTexFont_Habbo_9x13.Clear();
+	m_sTexFont_Tiny_6x5.Clear();
 
 	CGraphics::GetInstance().Clear();
 }
@@ -55,12 +57,14 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	PCX_LoadFromFile( "data/KarenFat_13x16.pcx", m_sTexFont_KarenFat_13x16 );
 	PCX_LoadFromFile( "data/TinyPixie2_6x6.pcx", m_sTexFont_TinyPixie2_6x6 );
 	PCX_LoadFromFile( "data/Habbo_9x13.pcx", m_sTexFont_Habbo_9x13 );
+	PCX_LoadFromFile( "data/tiny_6x5.pcx", m_sTexFont_Tiny_6x5 );
 
 	PLY_LoadFromFile( "data/ShipPlayer.ply", m_sMeshShipPlayer );
 	PLY_LoadFromFile( "data/ShipScout.ply", m_sMeshShipScout );
 	PLY_LoadFromFile( "data/ShipDestroyer.ply", m_sMeshShipDestroyer );
 	PLY_LoadFromFile( "data/Asteroid01.ply", m_sMeshAsteroid01 );
 	PLY_LoadFromFile( "data/Asteroid02.ply", m_sMeshAsteroid02 );
+	PLY_LoadFromFile( "data/AsteroidBig.ply", m_sMeshAsteroidBig );
 
 	m_cSceneMainMenu.Create();
 	m_cSceneCredits.Create();

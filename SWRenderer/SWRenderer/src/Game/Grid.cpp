@@ -40,7 +40,8 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 	{
 		BGRA8 Execute( const SVertexPCW::SAttribs& in ) const
 		{
-			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, ( ( ((int)(in.fW*10.0f)) % 5 ) != 2 ) ? in.vColor.w : 0.0f );
+			//return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, ( ( ((int)(in.fW*10.0f)) % 5 ) != 2 ) ? in.vColor.w : 0.0f );
+			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, fabsf( (in.fW*5.0f-floorf(in.fW*5.0f)) * 2.0f - 1.0f ) * in.vColor.w );
 		}
 	};
 
