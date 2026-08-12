@@ -20,6 +20,7 @@ void CSceneGame::Clear()
 	m_sTexHUD_Left.Clear();
 	m_sTexHUD_Bottom.Clear();
 	m_sTexHUD_Right.Clear();
+	m_sTexHUD_Tick.Clear();
 	m_cStarfield.Clear();
 	m_cGrid.Clear();
 	m_cActors.Clear();
@@ -34,6 +35,7 @@ void CSceneGame::Create()
 	PCX_LoadFromFile( "data/hud_left.pcx", m_sTexHUD_Left );
 	PCX_LoadFromFile( "data/hud_bottom.pcx", m_sTexHUD_Bottom );
 	PCX_LoadFromFile( "data/hud_right.pcx", m_sTexHUD_Right );
+	PCX_LoadFromFile( "data/hud_tick.pcx", m_sTexHUD_Tick );
 	
 	m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth+2, (float)CGraphics::GetInstance().GetFrameBuffer().iHeight-1 ) );
 	m_sCamera.m_fAspect = ( m_sViewportGameView.Get11().x - m_sViewportGameView.Get00().x ) / ( m_sViewportGameView.Get11().y - m_sViewportGameView.Get00().y );
@@ -114,12 +116,38 @@ void CSceneGame::Render()
 		int iHUDX = CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth;
 		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Right, iHUDX, 0 );
 
-		CGraphics::GetInstance().DrawText( iHUDX + 7, 8,  "FUEL    83%", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
+		char szText[256];
+		//sprintf_s( szText, "HP     %4.1d", (int)m_cActors.GetShipPlayer().m_fHP );
+		//CGraphics::GetInstance().DrawText( iHUDX + 7, 8,  szText, BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
+		CGraphics::GetInstance().DrawText( iHUDX + 5, 8,  "HP", BGRA8{ (uint8_t)40, 00, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -2 );
+
+		struct SBlendFuncAdditiveWithColorMultiplier
+		{
+			BGRA8 sColorMultiplier;
+			inline void Execute(BGRA8& dest, BGRA8 src) const
+			{
+				uint32_t rOut = dest.r + ((src.r * src.a) >> 8);
+				uint32_t gOut = dest.g + ((src.g * src.a) >> 8);
+				uint32_t bOut = dest.b + ((src.b * src.a) >> 8);
+				rOut = (uint32_t)(rOut * sColorMultiplier.r / 255);
+				gOut = (uint32_t)(gOut * sColorMultiplier.g / 255);
+				bOut = (uint32_t)(bOut * sColorMultiplier.b / 255);
+				dest.r = (uint8_t)(rOut > 255 ? 255 : rOut);
+				dest.g = (uint8_t)(gOut > 255 ? 255 : gOut);
+				dest.b = (uint8_t)(bOut > 255 ? 255 : bOut);
+			}
+		} sBlendFuncAdditiveWithColorMultiplier;
+		for ( int i = 0; i < 20; i++ )
+		{
+			sBlendFuncAdditiveWithColorMultiplier.sColorMultiplier = (i < (int)(m_cActors.GetShipPlayer().m_fHP*0.2f)) ? BGRA8{ (uint8_t)60, 0, 180, 255 } : BGRA8{ (uint8_t)20, 0, 30, 255 };
+			CGraphics::GetInstance().DrawTexture( sBlendFuncAdditiveWithColorMultiplier, m_sTexHUD_Tick, iHUDX + 14 + i*3, 7 );
+		}
+
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 14, "SHIELD  12%", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 20, "AMMO    174", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
 		CGraphics::GetInstance().DrawText( iHUDX + 7, 26, "ROCKET  0", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
 
-		char szText[256];
+		
 		float fSpeed = SVector3::Length( m_cActors.GetShipPlayer().m_vMov ) * 1000.0f;
 		sprintf_s( szText, "SPEED %4.1d", (int)fSpeed );
 		CGraphics::GetInstance().DrawText( iHUDX + 6, 42, szText, BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
@@ -222,6 +250,19 @@ void CSceneGame::Render()
 		if ( sShipPlayer.m_sTurret.m_bShoot )
 		{
 			sVertexShaderBasic.vColor2 = SVector3( 0.6f, 0.5f, 1.0f ) * 0.33f;
+		}
+		if ( sShipPlayer.m_fDamageTimerMs > 0.0f )
+		{
+			sVertexShaderBasic.vColor0.x *= 0.2f;
+			sVertexShaderBasic.vColor0.y *= 0.2f;
+			sVertexShaderBasic.vColor0.z = 1.0f;
+			sVertexShaderBasic.vColor1.x *= 0.2f;
+			sVertexShaderBasic.vColor1.y *= 0.2f;
+			sVertexShaderBasic.vColor1.z = 1.0f;
+			sVertexShaderBasic.vColor2.x *= 0.2f;
+			sVertexShaderBasic.vColor2.y *= 0.2f;
+			sVertexShaderBasic.vColor2.z = 1.0f;
+			sVertexShaderBasic.fAlpha = 0.3f;
 		}
 
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipPlayer().m_pVertices, CEngine::GetInstance().GetMeshShipPlayer().m_iVertexCount, CEngine::GetInstance().GetMeshShipPlayer().m_pIndices, CEngine::GetInstance().GetMeshShipPlayer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );

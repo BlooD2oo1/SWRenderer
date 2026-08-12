@@ -37,6 +37,7 @@ private:
 	STextureIndexed	m_sTexHUD_Left;
 	STextureIndexed	m_sTexHUD_Bottom;
 	STextureIndexed	m_sTexHUD_Right;
+	STextureIndexed	m_sTexHUD_Tick;
 
 	CStarfield		m_cStarfield;
 	
