@@ -377,7 +377,7 @@ void CSceneGame::Render()
 				out.vPos.y += vPos.y;
 				out.vPos.z += vPos.z;
 				SMatrix::Mul( out.vPos, out.vPos, matViewProjViewPort );
-				out.sAttribs.vColor = Lerp( vColor0, vColor1, in.sAttribs.vColor.x );
+				SVector4::Lerp( out.sAttribs.vColor, vColor0, vColor1, in.sAttribs.vColor.x );
 				out.sAttribs.vColor.w *= fAlpha;
 			}
 		} sVertexShaderAsteroid;

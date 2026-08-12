@@ -235,6 +235,14 @@ struct SVector4
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 	}
+
+	constexpr static void Lerp( SVector4& out, const SVector4& a, const SVector4& b, float t ) noexcept
+	{
+		out.x = a.x + (b.x - a.x) * t;
+		out.y = a.y + (b.y - a.y) * t;
+		out.z = a.z + (b.z - a.z) * t;
+		out.w = a.w + (b.w - a.w) * t;
+	}
 };
 
 constexpr inline SVector4 operator+(const SVector4& a, const SVector4& b) noexcept { return SVector4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }

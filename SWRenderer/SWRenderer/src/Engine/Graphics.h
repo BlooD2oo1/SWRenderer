@@ -135,12 +135,16 @@ struct SVertexPC
 
 		inline static void Lerp( SAttribs& out, const SAttribs& v0, const SAttribs& v1, float t )
 		{
-			out.vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
+			SVector4::Lerp( out.vColor, v0.vColor, v1.vColor, t );
 		}
 
 		inline static void LerpPerspective( SAttribs& out, const SAttribs& v0, const SAttribs& v1, float a, float b )
 		{
-			out.vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
+			float abSum = a + b;
+			out.vColor.x = (v0.vColor.x * a + v1.vColor.x * b) / abSum;
+			out.vColor.y = (v0.vColor.y * a + v1.vColor.y * b) / abSum;
+			out.vColor.z = (v0.vColor.z * a + v1.vColor.z * b) / abSum;
+			out.vColor.w = (v0.vColor.w * a + v1.vColor.w * b) / abSum;	
 		}
 	} sAttribs;
 };
@@ -174,14 +178,18 @@ struct SVertexPCW
 
 		inline static void Lerp( SAttribs& out, const SAttribs& v0, const SAttribs& v1, float t )
 		{
-			out.vColor = v0.vColor + (v1.vColor - v0.vColor) * t;
+			SVector4::Lerp( out.vColor, v0.vColor, v1.vColor, t );
 			out.fW = v0.fW + (v1.fW - v0.fW) * t;
 		}
 
 		inline static void LerpPerspective( SAttribs& out, const SAttribs& v0, const SAttribs& v1, float a, float b )
 		{
-			out.vColor = (v0.vColor * a + v1.vColor * b) / (a + b);
-			out.fW = (v0.fW * a + v1.fW * b) / (a + b);
+			float abSum = a + b;
+			out.vColor.x = (v0.vColor.x * a + v1.vColor.x * b) / abSum;
+			out.vColor.y = (v0.vColor.y * a + v1.vColor.y * b) / abSum;
+			out.vColor.z = (v0.vColor.z * a + v1.vColor.z * b) / abSum;
+			out.vColor.w = (v0.vColor.w * a + v1.vColor.w * b) / abSum;			
+			out.fW = (v0.fW * a + v1.fW * b) / abSum;
 		}
 	} sAttribs;
 };
@@ -591,7 +599,11 @@ void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t iVertexCount,
 #ifdef VERTEXCACHE
 	
 	static std::vector<SClipVertex<typename TVertexShader::AttribsType>> aTransformedVertices;
-	aTransformedVertices.resize( iVertexCount );
+	if ( aTransformedVertices.size() < iVertexCount )
+	{
+		// Preallocate memory for transformed vertices
+		aTransformedVertices.resize( iVertexCount );
+	}
 
 	for ( uint32_t i = 0; i < iVertexCount; i++ )
 	{
