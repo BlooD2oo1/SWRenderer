@@ -33,6 +33,7 @@ struct STurret
 	float						m_fShootFreqHz;
 	float						m_fBulletSpeed;
 	SVector3					m_vColor;
+	float						m_fDamage;
 
 	std::vector< SBullet >		m_aBullets;
 	bool						m_bShoot;

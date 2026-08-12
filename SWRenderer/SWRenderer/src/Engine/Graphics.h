@@ -3,6 +3,7 @@
 #include "Common/Globals.h"
 #include "Common/Vector.h"
 #include "Common/Math.h"
+#include "Common/Log.h"
 
 struct BGRA8
 {
@@ -268,7 +269,7 @@ public:
 	
 	// Rasterization functions ( no clipping )
 	template<class TBlendFunc>
-	void RasterizePixel( int x, int y, BGRA8 sColor, const TBlendFunc& sBlendFunc );
+	inline void RasterizePixel( int x, int y, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TAttribs, class TPixelShader, class TBlendFunc>
 	void RasterizeLineFlat( const SVector2& v0o, const SVector2& v1o, const TAttribs& sAttribs, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TAttribs, class TPixelShader, class TBlendFunc>
@@ -320,7 +321,7 @@ private:
 };
 
 template<class TBlendFunc>
-void CGraphics::RasterizePixel( int x, int y, BGRA8 sColor, const TBlendFunc& sBlendFunc )
+inline void CGraphics::RasterizePixel( int x, int y, BGRA8 sColor, const TBlendFunc& sBlendFunc )
 {
 	/*if ( x < 0 || x >= m_sFrameBuffer.iWidth || y < 0 || y >= m_sFrameBuffer.iHeight )
 	{
@@ -718,7 +719,16 @@ void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed
 					sColor.r = sTex.m_pPalette[uIndex*3+2];
 					sColor.g = sTex.m_pPalette[uIndex*3+1];
 					sColor.b = sTex.m_pPalette[uIndex*3+0];
+					sColor.a = 255;
 					RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
+					if ( iWidth == 4 && iHeight == 6 )
+					{
+						if ( (iTexY+iy) * sTex.m_iWidth + (iTexX+ix) == 14 )
+						{
+							LOG( "color: %d,%d,%d\n", sColor.r, sColor.g, sColor.b );
+							LOG( "dest: %d,%d,%d\n", m_sFrameBuffer.pData[iDestY * m_sFrameBuffer.iWidth + iDestX].r, m_sFrameBuffer.pData[iDestY * m_sFrameBuffer.iWidth + iDestX].g, m_sFrameBuffer.pData[iDestY * m_sFrameBuffer.iWidth + iDestX].b );
+						}
+					}
 				}			
 			}
 		}

@@ -41,6 +41,7 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_fShootFreqHz = 30.0f;
 		sShipPlayer.m_sTurret.m_fBulletSpeed = 0.2f;
+		sShipPlayer.m_sTurret.m_fDamage = 10.0f;
 		sShipPlayer.m_sTurret.m_vColor = SVector3( 1.0f, 0.7f, 0.9f ) * 0.6f;
 	}
 
@@ -52,6 +53,7 @@ void CActors::Create()
 		sShipEnemy.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
 		sShipEnemy.m_sTurret.m_fShootFreqHz = 10.0f;
 		sShipEnemy.m_sTurret.m_fBulletSpeed = 0.1f;
+		sShipEnemy.m_sTurret.m_fDamage = 3.0f;
 		sShipEnemy.m_sTurret.m_vColor = SVector3( 0.0f, 1.0f, 1.0f ) * 0.6f;
 
 		const float fScatterRadius = 40.0f;
@@ -386,7 +388,7 @@ void CActors::_updateShips()
 			{
 				sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.05f;
 
-				_onDamageShipByBullet( sShip, 34.0f, sBullet.m_vMov );
+				_onDamageShipByBullet( sShip, sShipPlayer.m_sTurret.m_fDamage, sBullet.m_vMov );
 
 				SAudioEvent sAudioEvent;
 				sAudioEvent.type = SAudioEvent::GunHit;
@@ -576,6 +578,8 @@ void STurret::Clear()
 	m_fShootFreqHz = 1.0f;
 	m_fBulletSpeed = 0.1f;
 	m_vColor = SVector3( 1.0f, 1.0f, 1.0f );
+
+	m_fDamage = 1.0f;
 
 	m_aBullets.clear();
 	m_bShoot = false;

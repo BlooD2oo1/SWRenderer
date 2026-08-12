@@ -30,7 +30,7 @@ constexpr double TARGET_FPS = 60.0;
 constexpr double TARGET_FRAME_TIME = 1.0 / TARGET_FPS;
 #endif
 
-bool bFullScreenBorderless = true;
+bool bFullScreenBorderless = false;
 
 bool bLockMouse = true;
 
