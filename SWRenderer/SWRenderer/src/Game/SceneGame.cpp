@@ -387,7 +387,7 @@ void CSceneGame::Render()
 		for ( size_t iAsteroidInd = 0; iAsteroidInd < m_cActors.GetAsteroidCount(); iAsteroidInd++ )
 		{
 			const SAsteroid& sAsteroid = m_cActors.GetAsteroid(iAsteroidInd);
-			//if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
+			if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
 			{
 				SMatrix::Identity( sVertexShaderAsteroid.matWorld );
 				SQuaternion::ToMatrix( sVertexShaderAsteroid.matWorld, sAsteroid.m_qRot );
