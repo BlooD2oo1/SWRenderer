@@ -33,7 +33,10 @@ private:
 	
 	SViewPort		m_sViewportMiniMap;
 	
-	STextureIndexed	m_sTexHUD;
+	STextureIndexed	m_sTexHUD_Top;
+	STextureIndexed	m_sTexHUD_Left;
+	STextureIndexed	m_sTexHUD_Bottom;
+	STextureIndexed	m_sTexHUD_Right;
 
 	CStarfield		m_cStarfield;
 	

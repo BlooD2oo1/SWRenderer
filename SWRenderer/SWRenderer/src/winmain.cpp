@@ -30,7 +30,40 @@ constexpr double TARGET_FPS = 60.0;
 constexpr double TARGET_FRAME_TIME = 1.0 / TARGET_FPS;
 #endif
 
+bool bFullScreenBorderless = true;
+
 bool bLockMouse = true;
+
+static WINDOWPLACEMENT g_wpPrev = { sizeof(g_wpPrev) };
+
+void ToggleFullscreen(HWND hwnd)
+{
+	DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
+
+	if (!bFullScreenBorderless)
+	{
+		MONITORINFO mi = { sizeof(mi) };
+		if (GetWindowPlacement(hwnd, &g_wpPrev) &&
+			GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &mi))
+		{
+			SetWindowLong(hwnd, GWL_STYLE, (dwStyle & ~WS_OVERLAPPEDWINDOW) | WS_POPUP);
+			SetWindowPos(hwnd, HWND_TOP,
+				mi.rcMonitor.left, mi.rcMonitor.top,
+				mi.rcMonitor.right - mi.rcMonitor.left,
+				mi.rcMonitor.bottom - mi.rcMonitor.top,
+				SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+		}
+		bFullScreenBorderless = true;
+	}
+	else
+	{
+		SetWindowLong(hwnd, GWL_STYLE, (dwStyle & ~WS_POPUP) | WS_OVERLAPPEDWINDOW);
+		SetWindowPlacement(hwnd, &g_wpPrev);
+		SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+		bFullScreenBorderless = false;
+	}
+}
 
 void EnableDPIAwareness()
 {
@@ -74,6 +107,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 		}
 
+		case WM_SYSKEYDOWN:
+		{
+			if (wParam == VK_RETURN && (lParam & (1 << 29)))
+			{
+				ToggleFullscreen(hwnd);
+				return 0;
+			}
+			break;
+		}
+
 		case WM_KEYDOWN:
 		{
 			/*if ( wParam == VK_ESCAPE )
@@ -81,6 +124,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				g_bRunning = false;
 				return 0;
 			}*/
+			if ( wParam == VK_SUBTRACT )
+			{
+				iPixelSizeX = std::max(1, iPixelSizeX - 1);
+				iPixelSizeY = std::max(1, iPixelSizeY - 1);
+				return 0;
+			}
+			if ( wParam == VK_ADD )
+			{
+				iPixelSizeX = std::min(10, iPixelSizeX + 1);
+				iPixelSizeY = std::min(10, iPixelSizeY + 1);
+				return 0;
+			}
 			CEngine::GetInstance().On_KeyDown((uint32_t)wParam);
 			return 0;
 		}
@@ -98,8 +153,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			if ( bLockMouse )
 			{
-				int centerX = (WIDTH * iPixelSizeX) / 2;
-				int centerY = (HEIGHT * iPixelSizeY) / 2;
+				RECT clientRect;
+				GetClientRect(hwnd, &clientRect);
+				int centerX = (clientRect.right - clientRect.left) / 2;
+				int centerY = (clientRect.bottom - clientRect.top) / 2;
 
 				if (iX != centerX || iY != centerY)
 				{
@@ -111,7 +168,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-			
 			return 0;
 		}
 
@@ -190,13 +246,47 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
 	RegisterClass(&wc);
 
-	DWORD style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+	DWORD style = 0;
+	DWORD exStyle = 0;
+	int posX = CW_USEDEFAULT;
+	int posY = CW_USEDEFAULT;
+	int windowWidth = 0;
+	int windowHeight = 0;
 
-	RECT rect = {0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY};
+	if (bFullScreenBorderless)
+	{
+		RECT rect = { 0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY };
+		AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+		int w = rect.right - rect.left;
+		int h = rect.bottom - rect.top;
 
-	AdjustWindowRect(&rect, style, FALSE);
+		g_wpPrev.length = sizeof(WINDOWPLACEMENT);
+		g_wpPrev.flags = 0;
+		g_wpPrev.showCmd = SW_SHOWNORMAL;
+		g_wpPrev.rcNormalPosition = { 100, 100, 100 + w, 100 + h };
 
-	HWND hwnd = CreateWindowEx(0, wc.lpszClassName, L"SWRenderer", style, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, hInstance, nullptr);
+		style = WS_POPUP | WS_VISIBLE;
+		exStyle = WS_EX_APPWINDOW;
+		posX = 0;
+		posY = 0;
+		windowWidth = GetSystemMetrics(SM_CXSCREEN);
+		windowHeight = GetSystemMetrics(SM_CYSCREEN);
+	}
+	else
+	{
+		style = WS_OVERLAPPEDWINDOW;
+		//style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+		RECT rect = { 0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY };
+		AdjustWindowRect(&rect, style, FALSE);
+		windowWidth = rect.right - rect.left;
+		windowHeight = rect.bottom - rect.top;
+	}
+
+	HWND hwnd = CreateWindowEx(
+		exStyle, wc.lpszClassName, L"SWRenderer", style,
+		posX, posY, windowWidth, windowHeight,
+		nullptr, nullptr, hInstance, nullptr
+	);
 
 	ShowWindow(hwnd, SW_SHOW);
 
@@ -225,11 +315,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		CPerf cPerfFrame;
 		cPerfFrame.BeginPerf();
 
-		{
+		/*{
 			wchar_t title[256];
 			swprintf(title, 256, L" SWRenderer %dx%d %.2f ms (%.2f fps)", WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, (double)iElapsedTimeNs/1000000.0, 1000000000.0/(double)iElapsedTimeNs);
 			SetWindowText(hwnd, title);
-		}
+		}*/
 
 #ifdef VSYNC
 		DwmFlush();
