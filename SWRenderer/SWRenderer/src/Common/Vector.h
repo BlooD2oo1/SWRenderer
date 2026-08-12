@@ -323,6 +323,12 @@ struct SMatrix
 		return out;
 	}
 
+	constexpr static SMatrix& Translate( SMatrix& out, const SVector3& vP ) noexcept
+	{
+		out.m30 += vP.x;	out.m31 += vP.y;	out.m32 += vP.z;
+		return out;
+	}
+
 	static SVector3& TransformCoord( SVector3& out, const SVector3& v, const SMatrix& m ) noexcept
 	{
 		float x = v.x * m.m00 + v.y * m.m10 + v.z * m.m20 + m.m30;

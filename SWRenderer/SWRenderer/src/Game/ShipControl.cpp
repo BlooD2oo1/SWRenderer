@@ -73,7 +73,7 @@ void CActors::Create()
 
 	}
 
-	m_aAsteroids.reserve( 1000 );
+	m_aAsteroids.reserve( 200 );
 	for ( size_t i = 0; i < m_aAsteroids.capacity(); i++ )
 	{
 		SAsteroid sAsteroid;
@@ -275,7 +275,7 @@ void CActors::_updateShips()
 			vMovRight = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), vMovRight, CalcSmoothUpdateWeight( 1.0f + fabsf( sShip.m_fAccForward ) * 0.0005f, fElapsedTimeMs ) );
 			sShip.m_vMov = vMovForward + vMovRight;
 
-			float fSpeedWeight = 1.00005f + SVector3::LengthSq( sShip.m_vMov ) * 0.05f * fabsf( sShip.m_fAccForward );
+			float fSpeedWeight = 1.00005f + SVector3::LengthSq( sShip.m_vMov ) * 0.05f;// * fabsf( sShip.m_fAccForward );
 			sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sShip.m_vMov, CalcSmoothUpdateWeight( fSpeedWeight, fElapsedTimeMs ) );
 
 			//m_fRoll = m_fYaw*0.5f;

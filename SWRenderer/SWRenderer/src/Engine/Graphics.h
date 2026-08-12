@@ -276,10 +276,14 @@ public:
 	void DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
+	
+	template< class TAttribs, class TPixelShader, class TBlendFunc>
+	inline void DrawLine3D( SClipVertex<TAttribs> vPh0, SClipVertex<TAttribs> vPh1, const SViewPort& sViewPort, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
+	
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-	void DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
+	void DrawLineList3D( const TVertex* pVertices, uint32_t iVertexCount, uint32_t* pIndices, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
 	template<class TBlendFunc>
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
@@ -540,6 +544,31 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewP
 	}
 }
 
+template< class TAttribs, class TPixelShader, class TBlendFunc>
+inline void CGraphics::DrawLine3D( SClipVertex<TAttribs> vPh0, SClipVertex<TAttribs> vPh1, const SViewPort& sViewPort, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+{
+	if ( ClipLineZ( vPh0, vPh1 ) )
+	{
+		if ( ClipLineXY( vPh0, vPh1, sViewPort ) )
+		{
+			{
+				float fWRec0 = 1.0f / vPh0.vPos.w;
+				vPh0.vPos.x = vPh0.vPos.x * fWRec0;
+				vPh0.vPos.y = vPh0.vPos.y * fWRec0;
+
+				float fWRec1 = 1.0f / vPh1.vPos.w;
+				vPh1.vPos.x = vPh1.vPos.x * fWRec1;
+				vPh1.vPos.y = vPh1.vPos.y * fWRec1;
+			}
+
+			SVector2 vScreen0( vPh0.vPos.x, vPh0.vPos.y );
+			SVector2 vScreen1( vPh1.vPos.x, vPh1.vPos.y );
+
+			RasterizeLine( vScreen0, vPh0.sAttribs, vPh0.vPos.w, vScreen1, vPh1.sAttribs, vPh1.vPos.w, sPixelShader, sBlendFunc );
+		}
+	}
+}
+
 template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
 {
@@ -548,20 +577,45 @@ void CGraphics::DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCou
 	{
 		int iInd0 = i*2+0;
 		int iInd1 = i*2+1;
-		DrawLine3D( pLineList[iInd0], pLineList[iInd1], sViewPort, sVertexShader, sPixelShader, sBlendFunc );
+
+		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sViewPort, sVertexShader, sPixelShader, sBlendFunc );
 	}
 }
 
+#define VERTEXCACHE
 template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t* pIndices, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t iVertexCount, uint32_t* pIndices, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
 {
-	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 );
+	assert( pVertices != nullptr && pIndices != nullptr && iPrimitiveCount > 0 && iVertexCount > 0 );
+
+#ifdef VERTEXCACHE
+	
+	static std::vector<SClipVertex<typename TVertexShader::AttribsType>> aTransformedVertices;
+	aTransformedVertices.resize( iVertexCount );
+
+	for ( uint32_t i = 0; i < iVertexCount; i++ )
+	{
+		sVertexShader.Execute( aTransformedVertices[i], pVertices[i] );
+	}
+
+	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
+	{
+		uint32_t i0 = pIndices[i * 2 + 0];
+		uint32_t i1 = pIndices[i * 2 + 1];
+		DrawLine3D( aTransformedVertices[i0], aTransformedVertices[i1], sViewPort, sPixelShader, sBlendFunc );
+	}
+
+#else
+
 	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
 	{
 		uint32_t iInd0 = pIndices[i * 2 + 0];
 		uint32_t iInd1 = pIndices[i * 2 + 1];
 		DrawLine3D( pVertices[iInd0], pVertices[iInd1], sViewPort, sVertexShader, sPixelShader, sBlendFunc );
 	}
+
+#endif
+
 }
 
 template<class TBlendFunc>
