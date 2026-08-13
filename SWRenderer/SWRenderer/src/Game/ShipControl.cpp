@@ -45,7 +45,7 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_vColor = SVector3( 1.0f, 0.7f, 0.9f ) * 0.6f;
 	}
 
-	for ( int i = 0;i < 30; i++ )
+	for ( int i = 0; i < 10; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
@@ -71,11 +71,11 @@ void CActors::Create()
 		sShipEnemy.f2 = ((float)rand() / (float)RAND_MAX);
 		sShipEnemy.f3 = ((float)rand() / (float)RAND_MAX);*/
 
-		sShipEnemy.m_fPhase_DistanceToPlayer = ((float)rand() / (float)RAND_MAX) * PI2;
+		sShipEnemy.m_fPhase_01 = ((float)rand() / (float)RAND_MAX) * PI2;
 
 	}
 
-	m_aAsteroids.reserve( 800 );
+	m_aAsteroids.reserve( 0 );
 	for ( size_t i = 0; i < m_aAsteroids.capacity(); i++ )
 	{
 		SAsteroid sAsteroid;
@@ -267,18 +267,39 @@ void CActors::_updateBoids()
 	}
 }
 
-void GetField( SVector2& vField, const SVector2& p, const SVector2& p0, const SVector2& d0 )
+void CActors::GetField( SVector2& vField, const SVector2& p, const SVector2& p0, const SVector2& d0 )
 {
 	vField = SVector2( 0.0f, 0.0f );
 	SVector2 v0( (p0+d0*2.0f) - p );
-	SVector2 v1( (p0+d0*41.0f) - p );
-	SVector2 v2( (p0+d0*42.0f) - p );
+	SVector2 v1( (p0+d0*35.0f) - p );
+	SVector2 v2( (p0+d0*37.0f) - p );
 	float l0 = SVector2::Length( v0 );
 	float l1 = SVector2::Length( v1 );
 	float l2 = SVector2::Length( v2 );
 	SVector2::Normalize( vField, v0*0.01f - v1/l1/l1*4.0f - v2/l2/l2*5.0f );
-	float fRepel = Clamp( 1000.0f / l0 / l0 / l0, 0.0f, 0.03f );
-	vField -= v0 * fRepel;
+
+	SVector2 vD( (p0) - p );
+	float lD = SVector2::Length( vD );
+	{
+		float fMulP = Clamp( ( lD - 15.0f ) / 10.0f, -1.0f, 1.0f );
+		float fMulN = Clamp( ( lD - 10.0f ) / 4.0f, -1.0f, 1.0f );
+		if ( fMulP > 0.0f )
+		{
+			vField *= fMulP;
+		}
+		else if ( fMulN < 0.0f )
+		{
+			vField = vD/lD * fMulN;
+		}
+		else
+		{
+			vField = SVector2( 0.0f, 0.0f );
+		}
+		
+	}
+
+	//float fRepel = Clamp( 1000.0f / l0 / l0 / l0, 0.0f, 0.03f );
+	//vField -= v0 * fRepel;
 }
 
 void CActors::_updateShips()
@@ -327,20 +348,20 @@ void CActors::_updateShips()
 			SVector3 vEnemyToPlayerDir( sShipPlayer.m_vPos - sShip.m_vPos );
 			const float fEnemyToPlayerDist = SVector3::Length( vEnemyToPlayerDir );
 			SVector3::Normalize( vEnemyToPlayerDir, vEnemyToPlayerDir );
-			const float fSin_DistanceToPlayer = powf( sinf( sShip.m_fPhase_DistanceToPlayer )*0.5f+0.5f, 0.5f );
+			const float fSin_Phase_01 = sinf( sShip.m_fPhase_01 );
 
 			SVector2 vField( 0.0f, 0.0f );
 			GetField( vField, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), SVector2( sShipPlayer.m_vPos.x, sShipPlayer.m_vPos.y ), SVector2( sShipPlayer.m_vDir.x, sShipPlayer.m_vDir.y ) );
-
-			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_DistanceToPlayer))*0.02f, -0.4f, 1.0f );
-			const float fFollowAmount = 0.18f;
+			vField *= ( fSin_Phase_01 * 0.5f + 0.5f ) * 0.7f + 0.3f;
+			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_Phase_01))*0.02f, -0.4f, 1.0f );
+			const float fFollowAmount = 0.2f;
 			SVector3 vFollowMov = SVector3( vField.x, vField.y, 0.0f );
 
 			// ha allunk az urhajoval ne alljanak kukan egy helybe
-			SVector2 vRotateFollowMov( -vEnemyToPlayerDir.y, vEnemyToPlayerDir.x );
-			SVector2::Normalize( vRotateFollowMov, vRotateFollowMov );
+			//SVector2 vRotateFollowMov( -vEnemyToPlayerDir.y, vEnemyToPlayerDir.x );
+			//SVector2::Normalize( vRotateFollowMov, vRotateFollowMov );
 
-			SVector3 vMov = sShip.m_vBoidMov * 0.001f + vFollowMov * fFollowAmount + SVector3( vRotateFollowMov, 0.0f ) * 0.05f;
+			SVector3 vMov = sShip.m_vBoidMov * 0.001f + vFollowMov * fFollowAmount;// + SVector3( vRotateFollowMov, 0.0f ) * 0.05f;
 
 			sShip.m_vMov = Lerp( vMov, sShip.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 
@@ -355,7 +376,7 @@ void CActors::_updateShips()
 			sShip.m_fRoll = Lerp( -sShip.m_fYawSpeed, sShip.m_fRoll, CalcSmoothUpdateWeight( 1.002f, fElapsedTimeMs ) );
 
 
-			if ( fSin_DistanceToPlayer < 0.1f && SVector3::Dot( sShip.m_vDir, vEnemyToPlayerDir ) > 0.8f )
+			if ( fSin_Phase_01 > 0.9f && fSin_Phase_01 < 1.0f && SVector3::Dot( sShip.m_vDir, vEnemyToPlayerDir ) > 0.8f )
 			{
 				if ( !sShip.m_sTurret.m_bShoot )
 				{
@@ -368,8 +389,8 @@ void CActors::_updateShips()
 				sShip.m_sTurret.m_bShoot = false;
 			}
 
-			sShip.m_fPhase_DistanceToPlayer += fElapsedTimeMs * 0.0003f;
-			if ( sShip.m_fPhase_DistanceToPlayer > PI2 ) sShip.m_fPhase_DistanceToPlayer -= PI2;
+			sShip.m_fPhase_01 += fElapsedTimeMs * 0.001f;
+			if ( sShip.m_fPhase_01 > PI2 ) sShip.m_fPhase_01 -= PI2;
 		}
 	}
 
@@ -539,7 +560,7 @@ void SShip::Clear()
 	m_fHP = 100.0f;
 	m_fDamageTimerMs = 0.0f;
 	m_bDead = false;
-	m_fPhase_DistanceToPlayer = 0.0f;
+	m_fPhase_01 = 0.0f;
 
 	m_fYawSpeed = 0.0f;
 	m_fYaw_ctrl = 0.0f;	

@@ -68,7 +68,7 @@ void CSceneGame::Update()
 		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 1800.0f, 100.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 1400.0f, 150.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
 		//m_sCamera.m_vEye.z += 200.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
@@ -167,7 +167,9 @@ void CSceneGame::Render()
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
-	/*{
+//#define DRAW_FIELD
+#ifdef DRAW_FIELD
+	{
 		struct SVertexShaderBasic
 		{
 			using AttribsType = SVertexPW::SAttribs;
@@ -191,23 +193,28 @@ void CSceneGame::Render()
 
 		SVector2 vField( 0.0f, 0.0f );
 	
-		for ( int x = -100; x < 100; x++ )
-		for ( int y = -100; y < 100; y++ )
+		const float fSize = 5.0f;
+		const int iGridSize = 50;
+		for ( int x = -iGridSize; x < iGridSize; x++ )
+		for ( int y = -iGridSize; y < iGridSize; y++ )
 		{
-			float fX = (float)x * 10.0f;
-			float fY = (float)y * 10.0f;
+			float fX = (float)x * fSize;
+			float fY = (float)y * fSize;
+			
+			fX += (int)(m_cActors.GetShipPlayer().m_vPos.x/fSize)*fSize;
+			fY += (int)(m_cActors.GetShipPlayer().m_vPos.y/fSize)*fSize;
 
 			SVector2 p( fX, fY );
 			SVector2 vField( 0.0f, 0.0f );
-			GetField( vField, p, SVector2( sShipPlayer.m_sShip.m_vPos.x, m_sShipPlayer.m_sShip.m_vPos.y ), SVector2( m_sShipPlayer.m_sShip.m_vDir.x, m_sShipPlayer.m_sShip.m_vDir.y ) );
+			CActors::GetField( vField, p, SVector2( m_cActors.GetShipPlayer().m_vPos.x, m_cActors.GetShipPlayer().m_vPos.y ), SVector2( m_cActors.GetShipPlayer().m_vDir.x, m_cActors.GetShipPlayer().m_vDir.y ) );
 
 			SVertexPW vert0{ SVector3( fX, fY, 0.0f ), 1.0f };
-			SVertexPW vert1{ SVector3( fX + vField.x * 10.0f, fY + vField.y * 10.0f, 0.0f ), 0.0f };
+			SVertexPW vert1{ SVector3( fX + vField.x * fSize*0.8f, fY + vField.y * fSize*0.8f, 0.0f ), 0.0f };
 
-			//CGraphics::GetInstance().DrawLine3D( vert0, vert1, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+			CGraphics::GetInstance().DrawLine3D( vert0, vert1, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 		}
-	}*/
-	
+	}
+#endif
 	SMatrix matViewProjViewPort;
 	SMatrix::Mul( matViewProjViewPort, m_sCamera.m_matViewProj, m_sViewportGameView.GetViewPortMatrix() );
 

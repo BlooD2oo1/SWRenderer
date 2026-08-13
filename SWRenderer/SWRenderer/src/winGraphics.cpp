@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-int iPixelSizeX = 8;
-int iPixelSizeY = 8;
+int iPixelSizeX = 7;
+int iPixelSizeY = 7;
 
 HBITMAP hBitmapFrameBuffer = nullptr;
 HDC hDCFrameBuffer = nullptr;

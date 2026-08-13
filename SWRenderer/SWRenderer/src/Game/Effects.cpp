@@ -51,7 +51,7 @@ void SEffect_ShipExplosion::Create()
 {
 	m_aParticles.clear();
 
-	for ( size_t i = 0; i < 30; i++ )
+	for ( size_t i = 0; i < 32; i++ )
 	{
 		SParticle sParticle;
 		sParticle.m_vPos = m_vPos;
@@ -68,7 +68,7 @@ void SEffect_ShipExplosion::Create()
 		sParticle.m_vMov *= 0.02f;
 		sParticle.m_vMov += Lerp( m_vMovShip, m_vMovBullet*0.3f, ((float)rand() / (float)RAND_MAX) );
 
-		sParticle.m_fLifeTimeMs = ((float)rand() / (float)RAND_MAX) * 3000.0f + 100.0f;
+		sParticle.m_fLifeTimeMs = ((float)rand() / (float)RAND_MAX) * 4000.0f + 300.0f;
 		sParticle.m_fAgeMs = 0.0f;
 		m_aParticles.push_back( sParticle );
 	}

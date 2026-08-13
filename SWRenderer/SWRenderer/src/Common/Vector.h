@@ -96,6 +96,8 @@ constexpr inline SVector2 operator*(float s, const SVector2& a) noexcept        
 constexpr inline SVector2 operator/(const SVector2& a, const SVector2& b) noexcept { return SVector2(a.x / b.x, a.y / b.y); }
 constexpr inline SVector2 operator/(const SVector2& a, float s) noexcept            { return SVector2(a.x / s,   a.y / s); }
 
+constexpr inline SVector2 operator-( const SVector2& a ) noexcept { return SVector2( -a.x, -a.y ); }
+
 
 struct SVector3
 {
@@ -201,6 +203,8 @@ constexpr inline SVector3 operator*(float s, const SVector3& a) noexcept        
 
 constexpr inline SVector3 operator/(const SVector3& a, const SVector3& b) noexcept { return SVector3(a.x / b.x, a.y / b.y, a.z / b.z); }
 constexpr inline SVector3 operator/(const SVector3& a, float s) noexcept            { return SVector3(a.x / s,   a.y / s,   a.z / s); }
+
+constexpr inline SVector3 operator-( const SVector3& v ) noexcept { return SVector3( -v.x, -v.y, -v.z ); }
 
 
 struct SVector4

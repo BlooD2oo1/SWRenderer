@@ -82,7 +82,7 @@ struct SShip
 	float		m_fHP;
 	float		m_fDamageTimerMs;
 	bool		m_bDead;
-	float		m_fPhase_DistanceToPlayer;
+	float		m_fPhase_01;
 
 	float		m_fYawSpeed;
 	float		m_fYaw_ctrl;	
@@ -130,6 +130,8 @@ public:
 
 	size_t				GetAsteroidCount() const { return m_aAsteroids.size(); }
 	const SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
+
+	static void			GetField( SVector2& vField, const SVector2& p, const SVector2& p0, const SVector2& d0 );
 
 private:
 	void _updateHashGrids();
