@@ -22,7 +22,7 @@ void CGrid::Create()
 
 void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& matViewProj, const SViewPort& sViewport, const SVector3& vPos )
 {
-	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.7f );
+	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.8f );
 	struct SVertexShaderGrid
 	{
 		using AttribsType = SVertexPCW::SAttribs;
@@ -177,7 +177,7 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 
 void CGrid::RenderToMiniMap( float fSpacing, int iHalfGridSize, const SMatrix& matViewProj, const SViewPort& sViewport, const SVector3& vPos )
 {
-	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.7f );
+	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.5f );
 	struct SVertexShaderGrid
 	{
 		using AttribsType = SVertexP::SAttribs;

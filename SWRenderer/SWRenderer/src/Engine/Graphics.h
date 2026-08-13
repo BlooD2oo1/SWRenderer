@@ -276,7 +276,8 @@ public:
 	void RasterizeLine( const SVector2& vPos0, TAttribs sAttribs0, float fW0, const SVector2& vPos1, TAttribs sAttribs1, float fW1, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 
 	// Draw functions ( with clipping )
-	void DrawPixelAA( const SVector2& v, BGRA8 sColor );
+	template<class TBlendFunc>
+	void DrawPixelAA( const SVector2& v, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
 	void DrawLineH( int x, int y, int len, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
@@ -284,11 +285,9 @@ public:
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 	void DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
-	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
-	
+	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
 	template< class TAttribs, class TPixelShader, class TBlendFunc>
-	inline void DrawLine3D( SClipVertex<TAttribs> vPh0, SClipVertex<TAttribs> vPh1, const SViewPort& sViewPort, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
-	
+	inline void DrawLine3D( SClipVertex<TAttribs> vPh0, SClipVertex<TAttribs> vPh1, const SViewPort& sViewPort, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 	void DrawLineList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
@@ -632,6 +631,31 @@ void CGraphics::DrawLineList3D( const TVertex* pVertices, uint32_t iVertexCount,
 }
 
 template<class TBlendFunc>
+void CGraphics::DrawPixelAA( const SVector2& v, BGRA8 sColor, const TBlendFunc& sBlendFunc )
+{
+	int ix = (int)v.x;
+	int iy = (int)v.y;
+	if ( ix >= 0 && ix < m_sFrameBuffer.iWidth - 1 &&
+		iy >= 0 && iy < m_sFrameBuffer.iHeight - 1 )
+	{
+		float fxmod = v.x - (float)ix;
+		float fymod = v.y - (float)iy;
+		float fxmodinv = 1.0f - fxmod;
+		float fymodinv = 1.0f - fymod;
+		uint8_t i00 = (uint8_t)( sqrtf( fxmodinv*fymodinv ) * sColor.a);
+		uint8_t i01 = (uint8_t)( sqrtf( fxmodinv*fymod ) * sColor.a);
+		uint8_t i10 = (uint8_t)( sqrtf( fxmod * fymodinv ) * sColor.a);
+		uint8_t i11 = (uint8_t)( sqrtf( fxmod * fymod ) * sColor.a);
+
+		sBlendFunc.Execute( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i00 } );
+		sBlendFunc.Execute( m_sFrameBuffer.pData[iy * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i10 } );
+		sBlendFunc.Execute( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix], BGRA8{ sColor.r, sColor.g, sColor.b, i01 } );
+		sBlendFunc.Execute( m_sFrameBuffer.pData[(iy + 1) * m_sFrameBuffer.iWidth + ix + 1], BGRA8{ sColor.r, sColor.g, sColor.b, i11 } );
+	}
+}
+
+
+template<class TBlendFunc>
 void CGraphics::DrawLineH( int x, int y, int len, BGRA8 sColor, const TBlendFunc& sBlendFunc )
 {
 	if ( y < 0 || y >= m_sFrameBuffer.iHeight || len == 0 )
@@ -721,14 +745,6 @@ void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed
 					sColor.b = sTex.m_pPalette[uIndex*3+0];
 					sColor.a = 255;
 					RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
-					if ( iWidth == 4 && iHeight == 6 )
-					{
-						if ( (iTexY+iy) * sTex.m_iWidth + (iTexX+ix) == 14 )
-						{
-							LOG( "color: %d,%d,%d\n", sColor.r, sColor.g, sColor.b );
-							LOG( "dest: %d,%d,%d\n", m_sFrameBuffer.pData[iDestY * m_sFrameBuffer.iWidth + iDestX].r, m_sFrameBuffer.pData[iDestY * m_sFrameBuffer.iWidth + iDestX].g, m_sFrameBuffer.pData[iDestY * m_sFrameBuffer.iWidth + iDestX].b );
-						}
-					}
 				}			
 			}
 		}
