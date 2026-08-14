@@ -34,6 +34,8 @@ void CActors::Create()
 	{
 		m_iPlayerShipInd = AddShip();
 		SShip& sShipPlayer = GetShip( m_iPlayerShipInd );
+		sShipPlayer.m_fSize = 10.0f;
+		sShipPlayer.m_fMass = powf( sShipPlayer.m_fSize, 3.0f );
 		//sShipPlayer.m_vMov.x = 0.05f;
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.5f, 2.7f, 0.0f ) );
 		sShipPlayer.m_sTurret.m_aTurretPositions.push_back( SVector3( 1.0f, 0.0f, 0.0f ) );
@@ -45,10 +47,13 @@ void CActors::Create()
 		sShipPlayer.m_sTurret.m_vColor = SVector3( 1.0f, 0.7f, 0.9f ) * 0.6f;
 	}
 
-	for ( int i = 0; i < 3200; i++ )
+	for ( int i = 0; i < 32; i++ )
 	{
 		uint32_t iShipInd = AddShip();
 		SShip& sShipEnemy = GetShip( iShipInd );
+
+		sShipEnemy.m_fSize = 7.0f;
+		sShipEnemy.m_fMass = powf( sShipEnemy.m_fSize, 3.0f );
 
 		sShipEnemy.m_sTurret.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
 		sShipEnemy.m_sTurret.m_fShootFreqHz = 10.0f;
@@ -75,7 +80,7 @@ void CActors::Create()
 
 	}
 
-	m_aAsteroids.reserve( 2000 );
+	m_aAsteroids.reserve( 800 );
 	for ( size_t i = 0; i < m_aAsteroids.capacity(); i++ )
 	{
 		SAsteroid sAsteroid;
@@ -89,6 +94,9 @@ void CActors::Create()
 		sAsteroid.m_fSize *= sAsteroid.m_fSize;
 		sAsteroid.m_eModel = ( sAsteroid.m_fSize > 0.8f ) ? SAsteroid::ModelBig : (((rand() % 2) == 0 ) ? SAsteroid::Model01 : SAsteroid::Model02);
 		sAsteroid.m_fSize *= 20.0f;
+		sAsteroid.m_fMass = powf( sAsteroid.m_fSize, 3.0f )*10.0f;
+
+		sAsteroid.m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 
 		// uniform distribution of quaternions:
 		const float u1 = ((float)rand() / (float)RAND_MAX);
@@ -101,14 +109,86 @@ void CActors::Create()
 
 		m_aAsteroids.push_back( sAsteroid );
 	}
+}
 
-	m_mapHashGridAsteroids.clear();
-	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
+void CActors::GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SShip& sShip )
+{
+	SVector2 vD( (sShip.m_vPos.xy()) - p );
+	float lD = SVector2::Length( vD );
+
+	vField = SVector2( 0.0f, 0.0f );
+
+	SVector2 vShipPos( sShip.m_vPos.xy() );
+	SVector2 vShipDir( sShip.m_vDir.xy() );
+	SVector2 v0( (vShipPos+vShipDir*(2.0f+lD*0.5f)) - p );
+	SVector2 v1( (vShipPos+vShipDir*35.0f) - p );
+	SVector2 v2( (vShipPos+vShipDir*37.0f) - p );
+	float l0 = SVector2::Length( v0 );
+	float l1 = SVector2::Length( v1 );
+	float l2 = SVector2::Length( v2 );
+	SVector2::Normalize( vField, v0*0.01f - v1/l1/l1*4.0f - v2/l2/l2*5.0f );
+
 	{
-		const SAsteroid& sAsteroid = GetAsteroid( i );
-		uint32_t iHash = _getHash( SVector2( sAsteroid.m_vPos.x, sAsteroid.m_vPos.y ), m_fHashGridSize );
-		m_mapHashGridAsteroids[iHash].push_back( (uint32_t)i );
+		float fMulP = Clamp( ( lD - 15.0f ) / 10.0f, -1.0f, 1.0f );
+		float fMulN = Clamp( ( lD - 10.0f ) / 4.0f, -1.0f, 1.0f );
+		if ( fMulP > 0.0f )
+		{
+			vField *= fMulP;
+		}
+		else if ( fMulN < 0.0f )
+		{
+			vField = vD/lD * fMulN;
+		}
+		else
+		{
+			vField = SVector2( 0.0f, 0.0f );
+		}
+
 	}
+
+	//float fRepel = Clamp( 1000.0f / l0 / l0 / l0, 0.0f, 0.03f );
+	//vField -= v0 * fRepel;
+}
+
+void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
+{
+	const float fWidth = sAsteroid.m_fSize * 1.2f + sShip.m_fSize;
+	const float fRad = std::min( sAsteroid.m_fSize * 2.5f + sShip.m_fSize, m_fHashGridSize );
+
+	SVector2 vShipMovNorm( sShip.m_vMov.xy() );
+	SVector2::Normalize( vShipMovNorm, vShipMovNorm );
+
+	SVector2 vAst( sAsteroid.m_vPos.xy() - p );
+	float t = SVector2::Cross( vAst, vShipMovNorm );
+	t /= fWidth;
+
+	if ( t > 0.0f )
+	{
+		t = +1.0f - t;
+		t = std::max( 0.0f, t );
+	}
+	else
+	{
+		t = -1.0f - t;
+		t = std::min( 0.0f, t );
+	}
+
+	float dotv = SVector2::Dot( vAst, vShipMovNorm );
+	if ( dotv < 1.0f ) dotv *= 25.0f;
+	t /= dotv;
+	t = Clamp( t * fRad, -1.0f, 1.0f );
+
+	float fAstL = SVector2::Length( vAst );
+	SVector2 vAstNorm( vAst / fAstL );
+
+	float r = Clamp( (fRad - fAstL) / fRad, 0.0f, 1.0f );
+
+	t *= r;
+
+	SVector2 vT( -vShipMovNorm.y, vShipMovNorm.x );	
+	vT *= t;
+	SVector2 vN( vAstNorm*-r );
+	SVector2::Lerp( vField, vT, vN, 0.3f );
 }
 
 void CActors::Update()
@@ -116,6 +196,7 @@ void CActors::Update()
 	_updateHashGrids();
 	_updateBoids();
 	_updateShips();
+	_updateAsteroids();
 }
 
 void CActors::_updateHashGrids()
@@ -126,6 +207,14 @@ void CActors::_updateHashGrids()
 		SShip& sShip = GetShip( i );
 		uint32_t iHash = _getHash( SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), m_fHashGridSize );
 		m_mapHashGridShips[iHash].push_back( (uint32_t)i );
+	}
+
+	m_mapHashGridAsteroids.clear();
+	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
+	{
+		const SAsteroid& sAsteroid = GetAsteroid( i );
+		uint32_t iHash = _getHash( SVector2( sAsteroid.m_vPos.x, sAsteroid.m_vPos.y ), m_fHashGridSize );
+		m_mapHashGridAsteroids[iHash].push_back( (uint32_t)i );
 	}
 }
 
@@ -234,10 +323,14 @@ void CActors::_updateBoids()
 					for ( size_t j = 0; j < aAsteroidInds.size(); j++ )
 					{
 						uint32_t i1 = aAsteroidInds[j];
-						const SAsteroid& sAsteroid1 = GetAsteroid( i1 );
-						SVector2 vField;
-						GetField_Asteroid( vField, SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y ), sShip0, sAsteroid1 );
-						vSeparation += vField*2.0f;
+						SAsteroid& sAsteroid1 = GetAsteroid( i1 );
+						
+						if ( i0 != m_iPlayerShipInd )
+						{
+							SVector2 vField;
+							GetField_Asteroid( vField, SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y ), sShip0, sAsteroid1 );
+							vSeparation += vField*2.0f;
+						}
 
 						SVector2 vDist( sAsteroid1.m_vPos.x - sShip0.m_vPos.x, sAsteroid1.m_vPos.y - sShip0.m_vPos.y );
 						float fDistSq = SVector2::LengthSq( vDist );
@@ -248,30 +341,13 @@ void CActors::_updateBoids()
 							{
 								fDamage = 0.05f * fElapsedTimeMs;
 							}
-							_onDamageShipByCollision( sShip0, fDamage );
-						}
-
-						/*SVector2 vDist( sAsteroid1.m_vPos.x - sShip0.m_vPos.x, sAsteroid1.m_vPos.y - sShip0.m_vPos.y );
-						float fDistSq = SVector2::LengthSq( vDist );
-						float fDistSqSeparation = fDistSq / powf( m_fHashGridSize / 2.0f, 2 );
-						if ( fDistSqSeparation < 1.0f )
-						{
-							if ( fDistSq < sAsteroid1.m_fSize * sAsteroid1.m_fSize )
+							if ( _onDamageShipByCollision( sShip0, fDamage ) )
 							{
-								float fDamage = 0.4f * fElapsedTimeMs;
-								if ( i0 == m_iPlayerShipInd )
-								{
-									fDamage = 0.05f * fElapsedTimeMs;
-								}
-								_onDamageShipByCollision( sShip0, fDamage );
+								SVector3 vDirAway( vDist.x, vDist.y, 0.0f );
+								vDirAway = vDirAway / sqrtf( fDistSq + 0.00001f );
+								sAsteroid1.m_vMov += vDirAway * (sShip0.m_fMass / sAsteroid1.m_fMass) * 0.1f * fElapsedTimeMs;
 							}
-
-							SVector2 vDirAway( -vDist.x, -vDist.y );
-							float fPower = (1.0f - fDistSqSeparation);
-							fPower *= fPower * fPower * fPower;
-							fPower *= 0.1f;
-							vSeparation += vDirAway * fPower;
-						}*/
+						}
 					}
 				}
 			}
@@ -282,77 +358,6 @@ void CActors::_updateBoids()
 
 		sShip0.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
 	}
-}
-
-void CActors::GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SVector2& vShip, const SVector2& vShipDir )
-{
-	SVector2 vD( (vShip) - p );
-	float lD = SVector2::Length( vD );
-
-	vField = SVector2( 0.0f, 0.0f );
-	SVector2 v0( (vShip+vShipDir*(2.0f+lD*0.5f)) - p );
-	SVector2 v1( (vShip+vShipDir*35.0f) - p );
-	SVector2 v2( (vShip+vShipDir*37.0f) - p );
-	float l0 = SVector2::Length( v0 );
-	float l1 = SVector2::Length( v1 );
-	float l2 = SVector2::Length( v2 );
-	SVector2::Normalize( vField, v0*0.01f - v1/l1/l1*4.0f - v2/l2/l2*5.0f );
-
-	{
-		float fMulP = Clamp( ( lD - 15.0f ) / 10.0f, -1.0f, 1.0f );
-		float fMulN = Clamp( ( lD - 10.0f ) / 4.0f, -1.0f, 1.0f );
-		if ( fMulP > 0.0f )
-		{
-			vField *= fMulP;
-		}
-		else if ( fMulN < 0.0f )
-		{
-			vField = vD/lD * fMulN;
-		}
-		else
-		{
-			vField = SVector2( 0.0f, 0.0f );
-		}
-		
-	}
-
-	//float fRepel = Clamp( 1000.0f / l0 / l0 / l0, 0.0f, 0.03f );
-	//vField -= v0 * fRepel;
-}
-
-void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
-{
-	const float fWidth = sAsteroid.m_fSize * 1.2f;
-	const float fRad = std::min( sAsteroid.m_fSize * 15.0f, m_fHashGridSize );
-
-	//SVector2 vAsteroidShip( sAsteroid.m_vPos.xy() - sShip.m_vPos.xy() );
-	SVector2 vShipMovNorm( sShip.m_vMov.xy() );
-	SVector2::Normalize( vShipMovNorm, vShipMovNorm );
-
-	SVector2 vD( sAsteroid.m_vPos.xy() - p );
-	float t = SVector2::Cross( vD, vShipMovNorm );
-	t /= fWidth;
-
-	if ( t > 0.0f )
-	{
-		t = +1.0f - t;
-		t = std::max( 0.0f, t );
-	}
-	else
-	{
-		t = -1.0f - t;
-		t = std::min( 0.0f, t );
-	}
-
-	float dotv = SVector2::Dot( vD, vShipMovNorm );
-	if ( dotv < 1.0f ) dotv *= 15.0f;
-
-	t = t / dotv;
-	t = Clamp( t * fRad, -1.0f, 1.0f );
-	t *= Clamp( (fRad * fRad - SVector2::Dot( vD, vD )) / (fRad * fRad), 0.0f, 1.0f );
-
-	SVector2 vT( -vShipMovNorm.y, vShipMovNorm.x );	
-	vField = vT * t;
 }
 
 void CActors::_updateShips()
@@ -404,7 +409,7 @@ void CActors::_updateShips()
 			const float fSin_Phase_01 = sinf( sShip.m_fPhase_01 );
 
 			SVector2 vField( 0.0f, 0.0f );
-			GetField_ShipPlayer( vField, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), SVector2( sShipPlayer.m_vPos.x, sShipPlayer.m_vPos.y ), SVector2( sShipPlayer.m_vDir.x, sShipPlayer.m_vDir.y ) );
+			GetField_ShipPlayer( vField, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), sShipPlayer );
 			vField *= ( fSin_Phase_01 * 0.5f + 0.5f ) * 0.7f + 0.3f;
 			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_Phase_01))*0.02f, -0.4f, 1.0f );
 			const float fFollowAmount = 0.2f;
@@ -458,7 +463,7 @@ void CActors::_updateShips()
 			SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
 			SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 			float fT = 0.0f;
-			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), 7.0f, fT ) )
+			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), sShip.m_fSize*sShip.m_fSize, fT ) )
 			{
 				sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.05f;
 
@@ -503,11 +508,23 @@ void CActors::_updateShips()
 	}
 }
 
-void CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet )
+void CActors::_updateAsteroids()
+{
+	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
+
+	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
+	{
+		SAsteroid& sAsteroid = GetAsteroid( i );
+		sAsteroid.m_vPos += sAsteroid.m_vMov * fElapsedTimeMs;
+		sAsteroid.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sAsteroid.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
+	}
+}
+
+bool CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet )
 {
 	if ( fDamage <= 0.0f )
 	{
-		return;
+		return false;
 	}
 
 	sShip.m_fHP -= fDamage;
@@ -536,14 +553,17 @@ void CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3
 		sEffect.Create();
 		
 		sShip.m_bDead = true;
+		return true;
 	}
+
+	return false;
 }
 
-void CActors::_onDamageShipByCollision( SShip& sShip, float fDamage )
+bool CActors::_onDamageShipByCollision( SShip& sShip, float fDamage )
 {
 	if ( fDamage <= 0.0f )
 	{
-		return;
+		return false;
 	}
 
 	sShip.m_fHP -= fDamage;
@@ -572,7 +592,10 @@ void CActors::_onDamageShipByCollision( SShip& sShip, float fDamage )
 		sEffect.Create();
 
 		sShip.m_bDead = true;
+		return true;
 	}
+
+	return false;
 }
 
 void CActors::Render()

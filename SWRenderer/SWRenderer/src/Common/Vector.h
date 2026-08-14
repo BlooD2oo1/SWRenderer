@@ -64,6 +64,13 @@ struct SVector2
 		return out;
 	}
 
+	constexpr static void Lerp( SVector2& out, const SVector2& a, const SVector2& b, float t ) noexcept
+	{
+		out.x = a.x + (b.x - a.x) * t;
+		out.y = a.y + (b.y - a.y) * t;
+	}
+
+
 	static SVector2& Slerp( SVector2& out, const SVector2& a, const SVector2& b, float w) noexcept
 	{
 		float dot = Dot(a, b);
@@ -168,6 +175,13 @@ struct SVector3
 			out.x = 0.0f; out.y = 0.0f; out.z = 0.0f;
 		}
 		return out;
+	}
+
+	constexpr static void Lerp( SVector3& out, const SVector3& a, const SVector3& b, float t ) noexcept
+	{
+		out.x = a.x + (b.x - a.x) * t;
+		out.y = a.y + (b.y - a.y) * t;
+		out.z = a.z + (b.z - a.z) * t;
 	}
 
 	static SVector3& Slerp( SVector3& out, const SVector3& a, const SVector3& b, float w) noexcept

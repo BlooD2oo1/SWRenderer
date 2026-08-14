@@ -2,7 +2,15 @@
 
 #include <vector>
 #include "Common/Vector.h"
+
+#define SKA
+#ifdef SKA
+#include "Common/flat_hash_map.hpp"
+#define spatial_hash_map ska::flat_hash_map
+#else
 #include <unordered_map>
+#define spatial_hash_map std::unordered_map
+#endif
 
 static const uint32_t iIndInvalid = 0xFFFFFFFF;
 
@@ -79,6 +87,8 @@ struct SShip
 	SMatrix		m_matShip;
 	SMatrix		m_matShipPrev;	
 
+	float		m_fSize;
+	float		m_fMass;
 	float		m_fHP;
 	float		m_fDamageTimerMs;
 	bool		m_bDead;
@@ -102,8 +112,10 @@ struct SAsteroid
 	};
 
 	SVector3	m_vPos;
-	float		m_fSize;
 	SQuaternion	m_qRot;
+	SVector3	m_vMov;
+	float		m_fSize;
+	float		m_fMass;
 	EModel		m_eModel;
 };
 
@@ -128,19 +140,21 @@ public:
 	size_t		GetShipCount() const { return m_aShips.size(); }
 	SShip&		GetShip( size_t i ) { return m_aShips[i]; }
 
-	size_t				GetAsteroidCount() const { return m_aAsteroids.size(); }
-	const SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
+	size_t		GetAsteroidCount() const { return m_aAsteroids.size(); }
+	SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
 
-	void		GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SVector2& p0, const SVector2& d0 );
+	// https://www.shadertoy.com/view/fcy3Wt
+	void		GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SShip& sShip );
 	void		GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid );
 
 private:
 	void _updateHashGrids();
 	void _updateBoids();
 	void _updateShips();
+	void _updateAsteroids();
 
-	void _onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet );
-	void _onDamageShipByCollision( SShip& sShip, float fDamage );
+	bool _onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet );
+	bool _onDamageShipByCollision( SShip& sShip, float fDamage );
 
 	inline void _getHash( int& iHashX, int& iHashY, const SVector2& vPos, float fMaxDist )
 	{
@@ -170,7 +184,8 @@ private:
 	std::vector< SAsteroid >	m_aAsteroids;
 
 	const float					m_fHashGridSize;
-	//ska::flat_hash_map
-	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapHashGridShips;
-	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapHashGridAsteroids;
+
+	spatial_hash_map< uint32_t, std::vector< uint32_t > > m_mapHashGridShips;
+	spatial_hash_map< uint32_t, std::vector< uint32_t > > m_mapHashGridAsteroids;
+
 };

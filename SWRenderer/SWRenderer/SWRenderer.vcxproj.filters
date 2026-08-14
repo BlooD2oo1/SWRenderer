@@ -147,5 +147,11 @@
     <ClInclude Include="src\Game\Effects.h">
       <Filter>src\Game</Filter>
     </ClInclude>
+    <ClInclude Include="src\Common\flat_hash_map.hpp">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\unordered_map.hpp">
+      <Filter>src\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
