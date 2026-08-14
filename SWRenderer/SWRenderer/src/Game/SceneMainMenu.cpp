@@ -16,38 +16,68 @@ CSceneMainMenu::~CSceneMainMenu()
 void CSceneMainMenu::Clear()
 {
 	m_sTexBackground.Clear();
+
+	m_sMainMenu.Clear();
+	m_sMainMenu.pParentMenu = &m_sMainMenu;
+	m_pSelectedMenu = &m_sMainMenu;
 }
 
 void CSceneMainMenu::Create()
 {
 	PCX_LoadFromFile( "data/mainscreen.pcx", m_sTexBackground );
 
-	m_eSelectedMenuItem = EMenuItem_StartGame;
+	{
+		m_sMainMenu.aSubMenus.emplace_back();
+		SMenuItemDesc& sMenu_NewGame = m_sMainMenu.aSubMenus.back();
+		sMenu_NewGame.eMenuType = Menu_StartGame;
+		sMenu_NewGame.sText = "NEW GAME";
+		sMenu_NewGame.bHidden = false;
+		
 
-	int iMenuHeight = 8;
-	int iFirstHeight = 55;
-	int iSpacingHeight = 8;
+		{
+			sMenu_NewGame.aSubMenus.emplace_back();
+			SMenuItemDesc& sMenu_Level0 = sMenu_NewGame.aSubMenus.back();
+			sMenu_Level0.eMenuType = Menu_Level;
+			sMenu_Level0.sText = "LEVEL 0";
+			sMenu_Level0.bHidden = false;
+			
 
-	m_pMenuItems[EMenuItem_StartGame].w = 160;
-	m_pMenuItems[EMenuItem_StartGame].h = iMenuHeight;
-	m_pMenuItems[EMenuItem_StartGame].x = 320 / 2 - m_pMenuItems[EMenuItem_StartGame].w / 2;
-	m_pMenuItems[EMenuItem_StartGame].y = iFirstHeight + (int)EMenuItem_StartGame*iSpacingHeight;
+			sMenu_NewGame.aSubMenus.emplace_back();
+			SMenuItemDesc& sMenu_Level1 = sMenu_NewGame.aSubMenus.back();
+			sMenu_Level1.eMenuType = Menu_Level;
+			sMenu_Level1.sText = "LEVEL 1";
+			sMenu_Level1.bHidden = false;
+			
 
-	m_pMenuItems[EMenuItem_Logs].w = 160;
-	m_pMenuItems[EMenuItem_Logs].h = iMenuHeight;
-	m_pMenuItems[EMenuItem_Logs].x = 320 / 2 - m_pMenuItems[EMenuItem_Logs].w / 2;
-	m_pMenuItems[EMenuItem_Logs].y = iFirstHeight + (int)EMenuItem_Logs * iSpacingHeight;
+			sMenu_NewGame.aSubMenus.emplace_back();
+			SMenuItemDesc& sMenu_Level2 = sMenu_NewGame.aSubMenus.back();
+			sMenu_Level2.eMenuType = Menu_Level;
+			sMenu_Level2.sText = "LEVEL 2";
+			sMenu_Level2.bHidden = false;
+		}
 
-	m_pMenuItems[EMenuItem_Credits].w = 160;
-	m_pMenuItems[EMenuItem_Credits].h = iMenuHeight;
-	m_pMenuItems[EMenuItem_Credits].x = 320 / 2 - m_pMenuItems[EMenuItem_Credits].w / 2;
-	m_pMenuItems[EMenuItem_Credits].y = iFirstHeight + (int)EMenuItem_Credits * iSpacingHeight;
+		m_sMainMenu.aSubMenus.emplace_back();
+		SMenuItemDesc& sMenu_Logs = m_sMainMenu.aSubMenus.back();
+		sMenu_Logs.eMenuType = Menu_Logs;
+		sMenu_Logs.sText = "LOGS";
+		sMenu_Logs.bHidden = false;
 
-	m_pMenuItems[EMenuItem_Exit].w = 160;
-	m_pMenuItems[EMenuItem_Exit].h = iMenuHeight;
-	m_pMenuItems[EMenuItem_Exit].x = 320 / 2 - m_pMenuItems[EMenuItem_Exit].w / 2;
-	m_pMenuItems[EMenuItem_Exit].y = iFirstHeight + (int)EMenuItem_Exit * iSpacingHeight;
+		m_sMainMenu.aSubMenus.emplace_back();
+		SMenuItemDesc& sMenu_Credits = m_sMainMenu.aSubMenus.back();
+		sMenu_Credits.eMenuType = Menu_Credits;
+		sMenu_Credits.sText = "CREDITS";
+		sMenu_Credits.bHidden = false;
 
+		m_sMainMenu.aSubMenus.emplace_back();
+		SMenuItemDesc& sMenu_Exit = m_sMainMenu.aSubMenus.back();
+		sMenu_Exit.eMenuType = Menu_Exit;
+		sMenu_Exit.sText = "EXIT";
+		sMenu_Exit.bHidden = false;		
+	}
+
+	SMenuItemDesc::SetMenuParents( &m_sMainMenu );
+
+	m_pSelectedMenu = &m_sMainMenu.aSubMenus[0];	
 }
 
 void CSceneMainMenu::Update()
@@ -58,34 +88,45 @@ void CSceneMainMenu::Render()
 {
 	CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexBackground );
 
-	char szMenuText[EMenuItem_Count][32] = { "START GAME", "LOGS", "CREDITS", "EXIT" };
 
-	for ( int i = 0; i < EMenuItem_Count; i++ )
+	SMenuItemDesc* pParentMenu = m_pSelectedMenu->pParentMenu;
+	for ( size_t i = 0; i < pParentMenu->aSubMenus.size(); i++ )
 	{
-		SMenu& sMenuItem = m_pMenuItems[i];
-		BGRA8 sColor = (i == m_eSelectedMenuItem) ? BGRA8{ (uint8_t)180, 250, 255, 255 } : BGRA8{ (uint8_t)160, 130, 120, 255 };
-		//CGraphics::GetInstance().DrawRect( sMenuItem.x, sMenuItem.y, sMenuItem.w, sMenuItem.h, sColor );
+		SMenuItemDesc& sMenuItem = pParentMenu->aSubMenus[i];
+		BGRA8 sColor = (&sMenuItem == m_pSelectedMenu) ? BGRA8{ (uint8_t)180, 250, 255, 255 } : BGRA8{ (uint8_t)160, 130, 120, 255 };
 		const int iFontWidth = 6;
 		const int iFontHeight = 6;
 		const int iSpacing = 0;
-		const int iTextLength = (int)strlen( szMenuText[i] );
+		const int iTextLength = (int)sMenuItem.sText.length();
 		const int iTextWidth = iTextLength * iFontWidth + (iTextLength - 1) * iSpacing;
-		CGraphics::GetInstance().DrawText( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2, sMenuItem.y + 2, szMenuText[i], sColor, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, iSpacing );
-		if ( i == m_eSelectedMenuItem )
-		{
-			//CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 3, 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			//CGraphics::GetInstance().DrawRect( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10 - 5, sMenuItem.y + 3, 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 } );
-			SBlendFuncCopy sBlendFunc;
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 3, 3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 10, sMenuItem.y + 4, 5, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w - iTextWidth) / 2 - 11, sMenuItem.y + 5, 3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 3, -3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 10, sMenuItem.y + 4, -5, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
-			CGraphics::GetInstance().DrawLineH( sMenuItem.x + (m_pMenuItems[i].w + iTextWidth) / 2 + 11, sMenuItem.y + 5, -3, BGRA8{ (uint8_t)10, 10, 120, 255 }, sBlendFunc );
-		}
+		CGraphics::GetInstance().DrawText( 320 / 2 - iTextWidth / 2, 55 + (int)i * 8, sMenuItem.sText.c_str(), sColor, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, iSpacing );
 	}
 
 	CGraphics::GetInstance().DrawText( 280, 200 - 7, "BlooD2oo1", BGRA8{ (uint8_t)100, 100, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -2 );
+}
+
+int FindMenuInd( const SMenuItemDesc& sMenu, const SMenuItemDesc* pSelectedMenu )
+{
+	for ( size_t i = 0; i < sMenu.aSubMenus.size(); i++ )
+	{
+		if ( &sMenu.aSubMenus[i] == pSelectedMenu )
+		{
+			return (int)i;
+		}
+	}
+	return -1;
+}
+
+void PlayMenuSound()
+{
+	SAudioEvent sAudioEvent;
+	sAudioEvent.type = SAudioEvent::MenuSelect;
+	sAudioEvent.fVolume = 0.2f;
+	sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 450;
+	sAudioEvent.iSampleCounter = 0;
+	sAudioEvent.fPhase = 0.0f;
+	CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 }
 
 bool CSceneMainMenu::On_KeyDown( uint32_t key )
@@ -93,51 +134,48 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 	switch ( key )
 	{
 		case KEY_UP:
-		if ( m_eSelectedMenuItem > 0 )
 		{
-			m_eSelectedMenuItem = (EMenuItem)((int)m_eSelectedMenuItem - 1);
-
-			SAudioEvent sAudioEvent;
-			sAudioEvent.type = SAudioEvent::MenuSelect;
-			sAudioEvent.fVolume = 0.2f;
-			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
-			sAudioEvent.iSampleCounter = 0;
-			sAudioEvent.fPhase = 0.0f;
-			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+			int iCurrInd = FindMenuInd( *m_pSelectedMenu->pParentMenu, m_pSelectedMenu );
+			if ( iCurrInd > 0 )
+			{
+				m_pSelectedMenu = &m_pSelectedMenu->pParentMenu->aSubMenus[iCurrInd - 1];
+				PlayMenuSound();
+			}				
 		}
 		return true;
 
 		case KEY_DOWN:
-		if ( m_eSelectedMenuItem < EMenuItem_Count - 1 )
 		{
-			m_eSelectedMenuItem = (EMenuItem)((int)m_eSelectedMenuItem + 1);
-
-			SAudioEvent sAudioEvent;
-			sAudioEvent.type = SAudioEvent::MenuSelect;
-			sAudioEvent.fVolume = 0.2f;
-			sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-			sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
-			sAudioEvent.iSampleCounter = 0;
-			sAudioEvent.fPhase = 0.0f;
-			CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+			int iCurrInd = FindMenuInd( *m_pSelectedMenu->pParentMenu, m_pSelectedMenu );
+			if ( iCurrInd >= 0 && iCurrInd < (int)m_pSelectedMenu->pParentMenu->aSubMenus.size() - 1 )
+			{
+				m_pSelectedMenu = &m_pSelectedMenu->pParentMenu->aSubMenus[iCurrInd + 1];
+				PlayMenuSound();
+			}
 		}
 		return true;
 
 		case KEY_ENTER:
 		case KEY_SPACE:
 		{
-			switch ( m_eSelectedMenuItem )
+			switch ( m_pSelectedMenu->eMenuType )
 			{
-			case EMenuItem_StartGame:
+			case Menu_StartGame:
+				if ( !m_pSelectedMenu->aSubMenus.empty() )
+				{
+					m_pSelectedMenu = &m_pSelectedMenu->aSubMenus[0];
+					PlayMenuSound();
+				}
+				break;
+			case Menu_Level:
 				CEngine::GetInstance().SetScene( EScene_Game );
 				break;
-			case EMenuItem_Logs:
+			case Menu_Logs:
 				break;
-			case EMenuItem_Credits:
+			case Menu_Credits:
 				CEngine::GetInstance().SetScene( EScene_Credits );
 				break;
-			case EMenuItem_Exit:
+			case Menu_Exit:
 				g_bRunning = false;
 				break;
 			}
@@ -145,23 +183,21 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 		return true;
 
 		case KEY_ESCAPE:
-			if ( m_eSelectedMenuItem != EMenuItem_Exit )
-			{
-				m_eSelectedMenuItem = EMenuItem_Exit;
-
-				SAudioEvent sAudioEvent;
-				sAudioEvent.type = SAudioEvent::MenuSelect;
-				sAudioEvent.fVolume = 0.2f;
-				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 150;
-				sAudioEvent.iSampleCounter = 0;
-				sAudioEvent.fPhase = 0.0f;
-				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
-			}
-			else
+			if ( m_pSelectedMenu->eMenuType == Menu_Exit )
 			{
 				g_bRunning = false;
 			}
+			if ( m_pSelectedMenu->pParentMenu == &m_sMainMenu )
+			{
+				m_pSelectedMenu = &m_sMainMenu.aSubMenus[m_sMainMenu.aSubMenus.size() - 1];
+				PlayMenuSound();
+			}
+			else
+			{
+				m_pSelectedMenu = m_pSelectedMenu->pParentMenu;
+				PlayMenuSound();
+			}
+
 		return true;
 	}
 

@@ -75,7 +75,7 @@ void CActors::Create()
 
 	}
 
-	m_aAsteroids.reserve( 0 );
+	m_aAsteroids.reserve( 800 );
 	for ( size_t i = 0; i < m_aAsteroids.capacity(); i++ )
 	{
 		SAsteroid sAsteroid;
