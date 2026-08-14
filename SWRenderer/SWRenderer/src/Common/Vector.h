@@ -127,6 +127,8 @@ struct SVector3
 	inline SVector3& operator*=(float s) noexcept { x *= s; y *= s; z *= s; return *this; }
 	inline SVector3& operator/=(float s) noexcept { float invS = 1.0f / s; x *= invS; y *= invS; z *= invS; return *this; }
 
+	constexpr SVector2 xy() const noexcept { return SVector2( x, y ); }
+
 	constexpr static float Dot( const SVector3& a, const SVector3& b ) noexcept
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z;

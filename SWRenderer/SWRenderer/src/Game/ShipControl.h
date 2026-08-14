@@ -131,7 +131,8 @@ public:
 	size_t				GetAsteroidCount() const { return m_aAsteroids.size(); }
 	const SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
 
-	static void			GetField( SVector2& vField, const SVector2& p, const SVector2& p0, const SVector2& d0 );
+	void		GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SVector2& p0, const SVector2& d0 );
+	void		GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid );
 
 private:
 	void _updateHashGrids();
@@ -169,6 +170,7 @@ private:
 	std::vector< SAsteroid >	m_aAsteroids;
 
 	const float					m_fHashGridSize;
+	//ska::flat_hash_map
 	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapHashGridShips;
 	std::unordered_map< uint32_t, std::vector< uint32_t > > m_mapHashGridAsteroids;
 };

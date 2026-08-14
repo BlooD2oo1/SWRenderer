@@ -167,7 +167,7 @@ void CSceneGame::Render()
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
-//#define DRAW_FIELD
+#define DRAW_FIELD
 #ifdef DRAW_FIELD
 	{
 		struct SVertexShaderBasic
@@ -204,9 +204,10 @@ void CSceneGame::Render()
 			fX += (int)(m_cActors.GetShipPlayer().m_vPos.x/fSize)*fSize;
 			fY += (int)(m_cActors.GetShipPlayer().m_vPos.y/fSize)*fSize;
 
-			SVector2 p( fX, fY );
 			SVector2 vField( 0.0f, 0.0f );
-			CActors::GetField( vField, p, SVector2( m_cActors.GetShipPlayer().m_vPos.x, m_cActors.GetShipPlayer().m_vPos.y ), SVector2( m_cActors.GetShipPlayer().m_vDir.x, m_cActors.GetShipPlayer().m_vDir.y ) );
+			SVector2 p( fX, fY );
+			//m_cActors.GetField_ShipPlayer( vField, p, SVector2( m_cActors.GetShipPlayer().m_vPos.x, m_cActors.GetShipPlayer().m_vPos.y ), SVector2( m_cActors.GetShipPlayer().m_vDir.x, m_cActors.GetShipPlayer().m_vDir.y ) );
+			m_cActors.GetField_Asteroid( vField, p,m_cActors.GetShipPlayer(), m_cActors.GetAsteroid(0) );
 
 			SVertexPW vert0{ SVector3( fX, fY, 0.0f ), 1.0f };
 			SVertexPW vert1{ SVector3( fX + vField.x * fSize*0.8f, fY + vField.y * fSize*0.8f, 0.0f ), 0.0f };
