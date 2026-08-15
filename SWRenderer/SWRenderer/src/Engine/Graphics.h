@@ -4,6 +4,7 @@
 #include "Common/Vector.h"
 #include "Common/Math.h"
 #include "Common/Log.h"
+#include <vector>
 
 struct BGRA8
 {
@@ -285,6 +286,8 @@ public:
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 	void DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
 	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
+	void DrawPointList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );
+	template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
 	void DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
 	template< class TAttribs, class TPixelShader, class TBlendFunc>
 	inline void DrawLine3D( SClipVertex<TAttribs> vPh0, SClipVertex<TAttribs> vPh1, const SViewPort& sViewPort, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc );	
@@ -515,6 +518,30 @@ void CGraphics::DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, cons
 			SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
 
 			RasterizePixel( (int)(vScreen.x+0.5f), (int)(vScreen.y+0.5f), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+		}
+	}
+}
+
+template<class TVertex, class TVertexShader, class TPixelShader, class TBlendFunc>
+void CGraphics::DrawPointList3D( const TVertex* pLineList, uint32_t iPrimitiveCount, const SViewPort& sViewPort, const TVertexShader& sVertexShader, const TPixelShader& sPixelShader, const TBlendFunc& sBlendFunc )
+{
+	using TAttribs = typename TVertexShader::AttribsType;
+	using TClipVertex = SClipVertex<TAttribs>;
+	TClipVertex vPh;
+	for ( uint32_t i = 0; i < iPrimitiveCount; i++ )
+	{
+		sVertexShader.Execute( vPh, pLineList[i] );
+		if ( vPh.vPos.w > 0.0f )
+		{
+			if ( ClipCode( vPh.vPos, sViewPort ) == 0 )
+			{
+				float fWRec = 1.0f / vPh.vPos.w;
+				vPh.vPos.x = vPh.vPos.x * fWRec;
+				vPh.vPos.y = vPh.vPos.y * fWRec;
+				SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
+
+				RasterizePixel( (int)(vScreen.x+0.5f), (int)(vScreen.y+0.5f), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+			}
 		}
 	}
 }

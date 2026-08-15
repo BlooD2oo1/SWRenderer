@@ -41,6 +41,7 @@ void CEngine::Clear()
 	m_sMeshAsteroid01.Clear();
 	m_sMeshAsteroid02.Clear();
 	m_sMeshAsteroidBig.Clear();
+	m_sMeshConstellations.Clear();
 
 	m_sTexFont_KarenFat_13x16.Clear();
 	m_sTexFont_TinyPixie2_6x6.Clear();
@@ -67,6 +68,7 @@ void CEngine::Create( SFrameBuffer& sFrameBuffer )
 	PLY_LoadFromFile( "data/models/Asteroid01.ply", m_sMeshAsteroid01 );
 	PLY_LoadFromFile( "data/models/Asteroid02.ply", m_sMeshAsteroid02 );
 	PLY_LoadFromFile( "data/models/AsteroidBig.ply", m_sMeshAsteroidBig );
+	PLY_LoadFromFile( "data/models/Constellations.ply", m_sMeshConstellations );
 
 	m_cSceneMainMenu.Create();
 	m_cSceneCredits.Create();

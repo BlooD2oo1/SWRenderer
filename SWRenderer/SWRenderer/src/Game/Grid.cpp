@@ -22,7 +22,7 @@ void CGrid::Create()
 
 void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& matViewProj, const SViewPort& sViewport, const SVector3& vPos )
 {
-	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.8f );
+	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.0f );
 	struct SVertexShaderGrid
 	{
 		using AttribsType = SVertexPCW::SAttribs;
@@ -40,8 +40,8 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 	{
 		BGRA8 Execute( const SVertexPCW::SAttribs& in ) const
 		{
-			//return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, ( ( ((int)(in.fW*10.0f)) % 5 ) != 2 ) ? in.vColor.w : 0.0f );
-			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, fabsf( (in.fW*5.0f-floorf(in.fW*5.0f)) * 2.0f - 1.0f ) * in.vColor.w );
+			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w * ( ( ((int)(in.fW*20.0f)) % 5 ) != 2 ) ? 1.0f : 0.5f );
+			//return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, fabsf( (in.fW*5.0f-floorf(in.fW*5.0f)) * 2.0f - 1.0f ) * in.vColor.w );
 		}
 	};
 
@@ -75,23 +75,20 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 			{
 				SVector3 vOffset( 0.0f, (float)i, (float)j );
 
-				SVertexPCW sVertex0;
-				SVertexPCW sVertex1;
-				SVertexPCW sVertex2;
+				SVertexPCW pVertices[3];
 
-				sVertex0.vPos = SVector3( vOffset );
-				sVertex0.sAttribs.vColor = vColor;
-				sVertex0.sAttribs.fW = fk;
+				pVertices[0].vPos = SVector3( vOffset );
+				pVertices[0].sAttribs.vColor = vColor;
+				pVertices[0].sAttribs.fW = fk;
+				pVertices[1].vPos = pVertices[0].vPos;
+				pVertices[1].sAttribs.vColor = vColor;
+				pVertices[1].sAttribs.fW = (float)iHalfGridSize + fk;
+				pVertices[2].vPos = pVertices[0].vPos;
+				pVertices[2].sAttribs.vColor = vColor;
+				pVertices[2].sAttribs.fW = (float)(iHalfGridSize*2) + fk;
 
-				sVertex1.vPos = sVertex0.vPos;
-				sVertex1.sAttribs.vColor = vColor;
-				sVertex1.sAttribs.fW = (float)iHalfGridSize + fk;
-				sVertex2.vPos = sVertex0.vPos;
-				sVertex2.sAttribs.vColor = vColor;
-				sVertex2.sAttribs.fW = (float)(iHalfGridSize*2) + fk;
-
-				sVertex0.vPos.x -= (float)iHalfGridSize;
-				sVertex2.vPos.x += (float)iHalfGridSize;
+				pVertices[0].vPos.x -= (float)iHalfGridSize;
+				pVertices[2].vPos.x += (float)iHalfGridSize;
 
 				float di = (float)i - fi;
 				float dj = (float)j - fj;
@@ -101,12 +98,13 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 
 				float fAlpha = 1.0f-t;
 
-				sVertex0.sAttribs.vColor.w *= 0.0f;
-				sVertex1.sAttribs.vColor.w *= fAlpha;
-				sVertex2.sAttribs.vColor.w *= 0.0f;
+				pVertices[0].sAttribs.vColor.w *= 0.0f;
+				pVertices[1].sAttribs.vColor.w *= fAlpha;
+				pVertices[2].sAttribs.vColor.w *= 0.0f;
 
-				CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sViewport, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
-				CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sViewport, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
+				uint32_t pIndices[4] = { 0, 1, 1, 2 };
+
+				CGraphics::GetInstance().DrawLineList3D( pVertices, 3, pIndices, 2, sViewport, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
 			}
 		}
 	}
@@ -137,24 +135,21 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 			{
 				SVector3 vOffset( (float)i, 0.0f, (float)j );
 
-				SVertexPCW sVertex0;
-				SVertexPCW sVertex1;
-				SVertexPCW sVertex2;
+				SVertexPCW pVertices[3];
 
-				sVertex0.vPos = SVector3( vOffset );
-				sVertex0.sAttribs.vColor = vColor;
-				sVertex0.sAttribs.fW = fk;
+				pVertices[0].vPos = SVector3( vOffset );
+				pVertices[0].sAttribs.vColor = vColor;
+				pVertices[0].sAttribs.fW = fk;
 
-				sVertex1.vPos = sVertex0.vPos;
-				sVertex1.sAttribs.vColor = vColor;
-				sVertex1.sAttribs.fW = (float)iHalfGridSize + fk;
+				pVertices[1].vPos = pVertices[0].vPos;
+				pVertices[1].sAttribs.vColor = vColor;
+				pVertices[1].sAttribs.fW = (float)iHalfGridSize + fk;
+				pVertices[2].vPos = pVertices[0].vPos;
+				pVertices[2].sAttribs.vColor = vColor;
+				pVertices[2].sAttribs.fW = (float)(iHalfGridSize*2) + fk;
 
-				sVertex2.vPos = sVertex0.vPos;
-				sVertex2.sAttribs.vColor = vColor;
-				sVertex2.sAttribs.fW = (float)(iHalfGridSize*2) + fk;
-
-				sVertex0.vPos.y -= (float)iHalfGridSize;
-				sVertex2.vPos.y += (float)iHalfGridSize;
+				pVertices[0].vPos.y -= (float)iHalfGridSize;
+				pVertices[2].vPos.y += (float)iHalfGridSize;
 
 				float di = (float)i - fi;
 				float dj = (float)j - fj;
@@ -164,12 +159,13 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 
 				float fAlpha = 1.0f-t;
 
-				sVertex0.sAttribs.vColor.w *= 0.0f;
-				sVertex1.sAttribs.vColor.w *= fAlpha;
-				sVertex2.sAttribs.vColor.w *= 0.0f;
+				pVertices[0].sAttribs.vColor.w *= 0.0f;
+				pVertices[1].sAttribs.vColor.w *= fAlpha;
+				pVertices[2].sAttribs.vColor.w *= 0.0f;
 
-				CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex1, sViewport, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
-				CGraphics::GetInstance().DrawLine3D( sVertex1, sVertex2, sViewport, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
+				uint32_t pIndices[4] = { 0, 1, 1, 2 };
+
+				CGraphics::GetInstance().DrawLineList3D( pVertices, 3, pIndices, 2, sViewport, sVertexShaderGrid, SPixelShaderGrid(), SBlendFuncAdditive() );
 			}
 		}
 	}

@@ -74,7 +74,7 @@ void CSceneGame::Update()
 		//vP += m_sShipPlayer.m_vDir * 10.0f;
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
-		m_sCamera.m_vEye.z += Lerp( 1400.0f, 150.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
+		m_sCamera.m_vEye.z += Lerp( 1100.0f, 120.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
 		//m_sCamera.m_vEye.z += 200.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
@@ -509,6 +509,46 @@ void CSceneGame::Render()
 					}
 				}
 			}
+		}
+	}
+
+	{
+		struct SVertexShaderConstellations
+		{
+			using AttribsType = SVertexPC::SAttribs;
+			SMatrix matWorldViewProjViewPort;
+			inline void Execute( SClipVertex<AttribsType>& out, const SVertexPC& in ) const
+			{
+				SVector4 vPhSrc( in.vPos, 1.0f );
+				SMatrix::Mul( out.vPos, vPhSrc, matWorldViewProjViewPort );
+				out.sAttribs.vColor = SVector4( 0.0f, 0.0f, 0.0f, 0.0f );
+			}
+		} sVertexShaderConstellations;	
+
+		struct SPixelShaderConstellations
+		{
+			BGRA8 sColor;
+			inline BGRA8 Execute( const SVertexPC::SAttribs& in ) const
+			{
+				return sColor;
+			}
+		} sPixelShaderConstellations;
+
+		{
+			const SShip& sShipPlayer = m_cActors.GetShipPlayer();
+			SMatrix matWorld;
+			SMatrix::BuildEulerXYZ( matWorld, 0.0f, 0.0f, 0.0f );
+			SMatrix::Scale( matWorld, 1000.0f );
+			SVector3 vPos = sShipPlayer.m_vPos;
+			vPos.z -= 400.0f;
+			SMatrix::Translate( matWorld, vPos );
+			SMatrix::Mul( sVertexShaderConstellations.matWorldViewProjViewPort, matWorld, matViewProjViewPort );
+
+			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)22, 12, 2, 255 );
+			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, CEngine::GetInstance().GetMeshConstellations().m_pIndices, CEngine::GetInstance().GetMeshConstellations().m_iIndexCount/2, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
+
+			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)22, 12, 2, 255 );
+			CGraphics::GetInstance().DrawPointList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 		}
 	}
 

@@ -34,6 +34,7 @@ struct STurret
 		SVector3	m_vPos;
 		SVector3	m_vPosPrev;
 		SVector3	m_vMov;
+		float		m_fMass;
 		float		m_fTimer;
 		float		m_fTime;
 	};

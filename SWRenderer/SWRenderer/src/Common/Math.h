@@ -67,13 +67,13 @@ static constexpr float Rand(uint32_t x, uint32_t y)
     return (Hash(x, y) & 0xffffff) * (1.0f / 16777215.0f);
 }
 
-static bool SegmentSphereTest( const SVector2& v0, const SVector2& v1, const SVector2& vCenter, float fRadiusSq, float& fT )
+static bool SegmentSphereTest( const SVector2& v0, const SVector2& v1, const SVector2& vCenter, float fRadius, float& fT )
 {
     SVector2 d = v1 - v0;
     SVector2 f = v0 - vCenter;
     float a = SVector2::Dot(d, d);
     float b = 2.0f * SVector2::Dot(f, d);
-    float c = SVector2::Dot(f, f) - fRadiusSq;
+    float c = SVector2::Dot(f, f) - fRadius*fRadius;
     float discriminant = b * b - 4 * a * c;
     if (discriminant < 0)
     {

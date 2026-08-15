@@ -7,7 +7,7 @@ struct SCamera
 {
 	void Clear()
 	{
-		m_fFOVY = 45.0f / 180.0f * PI;
+		m_fFOVY = 55.0f / 180.0f * PI;
 		m_fAspect = 1.0f;
 		m_fNear = 0.1f;
 		m_fFar = 10000.0f;

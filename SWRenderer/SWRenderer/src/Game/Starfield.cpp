@@ -22,7 +22,7 @@ void CStarfield::Create()
 {
 	Clear();
 
-	m_iStarsCount = 1000;
+	m_iStarsCount = 2000;
 	m_pStars = new SVertexPC[m_iStarsCount];
 	for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 	{
@@ -31,11 +31,16 @@ void CStarfield::Create()
 		m_pStars[i].vPos.z = ((float)rand()/(float)RAND_MAX);
 
 		float a = ((float)rand()/(float)RAND_MAX);
-		a = powf( a, 16.0f );
+		a = powf( a, 2.0f );
 		a = a * 0.9f + 0.1f;
-		m_pStars[i].sAttribs.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.5f, a*2.0f );
-	}
-}
+		a = a*0.5f;
+		//m_pStars[i].sAttribs.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.7f, ((float)rand()/(float)RAND_MAX)*0.1f+0.5f, a*2.0f );
+		m_pStars[i].sAttribs.vColor = SVector4( ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, ((float)rand()/(float)RAND_MAX)*0.1f+0.9f, 1.0f );
+		m_pStars[i].sAttribs.vColor.x = powf( m_pStars[i].sAttribs.vColor.x*a, 1.3f )*1.0f;
+		m_pStars[i].sAttribs.vColor.y = powf( m_pStars[i].sAttribs.vColor.y*a, 2.0f )*1.0f;
+		m_pStars[i].sAttribs.vColor.z = powf( m_pStars[i].sAttribs.vColor.z*a, 2.2f )*1.0f;
+	}																	   
+}																		   
 
 void CStarfield::Render( const SCamera& sCamera, const SViewPort& sViewport )
 {
@@ -53,7 +58,6 @@ void CStarfield::Render( const SCamera& sCamera, const SViewPort& sViewport )
 	SMatrix matViewProjViewportPrev;
 	SMatrix::Mul( matViewProjViewportPrev, sCamera.m_matViewProjPrev, sViewport.GetViewPortMatrix() );
 
-	float fAlpha = 1.0f;
 	const int iSteps = 3;
 	for ( int j =0; j < iSteps; j++ )
 	{
@@ -92,12 +96,12 @@ void CStarfield::Render( const SCamera& sCamera, const SViewPort& sViewport )
 
 					if ( fL > 1.5f )
 					{
-						sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w / (fL * 0.2f + 1.0f) );
+						sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z, m_pStars[i].sAttribs.vColor.w / (fL * 0.2f + 1.0f) );
 						CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
 					}
 					else
 					{
-						BGRA8 sColor = BGRA8( m_pStars[i].sAttribs.vColor.x * fAlpha, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z * fAlpha, m_pStars[i].sAttribs.vColor.w );
+						BGRA8 sColor = BGRA8( m_pStars[i].sAttribs.vColor.x , m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z, m_pStars[i].sAttribs.vColor.w );
 						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sColor, SBlendFuncAdditive() );
 					}
 				}

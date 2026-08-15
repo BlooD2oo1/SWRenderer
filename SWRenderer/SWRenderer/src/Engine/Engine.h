@@ -65,6 +65,7 @@ public:
 	const SMesh&		GetMeshAsteroid01() const { return m_sMeshAsteroid01; }
 	const SMesh&		GetMeshAsteroid02() const { return m_sMeshAsteroid02; }
 	const SMesh&		GetMeshAsteroidBig() const { return m_sMeshAsteroidBig; }
+	const SMesh&		GetMeshConstellations() const { return m_sMeshConstellations; }
 
 	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
 	const STextureIndexed& GetFontTex_TinyPixie2_6x6() const { return m_sTexFont_TinyPixie2_6x6; }
@@ -93,6 +94,7 @@ private:
 	SMesh				m_sMeshAsteroid01;
 	SMesh				m_sMeshAsteroid02;
 	SMesh				m_sMeshAsteroidBig;
+	SMesh				m_sMeshConstellations;
 
 	STextureIndexed	m_sTexFont_KarenFat_13x16;
 	STextureIndexed	m_sTexFont_TinyPixie2_6x6;

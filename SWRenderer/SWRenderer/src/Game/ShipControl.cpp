@@ -94,7 +94,7 @@ void CActors::Create()
 		sAsteroid.m_fSize *= sAsteroid.m_fSize;
 		sAsteroid.m_eModel = ( sAsteroid.m_fSize > 0.8f ) ? SAsteroid::ModelBig : (((rand() % 2) == 0 ) ? SAsteroid::Model01 : SAsteroid::Model02);
 		sAsteroid.m_fSize *= 20.0f;
-		sAsteroid.m_fMass = powf( sAsteroid.m_fSize, 3.0f )*10.0f;
+		sAsteroid.m_fMass = powf( sAsteroid.m_fSize, 3.0f )*8.0f;
 
 		sAsteroid.m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 
@@ -113,7 +113,7 @@ void CActors::Create()
 
 void CActors::GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SShip& sShip )
 {
-	SVector2 vD( (sShip.m_vPos.xy()) - p );
+	SVector2 vD( sShip.m_vPos.xy() - p );
 	float lD = SVector2::Length( vD );
 
 	vField = SVector2( 0.0f, 0.0f );
@@ -152,8 +152,8 @@ void CActors::GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SS
 
 void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
 {
-	const float fWidth = sAsteroid.m_fSize * 1.2f + sShip.m_fSize;
-	const float fRad = std::min( sAsteroid.m_fSize * 2.5f + sShip.m_fSize, m_fHashGridSize );
+	const float fWidth = sAsteroid.m_fSize * 2.0f + sShip.m_fSize;
+	const float fRad = std::min( sAsteroid.m_fSize * 2.4f + sShip.m_fSize, m_fHashGridSize );
 
 	SVector2 vShipMovNorm( sShip.m_vMov.xy() );
 	SVector2::Normalize( vShipMovNorm, vShipMovNorm );
@@ -336,16 +336,20 @@ void CActors::_updateBoids()
 						float fDistSq = SVector2::LengthSq( vDist );
 						if ( fDistSq < sAsteroid1.m_fSize * sAsteroid1.m_fSize )
 						{
-							float fDamage = 0.4f * fElapsedTimeMs;
+							float fDamage = 10.4f * fElapsedTimeMs;
 							if ( i0 == m_iPlayerShipInd )
 							{
 								fDamage = 0.05f * fElapsedTimeMs;
 							}
 							if ( _onDamageShipByCollision( sShip0, fDamage ) )
 							{
-								SVector3 vDirAway( vDist.x, vDist.y, 0.0f );
-								vDirAway = vDirAway / sqrtf( fDistSq + 0.00001f );
-								sAsteroid1.m_vMov += vDirAway * (sShip0.m_fMass / sAsteroid1.m_fMass) * 0.1f * fElapsedTimeMs;
+								if ( fDistSq > 0.0f )
+								{
+									SVector2 vAttackDir( vDist/sqrtf(fDistSq) );
+									float fAttackForce = SVector2::Dot( vAttackDir, sShip0.m_vMov.xy() );
+									SVector2 vMov = vAttackDir / sAsteroid1.m_fMass * sShip0.m_fMass;
+									sAsteroid1.m_vMov.xy() += vMov;
+								}
 							}
 						}
 					}
@@ -463,9 +467,15 @@ void CActors::_updateShips()
 			SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
 			SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 			float fT = 0.0f;
-			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), sShip.m_fSize*sShip.m_fSize, fT ) )
+			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), sShip.m_fSize, fT ) )
 			{
-				sShip.m_vMov += SVector3( sBullet.m_vMov.x, sBullet.m_vMov.y, 0.0f ) * 0.05f;
+				SVector2 vSegmentDir( vBulletPos - vBulletPosPrev );
+				SVector2::Normalize( vSegmentDir, vSegmentDir );
+				SVector2 vAttackPoint( vBulletPosPrev + vSegmentDir * fT );
+				float fAttackForce = SVector2::Dot( vSegmentDir, SVector2( sBullet.m_vMov.x, sBullet.m_vMov.y ) );
+				SVector2 vMov = (sShip.m_vPos.xy() - vAttackPoint) * fAttackForce / sShip.m_fMass * sBullet.m_fMass;
+				sShip.m_vMov.x += vMov.x;
+				sShip.m_vMov.y += vMov.y;
 
 				_onDamageShipByBullet( sShip, sShipPlayer.m_sTurret.m_fDamage, sBullet.m_vMov );
 
@@ -482,9 +492,46 @@ void CActors::_updateShips()
 				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
 				sBullet.m_fTime = sBullet.m_fTimer;
-			}				
+			}
 		}
 	}
+
+	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
+	{
+		SAsteroid& sAsteroid = GetAsteroid( i );
+		for ( int iBulletInd = 0; iBulletInd < sShipPlayer.m_sTurret.m_aBullets.size(); iBulletInd++ )
+		{
+			STurret::SBullet& sBullet = sShipPlayer.m_sTurret.m_aBullets[iBulletInd];
+			SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
+			SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
+			float fT = 0.0f;
+			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sAsteroid.m_vPos.x, sAsteroid.m_vPos.y ), sAsteroid.m_fSize, fT ) )
+			{
+				SVector2 vSegmentDir( vBulletPos - vBulletPosPrev );
+				SVector2::Normalize( vSegmentDir, vSegmentDir );
+				SVector2 vAttackPoint( vBulletPosPrev + vSegmentDir * fT );
+				float fAttackForce = SVector2::Dot( vSegmentDir, SVector2( sBullet.m_vMov.x, sBullet.m_vMov.y ) );
+				SVector2 vMov = ( sAsteroid.m_vPos.xy() - vAttackPoint ) * fAttackForce / sAsteroid.m_fMass * sBullet.m_fMass;
+				sAsteroid.m_vMov.x += vMov.x;
+				sAsteroid.m_vMov.y += vMov.y;
+
+				SAudioEvent sAudioEvent;
+				sAudioEvent.type = SAudioEvent::GunHit;
+				sAudioEvent.fVolume = 0.15f;
+				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 300;
+				sAudioEvent.iSampleCounter = 0;
+				sAudioEvent.fPhase = 0.0f;	
+				sAudioEvent.sClick.iButton = 1;
+				sAudioEvent.sGun.vPos = sBullet.m_vPos;
+				sAudioEvent.sGun.fPitch = 600.0f;
+				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+				sBullet.m_fTime = sBullet.m_fTimer;
+			}
+		}
+	}
+
 
 	for ( size_t i = 0; i < GetShipCount(); )
 	{
@@ -714,19 +761,17 @@ void STurret::Update( const SShip& sShip )
 
 			float fFrameW = (float)(iTNs - m_iLastBulletTimeStampNs) / (float)(CEngine::GetInstance().GetTimeStampNs() - m_iLastBulletTimeStampNs);
 
-			SBullet sBullet;
+			m_aBullets.emplace_back();
+			SBullet& sBullet = m_aBullets.back();
 			sBullet.m_vPos = Lerp( vGunPosWorldPrev, vGunPosWorld, fFrameW );
 
 			SVector3 vBulletDir = Lerp( vGunDirPrev, vGunDir, fFrameW );
 			sBullet.m_vMov = Lerp( vGunMovPrev, vGunMov, fFrameW ) + vBulletDir * m_fBulletSpeed;
 
-			/*sBullet.m_vDir.x += (rand() % 1000 - 500) * 0.00001f;
-			sBullet.m_vDir.y += (rand() % 1000 - 500) * 0.00001f;
-			sBullet.m_vDir.z += (rand() % 1000 - 500) * 0.00001f;*/
+			sBullet.m_fMass = 1.0f;
 
 			sBullet.m_fTime = 1000.0f;
 			sBullet.m_fTimer = 0.0f;
-			m_aBullets.push_back( sBullet );			
 
 			SAudioEvent sAudioEvent;
 			sAudioEvent.type = SAudioEvent::GunShot;
