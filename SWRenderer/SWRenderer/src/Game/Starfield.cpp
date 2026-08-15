@@ -25,7 +25,7 @@ void CStarfield::Create()
 {
 	Clear();
 
-	m_iStarsCount = 2000;
+	m_iStarsCount = 1000;
 	m_pStars = new SVertexPC[m_iStarsCount];
 	for ( uint32_t i = 0; i < m_iStarsCount; i++ )
 	{
@@ -44,7 +44,7 @@ void CStarfield::Create()
 		m_pStars[i].sAttribs.vColor.z = powf( m_pStars[i].sAttribs.vColor.z*a, 2.2f )*1.0f;
 	}					
 
-	m_iStarsBGCount = 2000;
+	m_iStarsBGCount = 1000;
 	m_pStarsBG = new SVertexPC[m_iStarsBGCount];
 	// random stars on a hemisphere:
 	for ( uint32_t i = 0; i < m_iStarsBGCount; i++ )

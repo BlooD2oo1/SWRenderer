@@ -153,7 +153,7 @@ void CActors::GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SS
 void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
 {
 	const float fWidth = sAsteroid.m_fSize * 2.0f + sShip.m_fSize;
-	const float fRad = std::min( sAsteroid.m_fSize * 2.4f + sShip.m_fSize, m_fHashGridSize );
+	const float fRad = std::min( sAsteroid.m_fSize * /*2.4f*/2.0f + sShip.m_fSize, m_fHashGridSize );
 
 	SVector2 vShipMovNorm( sShip.m_vMov.xy() );
 	SVector2::Normalize( vShipMovNorm, vShipMovNorm );
@@ -336,7 +336,7 @@ void CActors::_updateBoids()
 						float fDistSq = SVector2::LengthSq( vDist );
 						if ( fDistSq < sAsteroid1.m_fSize * sAsteroid1.m_fSize )
 						{
-							float fDamage = 10.4f * fElapsedTimeMs;
+							float fDamage = 0.8f * fElapsedTimeMs;
 							if ( i0 == m_iPlayerShipInd )
 							{
 								fDamage = 0.05f * fElapsedTimeMs;
