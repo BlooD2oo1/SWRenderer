@@ -24,6 +24,8 @@ void CSceneCredits::Update()
 
 void CSceneCredits::Render()
 {
+	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 0 ) );
+
 	int iCursorY = 24;
 	int iFrameBufferWidth = CGraphics::GetInstance().GetFrameBuffer().iWidth;
 	int iSpacing = -1;

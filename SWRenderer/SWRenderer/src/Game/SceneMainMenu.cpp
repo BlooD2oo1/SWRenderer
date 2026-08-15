@@ -24,7 +24,7 @@ void CSceneMainMenu::Clear()
 
 void CSceneMainMenu::Create()
 {
-	PCX_LoadFromFile( "data/mainscreen.pcx", m_sTexBackground );
+	PCX_LoadFromFile( "data/textures/mainscreen.pcx", m_sTexBackground );
 
 	{
 		m_sMainMenu.aSubMenus.emplace_back();
@@ -86,6 +86,8 @@ void CSceneMainMenu::Update()
 
 void CSceneMainMenu::Render()
 {
+	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 0 ) );
+
 	CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexBackground );
 
 

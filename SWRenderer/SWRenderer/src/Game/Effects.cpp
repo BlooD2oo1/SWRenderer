@@ -66,7 +66,7 @@ void SEffect_ShipExplosion::Create()
 		sParticle.m_vMov.z = cosf(phi);
 		sParticle.m_vMov *= 1.0f + powf( ((float)rand() / (float)RAND_MAX), 4 ) * 10.0f;
 		sParticle.m_vMov *= 0.02f;
-		sParticle.m_vMov += Lerp( m_vMovShip, m_vMovBullet*0.3f, ((float)rand() / (float)RAND_MAX) );
+		sParticle.m_vMov += Lerp( m_vMovShip, m_vMovBullet, ((float)rand() / (float)RAND_MAX) );
 
 		sParticle.m_fLifeTimeMs = ((float)rand() / (float)RAND_MAX) * 4000.0f + 300.0f;
 		sParticle.m_fAgeMs = 0.0f;

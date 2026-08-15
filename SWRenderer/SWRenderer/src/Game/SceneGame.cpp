@@ -16,10 +16,12 @@ CSceneGame::~CSceneGame()
 void CSceneGame::Clear()
 {
 	m_sCamera.Clear();
-	m_sTexHUD_Top.Clear();
-	m_sTexHUD_Left.Clear();
-	m_sTexHUD_Bottom.Clear();
-	m_sTexHUD_Right.Clear();
+	//m_sTexHUD_Top.Clear();
+	//m_sTexHUD_Left.Clear();
+	//m_sTexHUD_Bottom.Clear();
+	//m_sTexHUD_Right.Clear();
+	m_sTexHUD_Screen.Clear();
+	m_sTexHUD_Menu.Clear();
 	m_sTexHUD_Tick.Clear();
 	m_cStarfield.Clear();
 	m_cGrid.Clear();
@@ -31,16 +33,20 @@ void CSceneGame::Create()
 {
 	Clear();
 
-	PCX_LoadFromFile( "data/hud_top.pcx", m_sTexHUD_Top );
-	PCX_LoadFromFile( "data/hud_left.pcx", m_sTexHUD_Left );
-	PCX_LoadFromFile( "data/hud_bottom.pcx", m_sTexHUD_Bottom );
-	PCX_LoadFromFile( "data/hud_right.pcx", m_sTexHUD_Right );
-	PCX_LoadFromFile( "data/hud_tick.pcx", m_sTexHUD_Tick );
+	//PCX_LoadFromFile( "data/hud_top.pcx", m_sTexHUD_Top );
+	//PCX_LoadFromFile( "data/hud_left.pcx", m_sTexHUD_Left );
+	//PCX_LoadFromFile( "data/hud_bottom.pcx", m_sTexHUD_Bottom );
+	//PCX_LoadFromFile( "data/hud_right.pcx", m_sTexHUD_Right );
+	PCX_LoadFromFile( "data/textures/hud_screen.pcx", m_sTexHUD_Screen );
+	PCX_LoadFromFile( "data/textures/hud_menu.pcx", m_sTexHUD_Menu );
+	PCX_LoadFromFile( "data/textures/hud_tick.pcx", m_sTexHUD_Tick );
 	
-	m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth+2, (float)CGraphics::GetInstance().GetFrameBuffer().iHeight-1 ) );
+	//m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth+2, (float)CGraphics::GetInstance().GetFrameBuffer().iHeight-1 ) );
+	m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)m_sTexHUD_Screen.m_iWidth-2, (float)m_sTexHUD_Screen.m_iHeight-2 ) );
 	m_sCamera.m_fAspect = ( m_sViewportGameView.Get11().x - m_sViewportGameView.Get00().x ) / ( m_sViewportGameView.Get11().y - m_sViewportGameView.Get00().y );
 
-	m_sViewportMiniMap.Create( SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth + 9 ), 135.0f ), SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth + 9 + 60 ), 135.0f + 60.0f ) );
+	//m_sViewportMiniMap.Create( SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth + 9 ), 135.0f ), SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth + 9 + 60 ), 135.0f + 60.0f ) );
+	m_sViewportMiniMap.Create( SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth + 8 ), 135.0f ), SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth + 8 + 60 ), 135.0f + 60.0f ) );
 
 	m_cStarfield.Create();
 	m_cGrid.Create();
@@ -104,22 +110,29 @@ void CSceneGame::Update()
 
 void CSceneGame::Render()
 {
+	//CGraphics::GetInstance().ClearFrameBuffer( BGRA8( (uint8_t)8, 5, 1, 0 ) );
+
 	////////////////////////////////////////////////////////////////
 	// HUD
 	////////////////////////////////////////////////////////////////
 
 	{
-		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Left, 0, 0 );
-		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Top, 3, 0 );
-		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Bottom, 3, 200-3 );
+		//CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Left, 0, 0 );
+		//CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Top, 3, 0 );
+		//CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Bottom, 3, 200-3 );
 
-		int iHUDX = CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth;
-		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Right, iHUDX, 0 );
+		//int iHUDX = CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth;
+		//CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Right, iHUDX, 0 );
+
+		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Screen, 0, 0 );
+		CGraphics::GetInstance().DrawTexture( SBlendFuncCopy(), m_sTexHUD_Menu, m_sTexHUD_Screen.m_iWidth, 0 );
+		int iHUDX = CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth - 1;
+		
 
 		char szText[256];
 		//sprintf_s( szText, "HP     %4.1d", (int)m_cActors.GetShipPlayer().m_fHP );
 		//CGraphics::GetInstance().DrawText( iHUDX + 7, 8,  szText, BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
-		CGraphics::GetInstance().DrawText( iHUDX + 5, 8,  "HP", BGRA8{ (uint8_t)40, 00, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -2 );
+		CGraphics::GetInstance().DrawText( iHUDX + 4, 8,  "HP", BGRA8{ (uint8_t)40, 00, 100, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -2 );
 
 		struct SBlendFuncAdditiveWithColorMultiplier
 		{
@@ -140,19 +153,19 @@ void CSceneGame::Render()
 		for ( int i = 0; i < 20; i++ )
 		{
 			sBlendFuncAdditiveWithColorMultiplier.sColorMultiplier = (i < (int)(m_cActors.GetShipPlayer().m_fHP*0.2f)) ? BGRA8{ (uint8_t)60, 0, 180, 255 } : BGRA8{ (uint8_t)20, 0, 30, 255 };
-			CGraphics::GetInstance().DrawTexture( sBlendFuncAdditiveWithColorMultiplier, m_sTexHUD_Tick, iHUDX + 14 + i*3, 7 );
+			CGraphics::GetInstance().DrawTexture( sBlendFuncAdditiveWithColorMultiplier, m_sTexHUD_Tick, iHUDX + 13 + i*3, 7 );
 		}
 
-		CGraphics::GetInstance().DrawText( iHUDX + 7, 14, "SHIELD  12%", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
-		CGraphics::GetInstance().DrawText( iHUDX + 7, 20, "AMMO    174", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
-		CGraphics::GetInstance().DrawText( iHUDX + 7, 26, "ROCKET  0", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
+		CGraphics::GetInstance().DrawText( iHUDX + 6, 14, "SHIELD  12%", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
+		CGraphics::GetInstance().DrawText( iHUDX + 6, 20, "AMMO    174", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
+		CGraphics::GetInstance().DrawText( iHUDX + 6, 26, "ROCKET  0", BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
 
 		
 		float fSpeed = SVector3::Length( m_cActors.GetShipPlayer().m_vMov ) * 1000.0f;
 		sprintf_s( szText, "SPEED %4.1d", (int)fSpeed );
 		CGraphics::GetInstance().DrawText( iHUDX + 6, 42, szText, BGRA8{ (uint8_t)100, 70, 40, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
 
-		CGraphics::GetInstance().DrawText( iHUDX + 14, 82, "RailGun", BGRA8{ (uint8_t)100, 70, 140, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
+		CGraphics::GetInstance().DrawText( iHUDX + 13, 82, "RailGun", BGRA8{ (uint8_t)100, 70, 140, 255 }, SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Tiny_6x5(), 6, 5, -0 );
 	}
 
 	////////////////////////////////////////////////////////////////
