@@ -22,7 +22,7 @@ void CGrid::Create()
 
 void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& matViewProj, const SViewPort& sViewport, const SVector3& vPos )
 {
-	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.0f );
+	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 1.0f );
 	struct SVertexShaderGrid
 	{
 		using AttribsType = SVertexPCW::SAttribs;
@@ -40,7 +40,7 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 	{
 		BGRA8 Execute( const SVertexPCW::SAttribs& in ) const
 		{
-			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w * ( ( ((int)(in.fW*20.0f)) % 5 ) != 2 ) ? 1.0f : 0.5f );
+			return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, in.vColor.w * ( ( ( ((int)(in.fW*40.0f)) % 5 ) < 3 ) ? 0.5f : 0.1f ) );
 			//return BGRA8( in.vColor.x, in.vColor.y, in.vColor.z, fabsf( (in.fW*5.0f-floorf(in.fW*5.0f)) * 2.0f - 1.0f ) * in.vColor.w );
 		}
 	};

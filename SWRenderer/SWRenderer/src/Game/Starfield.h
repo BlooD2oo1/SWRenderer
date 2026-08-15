@@ -17,4 +17,7 @@ public:
 
 	SVertexPC*		m_pStars;
 	uint32_t		m_iStarsCount;
+
+	SVertexPC*		m_pStarsBG;
+	uint32_t		m_iStarsBGCount;
 };
