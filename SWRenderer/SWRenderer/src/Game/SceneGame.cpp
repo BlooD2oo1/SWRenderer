@@ -289,8 +289,8 @@ void CSceneGame::Render()
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipPlayer().m_pVertices, CEngine::GetInstance().GetMeshShipPlayer().m_iVertexCount, CEngine::GetInstance().GetMeshShipPlayer().m_pIndices, CEngine::GetInstance().GetMeshShipPlayer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
-	// destroyed ship
-	{
+	// underwater decor
+	/*{
 		SMatrix matShip;
 		SMatrix::BuildEulerXYZ( matShip, 0.5f, 0.5f, 2.1f );
 		SMatrix::Scale( matShip, 80.0f );
@@ -331,6 +331,19 @@ void CSceneGame::Render()
 		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
 		sVertexShaderBasic.fAlpha = 0.3f;
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshAsteroidBig().m_pVertices, CEngine::GetInstance().GetMeshAsteroidBig().m_iVertexCount, CEngine::GetInstance().GetMeshAsteroidBig().m_pIndices, CEngine::GetInstance().GetMeshAsteroidBig().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+	}*/
+
+	{
+		SMatrix matShip;
+		SMatrix::BuildEulerXYZ( matShip, 0.0f, 0.0f, 1.0f );
+		SMatrix::Scale( matShip, 5.0f );
+		SMatrix::Translate( matShip, SVector3( 100.0f, 100.0f, 0.0f ) );
+		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matShip, matViewProjViewPort );
+		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
+		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.6f, 0.5f ) * 0.33f;
+		sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
+		sVertexShaderBasic.fAlpha = 0.8f;
+		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipDestroyer().m_pVertices, CEngine::GetInstance().GetMeshShipDestroyer().m_iVertexCount, CEngine::GetInstance().GetMeshShipDestroyer().m_pIndices, CEngine::GetInstance().GetMeshShipDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
 	// enemy ships
@@ -544,10 +557,10 @@ void CSceneGame::Render()
 			SMatrix::Translate( matWorld, vPos );
 			SMatrix::Mul( sVertexShaderConstellations.matWorldViewProjViewPort, matWorld, matViewProjViewPort );
 
-			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)22, 12, 2, 255 );
+			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)24, 16, 2, 255 );
 			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, CEngine::GetInstance().GetMeshConstellations().m_pIndices, CEngine::GetInstance().GetMeshConstellations().m_iIndexCount/2, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 
-			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)22, 12, 2, 255 );
+			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)40, 25, 2, 255 );
 			CGraphics::GetInstance().DrawPointList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 		}
 	}
