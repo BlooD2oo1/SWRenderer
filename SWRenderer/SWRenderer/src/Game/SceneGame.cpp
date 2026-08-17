@@ -75,7 +75,7 @@ void CSceneGame::Update()
 		m_sCamera.m_vLookAt = vP;
 		m_sCamera.m_vEye = vP;
 		m_sCamera.m_vEye.z += Lerp( 1100.0f, 120.0f, expf( -SVector3::Length( sShipPlayer.m_vMov ) * 1.5f ) );
-		//m_sCamera.m_vEye.z += 200.0f;
+		//m_sCamera.m_vEye.z += 400.0f;
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 
@@ -206,8 +206,18 @@ void CSceneGame::Render()
 
 		SVector2 vField( 0.0f, 0.0f );
 	
-		const float fSize = 5.0f;
-		const int iGridSize = 50;
+		std::vector< SAsteroid* > aAsteroids;
+		for ( int iAsteroidInd = 0; iAsteroidInd < (int)m_cActors.GetAsteroidCount(); iAsteroidInd++ )
+		{
+			const SAsteroid& sAsteroid = m_cActors.GetAsteroid(iAsteroidInd);
+			if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
+			{
+				aAsteroids.push_back( (SAsteroid*)&sAsteroid );
+			}
+		}
+
+		const float fSize = 15.0f;
+		const int iGridSize = 30;
 		for ( int x = -iGridSize; x < iGridSize; x++ )
 		for ( int y = -iGridSize; y < iGridSize; y++ )
 		{
@@ -219,8 +229,17 @@ void CSceneGame::Render()
 
 			SVector2 vField( 0.0f, 0.0f );
 			SVector2 p( fX, fY );
-			m_cActors.GetField_ShipPlayer( vField, p, m_cActors.GetShipPlayer() );
-			//m_cActors.GetField_Asteroid( vField, p,m_cActors.GetShipPlayer(), m_cActors.GetAsteroid(0) );
+			//m_cActors.GetField_ShipPlayer( vField, p, m_cActors.GetShipPlayer() );
+			for ( int iAsteroidInd = 0; iAsteroidInd < (int)aAsteroids.size(); iAsteroidInd++ )
+			{
+				const SAsteroid& sAsteroid = *aAsteroids[iAsteroidInd];
+				if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
+				{
+					SVector2 v;
+					m_cActors.GetField_Asteroid( v, p, m_cActors.GetShipPlayer(), sAsteroid );
+					vField += v;
+				}
+			}
 
 			SVertexPW vert0{ SVector3( fX, fY, 0.0f ), 1.0f };
 			SVertexPW vert1{ SVector3( fX + vField.x * fSize*0.8f, fY + vField.y * fSize*0.8f, 0.0f ), 0.0f };
