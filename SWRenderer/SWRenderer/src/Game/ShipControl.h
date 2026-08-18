@@ -147,6 +147,7 @@ public:
 	// https://www.shadertoy.com/view/fcy3Wt
 	void		GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SShip& sShip );
 	void		GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid );
+	void		GetField_Asteroid2( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid );
 
 private:
 	void _updateHashGrids();

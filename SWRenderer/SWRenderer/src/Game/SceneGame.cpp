@@ -67,6 +67,8 @@ void CSceneGame::Update()
 
 	{
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
+		//const SShip& sShipPlayer = m_cActors.GetShipCount() > 1 ? m_cActors.GetShip(1) : m_cActors.GetShipPlayer();
+
 		// Update camera:
 		float fWFast = CalcSmoothUpdateWeight( 1.01f, fElapsedTimeMs );
 		float fWSlow = CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs );
@@ -180,7 +182,7 @@ void CSceneGame::Render()
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
-//#define DRAW_FIELD
+#define DRAW_FIELD
 #ifdef DRAW_FIELD
 	{
 		struct SVertexShaderBasic
@@ -236,7 +238,7 @@ void CSceneGame::Render()
 				if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
 				{
 					SVector2 v;
-					m_cActors.GetField_Asteroid( v, p, m_cActors.GetShipPlayer(), sAsteroid );
+					m_cActors.GetField_Asteroid2( v, p, m_cActors.GetShipPlayer(), sAsteroid );
 					vField += v;
 				}
 			}
