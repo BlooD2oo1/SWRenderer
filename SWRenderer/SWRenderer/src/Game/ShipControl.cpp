@@ -263,7 +263,7 @@ void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShi
 void CActors::GetField_Asteroid2( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
 {
 	const float fRad0 = std::min( sAsteroid.m_fSize * 0.5f + sShip.m_fSize, m_fHashGridAsteroids_Size );
-	const float fRad1 = std::min( sAsteroid.m_fSize * 9.0f + sShip.m_fSize, m_fHashGridAsteroids_Size );
+	const float fRad1 = std::min( sAsteroid.m_fSize * 5.0f + sShip.m_fSize, m_fHashGridAsteroids_Size );
 
 	SVector2 vAst( p - sAsteroid.m_vPos.xy() );
 	float fAstL = SVector2::Length( vAst );
@@ -440,17 +440,27 @@ void CActors::_updateBoids()
 			}
 		}
 
-		//project the asteroid field vector onto the tangent of the ship's mov vector:
-		SVector2 vShipMovNorm( sShip0.m_vMov.xy() );
+		/*SVector2 vShipMovNorm( sShip0.m_vMov.xy() );
 		SVector2::Normalize( vShipMovNorm, vShipMovNorm );
 		SVector2 vShipMovNormTan( -sShip0.m_vMov.y, sShip0.m_vMov.x );
 		SVector2::Normalize( vShipMovNormTan, vShipMovNormTan );
 		SVector2 vAsteroidFieldProj = vShipMovNormTan * SVector2::Dot( vAsteroidField, vShipMovNormTan );
-		vAsteroidFieldProj *= Clamp( -SVector2::Dot( vAsteroidField, vShipMovNorm ), 0.0f, 1.0f );
+		vAsteroidFieldProj *= Clamp( -SVector2::Dot( vAsteroidField, vShipMovNorm ), 0.0f, 1.0f );*/
 
+		const float fHeight = 10.0f;
+		float f = SVector2::Cross( sShip0.m_vMov.xy(), vAsteroidField );
+		if ( f >= 0.0f )
+		{
+			f = std::max( 0.0f, (fHeight - (+f)) / fHeight );
+		}
+		else
+		{
+			f = -std::max( 0.0f, (fHeight - (-f)) / fHeight );
+		}
+		f = Clamp( f, -1.0f, 1.0f );
+		vAsteroidField = SVector2( -sShip0.m_vMov.y, sShip0.m_vMov.x ) * f * SVector2::Length( vAsteroidField );
 
-
-		SVector2 vBoidMov = vAsteroidFieldProj * 500.0f;
+		SVector2 vBoidMov = vAsteroidField * 5000.0f;
 
 
 		sShip0.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );

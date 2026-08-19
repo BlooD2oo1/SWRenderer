@@ -41,12 +41,12 @@ void CSceneGame::Create()
 	PCX_LoadFromFile( "data/textures/hud_menu.pcx", m_sTexHUD_Menu );
 	PCX_LoadFromFile( "data/textures/hud_tick.pcx", m_sTexHUD_Tick );
 	
-	//m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth+2, (float)CGraphics::GetInstance().GetFrameBuffer().iHeight-1 ) );
-	m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)m_sTexHUD_Screen.m_iWidth-2, (float)m_sTexHUD_Screen.m_iHeight-2 ) );
+	//m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)m_sTexHUD_Screen.m_iWidth-2, (float)m_sTexHUD_Screen.m_iHeight-2 ) );
+	m_sViewportGameView.Create( SVector2( 1.0f, 1.0f ), SVector2( (float)(CGraphics::GetInstance().GetFrameBuffer().iWidth-78), (float)(CGraphics::GetInstance().GetFrameBuffer().iHeight-2) ) );
 	m_sCamera.m_fAspect = ( m_sViewportGameView.Get11().x - m_sViewportGameView.Get00().x ) / ( m_sViewportGameView.Get11().y - m_sViewportGameView.Get00().y );
 
-	//m_sViewportMiniMap.Create( SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth + 9 ), 135.0f ), SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Right.m_iWidth + 9 + 60 ), 135.0f + 60.0f ) );
-	m_sViewportMiniMap.Create( SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth + 8 ), 135.0f ), SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth + 8 + 60 ), 135.0f + 60.0f ) );
+	//m_sViewportMiniMap.Create( SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth + 8 ), 135.0f ), SVector2( (float)( CGraphics::GetInstance().GetFrameBuffer().iWidth - m_sTexHUD_Menu.m_iWidth + 8 + 60 ), 135.0f + 60.0f ) );
+	m_sViewportMiniMap.Create( SVector2( 251.0f, 135.0f ), SVector2( 251.0f + 60.0f, 135.0f + 60.0f ) );
 
 	m_cStarfield.Create();
 	m_cGrid.Create();
@@ -88,7 +88,12 @@ void CSceneGame::Update()
 		SVector2::Normalize( vDir2D, vDir2D );
 		m_sCamera.m_vUp.x = vDir2D.x;
 		m_sCamera.m_vUp.y = vDir2D.y;
-		
+
+#ifdef EDITOR
+		m_sCamera.m_vLookAtSmooth = SVector3( 0.0f, 0.0f, 0.0f );
+		m_sCamera.m_vEyeSmooth = SVector3( 0.0f, 0.0f, 1000.0f );
+		m_sCamera.m_vUp = SVector3( 0.0f, 1.0f, 0.0f );
+#endif		
 		m_sCamera.UpdateMatrices();
 	}	
 	
@@ -112,8 +117,9 @@ void CSceneGame::Update()
 
 void CSceneGame::Render()
 {
-	//CGraphics::GetInstance().ClearFrameBuffer( BGRA8( (uint8_t)8, 5, 1, 0 ) );
-
+#ifdef EDITOR
+	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( (uint8_t)8, 5, 1, 0 ) );
+#endif
 	////////////////////////////////////////////////////////////////
 	// HUD
 	////////////////////////////////////////////////////////////////
@@ -218,6 +224,7 @@ void CSceneGame::Render()
 			}
 		}
 
+		const SShip& sShip = m_cActors.GetShipPlayer();
 		const float fSize = 15.0f;
 		const int iGridSize = 30;
 		for ( int x = -iGridSize; x < iGridSize; x++ )
@@ -226,8 +233,8 @@ void CSceneGame::Render()
 			float fX = (float)x * fSize;
 			float fY = (float)y * fSize;
 			
-			fX += (int)(m_cActors.GetShipPlayer().m_vPos.x/fSize)*fSize;
-			fY += (int)(m_cActors.GetShipPlayer().m_vPos.y/fSize)*fSize;
+			fX += (int)(sShip.m_vPos.x/fSize)*fSize;
+			fY += (int)(sShip.m_vPos.y/fSize)*fSize;
 
 			SVector2 vField( 0.0f, 0.0f );
 			SVector2 p( fX, fY );
@@ -238,10 +245,23 @@ void CSceneGame::Render()
 				if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
 				{
 					SVector2 v;
-					m_cActors.GetField_Asteroid2( v, p, m_cActors.GetShipPlayer(), sAsteroid );
+					m_cActors.GetField_Asteroid2( v, p, sShip, sAsteroid );
 					vField += v;
 				}
 			}
+
+			const float fHeight = 10.0f;
+			float f = SVector2::Cross( sShip.m_vMov.xy(), vField );
+			if ( f >= 0.0f )
+			{
+				f = std::max( 0.0f, (fHeight - (+f)) / fHeight );
+			}
+			else
+			{
+				f = -std::max( 0.0f, (fHeight - (-f)) / fHeight );
+			}
+			f = Clamp( f, -1.0f, 1.0f );
+			vField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vField ) * 10.0f;
 
 			SVertexPW vert0{ SVector3( fX, fY, 0.0f ), 1.0f };
 			SVertexPW vert1{ SVector3( fX + vField.x * fSize*0.8f, fY + vField.y * fSize*0.8f, 0.0f ), 0.0f };
@@ -569,11 +589,10 @@ void CSceneGame::Render()
 		} sPixelShaderConstellations;
 
 		{
-			const SShip& sShipPlayer = m_cActors.GetShipPlayer();
 			SMatrix matWorld;
 			SMatrix::BuildEulerXYZ( matWorld, 0.0f, 0.0f, 0.0f );
 			SMatrix::Scale( matWorld, 1000.0f );
-			SVector3 vPos = sShipPlayer.m_vPos;
+			SVector3 vPos = m_sCamera.m_vEyeSmooth;
 			vPos.z -= 400.0f;
 			SMatrix::Translate( matWorld, vPos );
 			SMatrix::Mul( sVertexShaderConstellations.matWorldViewProjViewPort, matWorld, matViewProjViewPort );

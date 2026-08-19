@@ -298,7 +298,7 @@ public:
 	template<class TBlendFunc>
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
-	void DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX = 0, int iDstY = 0, int iWidth = INT_MAX, int iHeight = INT_MAX, int iTexX = 0, int iTexY = 0 );
+	void DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX = 0, int iDstY = 0, int iDstWidth = INT_MAX, int iDstHeight = INT_MAX, int iSrcX = 0, int iSrcY = 0 );
 	template<class TBlendFunc>
 	void DrawText( int x, int y, const char* pText, BGRA8 sColor, const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iCharWidth, int iCharHeight, int iSpacing = 0 );
 
@@ -312,9 +312,9 @@ private:
 	{
 		uint8_t iRet = 0;
 		iRet |= ( vP4.x < vP4.w * sViewPort.Get00().x ) ? 1 : 0;
-		iRet |= ( vP4.x > vP4.w * sViewPort.Get11().x ) ? 2 : 0;
+		iRet |= ( vP4.x > vP4.w * ( sViewPort.Get11().x-0.001f ) ) ? 2 : 0;
 		iRet |= ( vP4.y < vP4.w * sViewPort.Get00().y ) ? 4 : 0;
-		iRet |= ( vP4.y > vP4.w * sViewPort.Get11().y ) ? 8 : 0;
+		iRet |= ( vP4.y > vP4.w * ( sViewPort.Get11().y-0.001f ) ) ? 8 : 0;
 		return iRet;
 	}
 
@@ -517,7 +517,7 @@ void CGraphics::DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, cons
 			vPh.vPos.y = vPh.vPos.y * fWRec;
 			SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
 
-			RasterizePixel( (int)(vScreen.x+0.5f), (int)(vScreen.y+0.5f), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+			RasterizePixel( (int)(vScreen.x), (int)(vScreen.y), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
 		}
 	}
 }
@@ -540,7 +540,7 @@ void CGraphics::DrawPointList3D( const TVertex* pLineList, uint32_t iPrimitiveCo
 				vPh.vPos.y = vPh.vPos.y * fWRec;
 				SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
 
-				RasterizePixel( (int)(vScreen.x+0.5f), (int)(vScreen.y+0.5f), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+				RasterizePixel( (int)(vScreen.x), (int)(vScreen.y), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
 			}
 		}
 	}
@@ -750,22 +750,22 @@ void CGraphics::DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlend
 }
 
 template<class TBlendFunc>
-void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iWidth, int iHeight, int iTexX, int iTexY )
+void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iDstWidth, int iDstHeight, int iSrcX, int iSrcY )
 {
-	iWidth = std::min( iWidth, sTex.m_iWidth - iTexX );
-	iHeight = std::min( iHeight, sTex.m_iHeight - iTexY );
-	for ( int iy = 0; iy < iHeight; iy++ )
+	/*iDstWidth = std::min( iDstWidth, sTex.m_iWidth - iSrcX );
+	iDstHeight = std::min( iDstHeight, sTex.m_iHeight - iSrcY );
+	for ( int iy = 0; iy < iDstHeight; iy++ )
 	{
 		int iDestY = iDstY + iy;
 		if ( iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
 		{
-			for ( int ix = 0; ix < iWidth; ix++ )
+			for ( int ix = 0; ix < iDstWidth; ix++ )
 			{
 				int iDestX = iDstX + ix;
 			
 				if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth )
 				{
-					uint8_t uIndex = sTex.m_pData[(iTexY+iy) * sTex.m_iWidth + (iTexX+ix)];
+					uint8_t uIndex = sTex.m_pData[(iSrcY+iy) * sTex.m_iWidth + (iSrcX+ix)];
 					BGRA8 sColor;
 					sColor.r = sTex.m_pPalette[uIndex*3+2];
 					sColor.g = sTex.m_pPalette[uIndex*3+1];
@@ -774,6 +774,55 @@ void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed
 					RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
 				}			
 			}
+		}
+	}*/
+
+	int iDrawW = std::min( iDstWidth, sTex.m_iWidth - iSrcX );
+	int iDrawH = std::min( iDstHeight, sTex.m_iHeight - iSrcY );
+
+	if ( iDstX < 0 )
+	{
+		int iClip = -iDstX;
+		iSrcX += iClip;
+		iDrawW -= iClip;
+		iDstX = 0;
+	}
+	if ( iDstY < 0 )
+	{
+		int iClip = -iDstY;
+		iSrcY += iClip;
+		iDrawH -= iClip;
+		iDstY = 0;
+	}
+
+	if ( iDstX + iDrawW > m_sFrameBuffer.iWidth )
+	{
+		iDrawW = m_sFrameBuffer.iWidth - iDstX;
+	}
+	if ( iDstY + iDrawH > m_sFrameBuffer.iHeight )
+	{
+		iDrawH = m_sFrameBuffer.iHeight - iDstY;
+	}
+
+	if ( iDrawW <= 0 || iDrawH <= 0 ) return;
+
+	for ( int iy = 0; iy < iDrawH; ++iy )
+	{
+		BGRA8* pDstRow = &m_sFrameBuffer.pData[( iDstY + iy ) * m_sFrameBuffer.iWidth + iDstX];
+		const uint8_t* pSrcRow = &sTex.m_pData[( iSrcY + iy ) * sTex.m_iWidth + iSrcX];
+
+		for ( int ix = 0; ix < iDrawW; ++ix )
+		{
+			uint8_t uIndex = pSrcRow[ix];
+			uint32_t uPalIdx = (uint32_t)uIndex * 3;
+
+			BGRA8 sColor;
+			sColor.b = sTex.m_pPalette[uPalIdx + 0];
+			sColor.g = sTex.m_pPalette[uPalIdx + 1];
+			sColor.r = sTex.m_pPalette[uPalIdx + 2];
+			sColor.a = 255;
+
+			sBlendFunc.Execute( pDstRow[ix], sColor );
 		}
 	}
 }
