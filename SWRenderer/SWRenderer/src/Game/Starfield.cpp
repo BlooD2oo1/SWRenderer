@@ -126,7 +126,7 @@ void CStarfield::Render( const SCamera& sCamera, const SViewPort& sViewport )
 						if ( fL > 1.5f )
 						{
 							sPixelShaderBasic.sColor = BGRA8( m_pStars[i].sAttribs.vColor.x, m_pStars[i].sAttribs.vColor.y, m_pStars[i].sAttribs.vColor.z, m_pStars[i].sAttribs.vColor.w / (fL * 0.2f + 1.0f) );
-							CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
+							CGraphics::GetInstance().RasterizeLineFlat( sPh0.vPos.xy(), sPh1.vPos.xy(), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
 						}
 						else
 						{

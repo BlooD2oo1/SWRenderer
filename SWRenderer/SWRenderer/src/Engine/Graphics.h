@@ -515,9 +515,8 @@ void CGraphics::DrawPoint3D( const TVertex& sV, const SViewPort& sViewPort, cons
 			float fWRec = 1.0f / vPh.vPos.w;
 			vPh.vPos.x = vPh.vPos.x * fWRec;
 			vPh.vPos.y = vPh.vPos.y * fWRec;
-			SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
 
-			RasterizePixel( (int)(vScreen.x), (int)(vScreen.y), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+			RasterizePixel( (int)(vPh.vPos.x), (int)(vPh.vPos.y), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
 		}
 	}
 }
@@ -538,9 +537,8 @@ void CGraphics::DrawPointList3D( const TVertex* pLineList, uint32_t iPrimitiveCo
 				float fWRec = 1.0f / vPh.vPos.w;
 				vPh.vPos.x = vPh.vPos.x * fWRec;
 				vPh.vPos.y = vPh.vPos.y * fWRec;
-				SVector2 vScreen( vPh.vPos.x, vPh.vPos.y );
 
-				RasterizePixel( (int)(vScreen.x), (int)(vScreen.y), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
+				RasterizePixel( (int)(vPh.vPos.x), (int)(vPh.vPos.y), sPixelShader.Execute( vPh.sAttribs ), sBlendFunc );
 			}
 		}
 	}
@@ -571,10 +569,7 @@ void CGraphics::DrawLine3D( const TVertex& sV0, const TVertex& sV1, const SViewP
 				vPh1.vPos.y = vPh1.vPos.y * fWRec1;
 			}
 
-			SVector2 vScreen0( vPh0.vPos.x, vPh0.vPos.y );
-			SVector2 vScreen1( vPh1.vPos.x, vPh1.vPos.y );
-
-			RasterizeLine( vScreen0, vPh0.sAttribs, vPh0.vPos.w, vScreen1, vPh1.sAttribs, vPh1.vPos.w, sPixelShader, sBlendFunc );
+			RasterizeLine( vPh0.vPos.xy(), vPh0.sAttribs, vPh0.vPos.w, vPh1.vPos.xy(), vPh1.sAttribs, vPh1.vPos.w, sPixelShader, sBlendFunc );
 		}
 	}
 }
@@ -596,10 +591,7 @@ inline void CGraphics::DrawLine3D( SClipVertex<TAttribs> vPh0, SClipVertex<TAttr
 				vPh1.vPos.y = vPh1.vPos.y * fWRec1;
 			}
 
-			SVector2 vScreen0( vPh0.vPos.x, vPh0.vPos.y );
-			SVector2 vScreen1( vPh1.vPos.x, vPh1.vPos.y );
-
-			RasterizeLine( vScreen0, vPh0.sAttribs, vPh0.vPos.w, vScreen1, vPh1.sAttribs, vPh1.vPos.w, sPixelShader, sBlendFunc );
+			RasterizeLine( vPh0.vPos.xy(), vPh0.sAttribs, vPh0.vPos.w, vPh1.vPos.xy(), vPh1.sAttribs, vPh1.vPos.w, sPixelShader, sBlendFunc );
 		}
 	}
 }

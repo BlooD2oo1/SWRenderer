@@ -251,6 +251,9 @@ struct SVector4
 	inline SVector4& operator*=(float s) noexcept { x *= s; y *= s; z *= s; w *= s; return *this; }
 	inline SVector4& operator/=(float s) noexcept { float invS = 1.0f / s; x *= invS; y *= invS; z *= invS; w *= invS; return *this; }
 
+	constexpr SVector2& xy() const noexcept { return *(SVector2*)this; }
+	constexpr SVector3& xyz() const noexcept { return *(SVector3*)this; }
+
 	constexpr static float Dot( const SVector4& a, const SVector4& b ) noexcept
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;

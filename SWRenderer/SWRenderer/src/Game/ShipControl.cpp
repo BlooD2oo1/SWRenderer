@@ -345,8 +345,8 @@ void CActors::_updateBoids()
 						vSeparation += vDirAway * (1.0f / (fDistSq + 0.00001f));
 					}
 					iNeighborCount++;
-					vAvgPos += SVector2( sShip1.m_vPos.x, sShip1.m_vPos.y );
-					vAvgMov += SVector2( sShip1.m_vMov.x, sShip1.m_vMov.y );
+					vAvgPos += sShip1.m_vPos.xy();
+					vAvgMov += sShip1.m_vMov.xy();
 				}
 			}
 		}
@@ -354,10 +354,10 @@ void CActors::_updateBoids()
 		if ( iNeighborCount > 0 )
 		{
 			vAvgMov /= (float)iNeighborCount;
-			vAlignment = vAvgMov - SVector2( sShip0.m_vMov.x, sShip0.m_vMov.y );
+			vAlignment = vAvgMov - sShip0.m_vMov.xy();
 
 			vAvgPos /= (float)iNeighborCount;
-			vCohesion = vAvgPos - SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y );
+			vCohesion = vAvgPos - sShip0.m_vPos.xy();
 		}
 
 		SVector2 vBoidMov =	vSeparation * 600.0f +
@@ -391,10 +391,10 @@ void CActors::_updateBoids()
 				//if ( i0 != m_iPlayerShipInd )
 				{
 					SVector2 vField;
-					//GetField_Asteroid( vField, SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y ), sShip0, sAsteroid1 );
+					//GetField_Asteroid( vField, sShip0.m_vPos.xy(), sShip0, sAsteroid1 );
 					//vSeparation += vField*2.0f;
 
-					GetField_Asteroid2( vField, SVector2( sShip0.m_vPos.x, sShip0.m_vPos.y ), sShip0, sAsteroid1 );
+					GetField_Asteroid2( vField, sShip0.m_vPos.xy(), sShip0, sAsteroid1 );
 					vAsteroidField += vField;
 				}
 
@@ -490,7 +490,7 @@ void CActors::_updateShips()
 			const float fSin_Phase_01 = sinf( sShip.m_fPhase_01 );
 
 			SVector2 vField( 0.0f, 0.0f );
-			GetField_ShipPlayer( vField, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), sShipPlayer );
+			GetField_ShipPlayer( vField, sShip.m_vPos.xy(), sShipPlayer );
 			vField *= ( fSin_Phase_01 * 0.5f + 0.5f ) * 0.7f + 0.3f;
 			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_Phase_01))*0.02f, -0.4f, 1.0f );
 			const float fFollowAmount = 0.2f;
@@ -542,15 +542,13 @@ void CActors::_updateShips()
 		for ( int iBulletInd = 0; iBulletInd < sShipPlayer.m_sTurret.m_aBullets.size(); iBulletInd++ )
 		{
 			STurret::SBullet& sBullet = sShipPlayer.m_sTurret.m_aBullets[iBulletInd];
-			SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
-			SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 			float fT = 0.0f;
-			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sShip.m_vPos.x, sShip.m_vPos.y ), sShip.m_fSize, fT ) )
+			if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sShip.m_vPos.xy(), sShip.m_fSize, fT ) )
 			{
-				SVector2 vSegmentDir( vBulletPos - vBulletPosPrev );
+				SVector2 vSegmentDir( sBullet.m_vPos.xy() - sBullet.m_vPosPrev.xy() );
 				SVector2::Normalize( vSegmentDir, vSegmentDir );
-				SVector2 vAttackPoint( vBulletPosPrev + vSegmentDir * fT );
-				float fAttackForce = SVector2::Dot( vSegmentDir, SVector2( sBullet.m_vMov.x, sBullet.m_vMov.y ) );
+				SVector2 vAttackPoint( sBullet.m_vPosPrev.xy() + vSegmentDir * fT );
+				float fAttackForce = SVector2::Dot( vSegmentDir, sBullet.m_vMov.xy() );
 				SVector2 vMov = (sShip.m_vPos.xy() - vAttackPoint) * fAttackForce / sShip.m_fMass * sBullet.m_fMass;
 				sShip.m_vMov.x += vMov.x;
 				sShip.m_vMov.y += vMov.y;
@@ -580,15 +578,13 @@ void CActors::_updateShips()
 		for ( int iBulletInd = 0; iBulletInd < sShipPlayer.m_sTurret.m_aBullets.size(); iBulletInd++ )
 		{
 			STurret::SBullet& sBullet = sShipPlayer.m_sTurret.m_aBullets[iBulletInd];
-			SVector2 vBulletPosPrev( sBullet.m_vPosPrev.x, sBullet.m_vPosPrev.y );
-			SVector2 vBulletPos( sBullet.m_vPos.x, sBullet.m_vPos.y );
 			float fT = 0.0f;
-			if ( SegmentSphereTest( vBulletPosPrev, vBulletPos, SVector2( sAsteroid.m_vPos.x, sAsteroid.m_vPos.y ), sAsteroid.m_fSize, fT ) )
+			if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sAsteroid.m_vPos.xy(), sAsteroid.m_fSize, fT ) )
 			{
-				/*SVector2 vSegmentDir( vBulletPos - vBulletPosPrev );
+				/*SVector2 vSegmentDir( sBullet.m_vPos.xy() - sBullet.m_vPosPrev.xy() );
 				SVector2::Normalize( vSegmentDir, vSegmentDir );
-				SVector2 vAttackPoint( vBulletPosPrev + vSegmentDir * fT );
-				float fAttackForce = SVector2::Dot( vSegmentDir, SVector2( sBullet.m_vMov.x, sBullet.m_vMov.y ) );
+				SVector2 vAttackPoint( sBullet.m_vPosPrev.xy() + vSegmentDir * fT );
+				float fAttackForce = SVector2::Dot( vSegmentDir, sBullet.m_vMov.xy() );
 				SVector2 vMov = ( sAsteroid.m_vPos.xy() - vAttackPoint ) * fAttackForce / sAsteroid.m_fMass * sBullet.m_fMass;
 				sAsteroid.m_vMov.x += vMov.x;
 				sAsteroid.m_vMov.y += vMov.y;*/

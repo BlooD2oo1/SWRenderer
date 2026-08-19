@@ -157,15 +157,9 @@ private:
 	CSceneGame&					m_sSceneGame;
 
 	ShipID						m_iPlayerShipID;
-	//std::vector< SShip >		m_aShips;
 	DenseMap< SShip, ShipID >	m_mShips;
 	std::vector< SAsteroid >	m_aAsteroids;
 
 	CSpatialHashGrid< size_t >	m_cHashGridShips;
 	CSpatialHashGrid< size_t >	m_cHashGridAsteroids;
-	//const float					m_fHashGridShips_Size;
-	//spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridShips;
-	//const float					m_fHashGridAsteroids_Size;
-	//spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridAsteroids;
-
 };

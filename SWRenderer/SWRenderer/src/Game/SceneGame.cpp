@@ -81,10 +81,11 @@ void CSceneGame::Update()
 		m_sCamera.m_vLookAtSmooth = Lerp( m_sCamera.m_vLookAt, m_sCamera.m_vLookAtSmooth, fWFast );
 		m_sCamera.m_vEyeSmooth = Lerp( m_sCamera.m_vEye, m_sCamera.m_vEyeSmooth, fWSlow );
 
-		//SVector2 vDir2D( m_sShipPlayer.m_sShip.m_vDir.x, m_sShipPlayer.m_sShip.m_vDir.y );
-		SVector2 vDir2D( sShipPlayer.m_vMov.x, sShipPlayer.m_vMov.y ); SVector2::Normalize( vDir2D, vDir2D );
-		//SVector2::Slerp( vDir2D, vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
-		vDir2D = Lerp( vDir2D, SVector2( m_sCamera.m_vUp.x, m_sCamera.m_vUp.y ), CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs ) );
+		//SVector2 vDir2D( m_sShipPlayer.m_sShip.m_vDir.xy() );
+		SVector2 vDir2D( sShipPlayer.m_vMov.xy() );
+		SVector2::Normalize( vDir2D, vDir2D );
+		//SVector2::Slerp( vDir2D, vDir2D, m_sCamera.m_vUp.xy(), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
+		vDir2D = Lerp( vDir2D, m_sCamera.m_vUp.xy(), CalcSmoothUpdateWeight( 1.0005f, fElapsedTimeMs ) );
 		SVector2::Normalize( vDir2D, vDir2D );
 		m_sCamera.m_vUp.x = vDir2D.x;
 		m_sCamera.m_vUp.y = vDir2D.y;
@@ -554,7 +555,7 @@ void CSceneGame::Render()
 
 						if ( fL > 1.5f )
 						{
-							CGraphics::GetInstance().RasterizeLineFlat( SVector2( sPh0.vPos.x, sPh0.vPos.y ), SVector2( sPh1.vPos.x, sPh1.vPos.y ), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
+							CGraphics::GetInstance().RasterizeLineFlat( sPh0.vPos.xy(), sPh1.vPos.xy(), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
 						}
 						else
 						{
