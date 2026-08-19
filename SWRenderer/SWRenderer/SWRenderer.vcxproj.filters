@@ -153,5 +153,11 @@
     <ClInclude Include="src\Common\unordered_map.hpp">
       <Filter>src\Common</Filter>
     </ClInclude>
+    <ClInclude Include="src\Common\DenseMap.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common\SpatialHashGrid.h">
+      <Filter>src\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

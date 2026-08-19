@@ -2,17 +2,8 @@
 
 #include <vector>
 #include "Common/Vector.h"
-
-#define SKA
-#ifdef SKA
-#include "Common/flat_hash_map.hpp"
-#define spatial_hash_map ska::flat_hash_map
-#else
-#include <unordered_map>
-#define spatial_hash_map std::unordered_map
-#endif
-
-static const uint32_t iIndInvalid = 0xFFFFFFFF;
+#include "Common/DenseMap.h"
+#include "Common/SpatialHashGrid.h"
 
 struct SShip;
 struct STurret
@@ -62,6 +53,8 @@ struct SLaserGun
 	bool						m_bShoot;
 };
 
+using ShipID = uint32_t;
+const ShipID iShipIDInvalid = 0xffffffff;
 struct SShip
 {
 	SShip();
@@ -69,6 +62,8 @@ struct SShip
 	void Clear();
 
 	void Update();
+
+	ShipID		m_iID;		//used by DenseMap
 
 	STurret		m_sTurret;
 	SLaserGun	m_sLaserGun;
@@ -133,13 +128,12 @@ public:
 	void Update();
 	void Render();
 
-	uint32_t	AddShip();
-
-	SShip&		GetShipPlayer() { return m_aShips[m_iPlayerShipInd]; }
-	uint32_t	GetShipPlayerInd() { return m_iPlayerShipInd; }
-
-	size_t		GetShipCount() const { return m_aShips.size(); }
-	SShip&		GetShip( size_t i ) { return m_aShips[i]; }
+	ShipID		AddShip();
+	SShip&		GetShipPlayer() { return m_mShips.GetByID(m_iPlayerShipID); }
+	ShipID		GetShipIDPlayer() { return m_iPlayerShipID; }
+	size_t		GetShipCount() const { return m_mShips.GetCount(); }
+	SShip&		GetShip( size_t i ) { return m_mShips.GetByInd(i); }
+	SShip&		GetShipByID( ShipID iID ) { return m_mShips.GetByID( iID ); }
 
 	size_t		GetAsteroidCount() const { return m_aAsteroids.size(); }
 	SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
@@ -163,17 +157,17 @@ private:
 		iHashX = (int)floorf( vPos.x / fMaxDist );
 		iHashY = (int)floorf( vPos.y / fMaxDist );
 	}
-	inline uint32_t _getHash( const SVector2& vPos, float fMaxDist )
+	inline SpatialHash _getHash( const SVector2& vPos, float fMaxDist )
 	{
 		int iHashX;
 		int iHashY;
 		_getHash( iHashX, iHashY, vPos, fMaxDist );
-		uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
+		SpatialHash iHash = ((SpatialHash)iHashX << 16) | ((SpatialHash)iHashY & 0xFFFF);
 		return iHash;
 	}
-	uint32_t _getHash( int iHashX, int iHashY )
+	SpatialHash _getHash( int iHashX, int iHashY )
 	{
-		uint32_t iHash = ((uint32_t)iHashX << 16) | ((uint32_t)iHashY & 0xFFFF);
+		SpatialHash iHash = ((SpatialHash)iHashX << 16) | ((SpatialHash)iHashY & 0xFFFF);
 		return iHash;
 	}
 
@@ -181,13 +175,14 @@ private:
 
 	CSceneGame&					m_sSceneGame;
 
-	uint32_t					m_iPlayerShipInd;
-	std::vector< SShip >		m_aShips;
+	ShipID						m_iPlayerShipID;
+	//std::vector< SShip >		m_aShips;
+	DenseMap< SShip, ShipID >	m_mShips;
 	std::vector< SAsteroid >	m_aAsteroids;
 
 	const float					m_fHashGridShips_Size;
-	spatial_hash_map< uint32_t, std::vector< uint32_t > > m_mapHashGridShips;
+	spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridShips;
 	const float					m_fHashGridAsteroids_Size;
-	spatial_hash_map< uint32_t, std::vector< uint32_t > > m_mapHashGridAsteroids;
+	spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridAsteroids;
 
 };

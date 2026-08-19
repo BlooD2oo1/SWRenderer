@@ -107,6 +107,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Common\Defines.h" />
+    <ClInclude Include="src\Common\DenseMap.h" />
     <ClInclude Include="src\Common\flat_hash_map.hpp" />
     <ClInclude Include="src\Common\Globals.h" />
     <ClInclude Include="src\Common\Log.h" />
@@ -114,6 +115,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Common\PCXLoader.h" />
     <ClInclude Include="src\Common\PLYLoader.h" />
     <ClInclude Include="src\Common\RingBuffer.h" />
+    <ClInclude Include="src\Common\SpatialHashGrid.h" />
     <ClInclude Include="src\Common\Threading.h" />
     <ClInclude Include="src\Common\Time.h" />
     <ClInclude Include="src\Common\unordered_map.hpp" />

@@ -188,7 +188,7 @@ void CSceneGame::Render()
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
-#define DRAW_FIELD
+//#define DRAW_FIELD
 #ifdef DRAW_FIELD
 	{
 		struct SVertexShaderBasic
@@ -390,12 +390,12 @@ void CSceneGame::Render()
 	// enemy ships
 	for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 	{
-		if ( iShipInd == m_cActors.GetShipPlayerInd() )
+		SShip& sShipEnemy = m_cActors.GetShip( iShipInd );
+
+		if ( sShipEnemy.m_iID == m_cActors.GetShipIDPlayer() )
 		{
 			continue;
-		}
-
-		SShip& sShipEnemy = m_cActors.GetShip( iShipInd );
+		}		
 
 		if ( m_sCamera.FrustumSphereTest( sShipEnemy.m_vPos, 2.0f ) )
 		{		
