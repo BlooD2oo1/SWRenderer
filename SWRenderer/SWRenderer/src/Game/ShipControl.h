@@ -152,25 +152,6 @@ private:
 	bool _onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet );
 	bool _onDamageShipByCollision( SShip& sShip, float fDamage );
 
-	inline void _getHash( int& iHashX, int& iHashY, const SVector2& vPos, float fMaxDist )
-	{
-		iHashX = (int)floorf( vPos.x / fMaxDist );
-		iHashY = (int)floorf( vPos.y / fMaxDist );
-	}
-	inline SpatialHash _getHash( const SVector2& vPos, float fMaxDist )
-	{
-		int iHashX;
-		int iHashY;
-		_getHash( iHashX, iHashY, vPos, fMaxDist );
-		SpatialHash iHash = ((SpatialHash)iHashX << 16) | ((SpatialHash)iHashY & 0xFFFF);
-		return iHash;
-	}
-	SpatialHash _getHash( int iHashX, int iHashY )
-	{
-		SpatialHash iHash = ((SpatialHash)iHashX << 16) | ((SpatialHash)iHashY & 0xFFFF);
-		return iHash;
-	}
-
 private:
 
 	CSceneGame&					m_sSceneGame;
@@ -180,9 +161,11 @@ private:
 	DenseMap< SShip, ShipID >	m_mShips;
 	std::vector< SAsteroid >	m_aAsteroids;
 
-	const float					m_fHashGridShips_Size;
-	spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridShips;
-	const float					m_fHashGridAsteroids_Size;
-	spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridAsteroids;
+	CSpatialHashGrid< size_t >	m_cHashGridShips;
+	CSpatialHashGrid< size_t >	m_cHashGridAsteroids;
+	//const float					m_fHashGridShips_Size;
+	//spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridShips;
+	//const float					m_fHashGridAsteroids_Size;
+	//spatial_hash_map< SpatialHash, std::vector< size_t > > m_mapHashGridAsteroids;
 
 };
