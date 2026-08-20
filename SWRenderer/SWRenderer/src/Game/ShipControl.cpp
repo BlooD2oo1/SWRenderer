@@ -260,15 +260,18 @@ void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShi
 void CActors::GetField_Asteroid2( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
 {
 	const float fRad0 = std::min( sAsteroid.m_fSize * 0.5f + sShip.m_fSize, m_cHashGridAsteroids.GetGridSize() );
-	const float fRad1 = std::min( sAsteroid.m_fSize * 5.0f + sShip.m_fSize, m_cHashGridAsteroids.GetGridSize() );
+	const float fRad1 = std::min( sAsteroid.m_fSize * 7.0f + sShip.m_fSize, m_cHashGridAsteroids.GetGridSize() );
 
 	SVector2 vAst( p - sAsteroid.m_vPos.xy() );
 	float fAstL = SVector2::Length( vAst );
 	if ( fAstL > 0.0f )
 	{
 		float f = Clamp( (fRad1-fAstL)/(fRad1-fRad0), 0.0f, 1.0f );
-		f = powf( f, 4.0f );
+		f = powf( f, 3.0f );
 		vField = vAst/fAstL*f;
+		SVector2 vShipMovNorm( sShip.m_vMov.xy() );
+		SVector2::Normalize( vShipMovNorm, vShipMovNorm );
+		vField *= Clamp( -SVector2::Dot( vField, vShipMovNorm ), 0.0f, 1.0f );
 	}
 	else
 	{
@@ -415,7 +418,9 @@ void CActors::_updateBoids()
 		}
 
 		const float fHeight = 10.0f;
-		float f = SVector2::Cross( sShip.m_vMov.xy(), vAsteroidField );
+		SVector2 vShipMovNorm( sShip.m_vMov.xy() );
+		SVector2::Normalize( vShipMovNorm, vShipMovNorm );
+		float f = SVector2::Cross( vShipMovNorm, vAsteroidField );
 		if ( f >= 0.0f )
 		{
 			f = std::max( 0.0f, (fHeight - (+f)) / fHeight );
@@ -425,9 +430,9 @@ void CActors::_updateBoids()
 			f = -std::max( 0.0f, (fHeight - (-f)) / fHeight );
 		}
 		f = Clamp( f, -1.0f, 1.0f );
-		vAsteroidField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vAsteroidField );
+		vAsteroidField = SVector2( -vShipMovNorm.y, vShipMovNorm.x ) * f * SVector2::Length( vAsteroidField );
 
-		SVector2 vBoidMov = vAsteroidField * 5000.0f;
+		SVector2 vBoidMov = vAsteroidField * 1000.0f;
 
 
 		sShip.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
