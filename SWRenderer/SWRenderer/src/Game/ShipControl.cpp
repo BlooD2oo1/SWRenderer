@@ -307,9 +307,9 @@ void CActors::_updateBoids()
 		sShip.m_vBoidMov = SVector3( 0.0f, 0.0f, 0.0f );
 	}
 
-	for ( size_t i0 = 0; i0 < GetShipCount(); i0++ )
+	for ( size_t iShipInd0 = 0; iShipInd0 < GetShipCount(); iShipInd0++ )
 	{
-		SShip& sShip0 = GetShip( i0 );
+		SShip& sShip0 = GetShip( iShipInd0 );
 
 		if ( sShip0.m_iID == GetShipIDPlayer() ) continue;	
 
@@ -322,19 +322,19 @@ void CActors::_updateBoids()
 		SVector2 vAvgMov( 0.0f, 0.0f );
 
 
-		const auto aNeighbors = m_cHashGridShips.Get3x3Neighbors( sShip0.m_vPos.xy() );
-		for ( size_t i = 0; i < aNeighbors.size(); ++i )
+		const auto aNeighborGrids = m_cHashGridShips.Get3x3Neighbors( sShip0.m_vPos.xy() );
+		for ( size_t iNeighbourGridInd = 0; iNeighbourGridInd < aNeighborGrids.size(); ++iNeighbourGridInd )
 		{
-			const std::vector< size_t >* pShipInds = aNeighbors[i];
+			const std::vector< size_t >* pShipInds = aNeighborGrids[iNeighbourGridInd];
 			if ( !pShipInds )
 			{
 				continue;
 			}
-			for ( size_t j = 0; j < pShipInds->size(); j++ )
+			for ( size_t iShipIndInd = 0; iShipIndInd < pShipInds->size(); iShipIndInd++ )
 			{
-				size_t i1 = (*pShipInds)[j];
-				if ( i0 == i1 ) continue;
-				SShip& sShip1 = GetShip( i1 );
+				size_t iShipInd1 = (*pShipInds)[iShipIndInd];
+				if ( iShipInd0 == iShipInd1 ) continue;
+				SShip& sShip1 = GetShip( iShipInd1 );
 				SVector2 vDist( sShip1.m_vPos.x - sShip0.m_vPos.x, sShip1.m_vPos.y - sShip0.m_vPos.y );
 				float fDistSq = SVector2::LengthSq( vDist );
 				if ( fDistSq < powf( m_cHashGridShips.GetGridSize(), 2 ) )
@@ -367,62 +367,61 @@ void CActors::_updateBoids()
 		sShip0.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
 	}
 
-	for ( size_t i0 = 0; i0 < GetShipCount(); i0++ )
+	for ( size_t iShipInd = 0; iShipInd < GetShipCount(); iShipInd++ )
 	{
-		//if ( i0 == m_iPlayerShipInd ) continue;
+		//if ( iShipInd == m_iPlayerShipInd ) continue;
 
-		SShip& sShip0 = GetShip( i0 );
+		SShip& sShip = GetShip( iShipInd );
 
 		SVector2 vAsteroidField( 0.0f, 0.0f );
 
-		const auto aNeighbors = m_cHashGridAsteroids.Get3x3Neighbors( sShip0.m_vPos.xy() );
-		for ( size_t i = 0; i < aNeighbors.size(); ++i )
+		const auto aNeighborGrid = m_cHashGridAsteroids.Get3x3Neighbors( sShip.m_vPos.xy() );
+		for ( size_t iNeighbourGridInd = 0; iNeighbourGridInd < aNeighborGrid.size(); ++iNeighbourGridInd )
 		{
-			const std::vector< size_t >* pAsteroidInds = aNeighbors[i];
+			const std::vector< size_t >* pAsteroidInds = aNeighborGrid[iNeighbourGridInd];
 			if ( !pAsteroidInds )
 			{
 				continue;
 			}
-			for ( size_t j = 0; j < pAsteroidInds->size(); j++ )
+			for ( size_t iAsteroidIndInd = 0; iAsteroidIndInd < pAsteroidInds->size(); iAsteroidIndInd++ )
 			{
-				size_t i1 = (*pAsteroidInds)[j];
-				SAsteroid& sAsteroid1 = GetAsteroid( i1 );
+				size_t iAsteroidInd = (*pAsteroidInds)[iAsteroidIndInd];
+				SAsteroid& sAsteroid = GetAsteroid( iAsteroidInd );
 						
-				//if ( i0 != m_iPlayerShipInd )
+				//if ( iShipInd != m_iPlayerShipInd )
 				{
 					SVector2 vField;
-					//GetField_Asteroid( vField, sShip0.m_vPos.xy(), sShip0, sAsteroid1 );
+					//GetField_Asteroid( vField, sShip.m_vPos.xy(), sShip, sAsteroid );
 					//vSeparation += vField*2.0f;
 
-					GetField_Asteroid2( vField, sShip0.m_vPos.xy(), sShip0, sAsteroid1 );
+					GetField_Asteroid2( vField, sShip.m_vPos.xy(), sShip, sAsteroid );
 					vAsteroidField += vField;
 				}
 
-				SVector2 vDist( sAsteroid1.m_vPos.x - sShip0.m_vPos.x, sAsteroid1.m_vPos.y - sShip0.m_vPos.y );
+				SVector2 vDist( sAsteroid.m_vPos.x - sShip.m_vPos.x, sAsteroid.m_vPos.y - sShip.m_vPos.y );
 				float fDistSq = SVector2::LengthSq( vDist );
-				if ( fDistSq < sAsteroid1.m_fSize * sAsteroid1.m_fSize )
+				if ( fDistSq < sAsteroid.m_fSize * sAsteroid.m_fSize )
 				{
 					float fDamage = 0.8f * fElapsedTimeMs;
-					if ( sShip0.m_iID == GetShipIDPlayer() )
+					if ( sShip.m_iID == GetShipIDPlayer() )
 					{
 						fDamage = 0.05f * fElapsedTimeMs;
 					}
-					if ( _onDamageShipByCollision( sShip0, fDamage ) )
+
+					SVector2 vNormal( vDist/sqrtf(fDistSq) );
+					SVector2 vMovReflect = -vNormal;//sShip.m_vMov.xy() - vNormal * SVector2::Dot( sShip.m_vMov.xy(), vNormal ) * 2.0f;
+					sShip.m_vMov.xy() += vMovReflect * 0.005f;
+					SVector2::Lerp( sShip.m_vMov.xy(), SVector2( 0.0f, 0.0f ), sShip.m_vMov.xy(), CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
+
+					if ( _onDamageShipByCollision( sShip, fDamage ) )
 					{
-						/*if ( fDistSq > 0.0f )
-						{
-							SVector2 vAttackDir( vDist/sqrtf(fDistSq) );
-							float fAttackForce = SVector2::Dot( vAttackDir, sShip0.m_vMov.xy() );
-							SVector2 vMov = vAttackDir / sAsteroid1.m_fMass * sShip0.m_fMass;
-							sAsteroid1.m_vMov.xy() += vMov;
-						}*/
 					}
 				}
 			}
 		}
 
 		const float fHeight = 10.0f;
-		float f = SVector2::Cross( sShip0.m_vMov.xy(), vAsteroidField );
+		float f = SVector2::Cross( sShip.m_vMov.xy(), vAsteroidField );
 		if ( f >= 0.0f )
 		{
 			f = std::max( 0.0f, (fHeight - (+f)) / fHeight );
@@ -432,12 +431,12 @@ void CActors::_updateBoids()
 			f = -std::max( 0.0f, (fHeight - (-f)) / fHeight );
 		}
 		f = Clamp( f, -1.0f, 1.0f );
-		vAsteroidField = SVector2( -sShip0.m_vMov.y, sShip0.m_vMov.x ) * f * SVector2::Length( vAsteroidField );
+		vAsteroidField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vAsteroidField );
 
 		SVector2 vBoidMov = vAsteroidField * 5000.0f;
 
 
-		sShip0.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
+		sShip.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
 	}
 }
 
@@ -632,9 +631,9 @@ void CActors::_updateShips()
 {
 	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
 
-	for ( size_t i = 0; i < GetAsteroidCount(); i++ )
+	for ( size_t iNeighbourGridInd = 0; iNeighbourGridInd < GetAsteroidCount(); iNeighbourGridInd++ )
 	{
-		SAsteroid& sAsteroid = GetAsteroid( i );
+		SAsteroid& sAsteroid = GetAsteroid( iNeighbourGridInd );
 		sAsteroid.m_vPos += sAsteroid.m_vMov * fElapsedTimeMs;
 		sAsteroid.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sAsteroid.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 	}
