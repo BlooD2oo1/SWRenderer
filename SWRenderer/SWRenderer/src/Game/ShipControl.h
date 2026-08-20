@@ -109,9 +109,7 @@ struct SAsteroid
 
 	SVector3	m_vPos;
 	SQuaternion	m_qRot;
-	//SVector3	m_vMov;
 	float		m_fSize;
-	//float		m_fMass;
 	EModel		m_eModel;
 };
 
@@ -147,7 +145,6 @@ private:
 	void _updateHashGrids();
 	void _updateBoids();
 	void _updateShips();
-	//void _updateAsteroids();
 
 	bool _onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet );
 	bool _onDamageShipByCollision( SShip& sShip, float fDamage );

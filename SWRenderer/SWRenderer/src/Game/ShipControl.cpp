@@ -96,9 +96,6 @@ void CActors::Create()
 		sAsteroid.m_fSize *= sAsteroid.m_fSize;
 		sAsteroid.m_eModel = ( sAsteroid.m_fSize > 0.8f ) ? SAsteroid::ModelBig : (((rand() % 2) == 0 ) ? SAsteroid::Model01 : SAsteroid::Model02);
 		sAsteroid.m_fSize *= 20.0f;
-		//sAsteroid.m_fMass = powf( sAsteroid.m_fSize, 3.0f )*8.0f;
-
-		//sAsteroid.m_vMov = SVector3( 0.0f, 0.0f, 0.0f );
 
 		// uniform distribution of quaternions:
 		const float u1 = ((float)rand() / (float)RAND_MAX);
@@ -369,8 +366,6 @@ void CActors::_updateBoids()
 
 	for ( size_t iShipInd = 0; iShipInd < GetShipCount(); iShipInd++ )
 	{
-		//if ( iShipInd == m_iPlayerShipInd ) continue;
-
 		SShip& sShip = GetShip( iShipInd );
 
 		SVector2 vAsteroidField( 0.0f, 0.0f );
@@ -388,7 +383,6 @@ void CActors::_updateBoids()
 				size_t iAsteroidInd = (*pAsteroidInds)[iAsteroidIndInd];
 				SAsteroid& sAsteroid = GetAsteroid( iAsteroidInd );
 						
-				//if ( iShipInd != m_iPlayerShipInd )
 				{
 					SVector2 vField;
 					//GetField_Asteroid( vField, sShip.m_vPos.xy(), sShip, sAsteroid );
@@ -580,14 +574,6 @@ void CActors::_updateShips()
 			float fT = 0.0f;
 			if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sAsteroid.m_vPos.xy(), sAsteroid.m_fSize, fT ) )
 			{
-				/*SVector2 vSegmentDir( sBullet.m_vPos.xy() - sBullet.m_vPosPrev.xy() );
-				SVector2::Normalize( vSegmentDir, vSegmentDir );
-				SVector2 vAttackPoint( sBullet.m_vPosPrev.xy() + vSegmentDir * fT );
-				float fAttackForce = SVector2::Dot( vSegmentDir, sBullet.m_vMov.xy() );
-				SVector2 vMov = ( sAsteroid.m_vPos.xy() - vAttackPoint ) * fAttackForce / sAsteroid.m_fMass * sBullet.m_fMass;
-				sAsteroid.m_vMov.x += vMov.x;
-				sAsteroid.m_vMov.y += vMov.y;*/
-
 				SAudioEvent sAudioEvent;
 				sAudioEvent.type = SAudioEvent::GunHit;
 				sAudioEvent.fVolume = 0.15f;
@@ -626,18 +612,6 @@ void CActors::_updateShips()
 		sShip.Update();
 	}
 }
-
-/*void CActors::_updateAsteroids()
-{
-	float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
-
-	for ( size_t iNeighbourGridInd = 0; iNeighbourGridInd < GetAsteroidCount(); iNeighbourGridInd++ )
-	{
-		SAsteroid& sAsteroid = GetAsteroid( iNeighbourGridInd );
-		sAsteroid.m_vPos += sAsteroid.m_vMov * fElapsedTimeMs;
-		sAsteroid.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sAsteroid.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
-	}
-}*/
 
 bool CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet )
 {
