@@ -581,9 +581,9 @@ void CActors::_updateShips()
 			{
 				SAudioEvent sAudioEvent;
 				sAudioEvent.type = SAudioEvent::GunHit;
-				sAudioEvent.fVolume = 0.15f;
+				sAudioEvent.fVolume = 0.1f;
 				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 300;
+				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 200;
 				sAudioEvent.iSampleCounter = 0;
 				sAudioEvent.fPhase = 0.0f;	
 				sAudioEvent.sClick.iButton = 1;
