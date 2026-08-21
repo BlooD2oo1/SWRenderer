@@ -5,13 +5,13 @@
 #include "Common/Vector.h"
 
 template< class T, class T2 >
-constexpr T	Lerp( const T& f0, const T& f1, const T2 fX )
+constexpr T	Lerp( const T& f0, const T& f1, const T2 t )
 { 
 	//return ( T )( fA * ( 1.0f - fW ) + fB * fW );
-	return (T)( f0 + fX * ( f1-f0 ) );
+	return (T)( f0 + t * ( f1-f0 ) );
 }
 
-constexpr float	LerpAngle( const float f0, const float f1, const float fX )
+constexpr float	LerpAngle( const float f0, const float f1, const float t )
 {
 
     float fDelta = f1 - f0;
@@ -23,17 +23,17 @@ constexpr float	LerpAngle( const float f0, const float f1, const float fX )
     {
         fDelta += 2.0f * PI;
     }
-	return f0 + fX * fDelta;
+	return f0 + t * fDelta;
     
 }
 
 template< class T >
-constexpr T	Lerp( const T& f00, const T& f01, const T& f10, const T& f11, const float fX, const float fY )
+constexpr T	Lerp( const T& f00, const T& f01, const T& f10, const T& f11, const float u, const float v )
 { 
-	float f0 = Lerp( f00, f10, fX );
-	float f1 = Lerp( f01, f11, fX );
+	float f0 = Lerp( f00, f10, u );
+	float f1 = Lerp( f01, f11, u );
 
-	return Lerp( f0, f1, fY );
+	return Lerp( f0, f1, v );
 }
 
 
