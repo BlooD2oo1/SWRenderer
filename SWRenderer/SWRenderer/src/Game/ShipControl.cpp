@@ -260,7 +260,7 @@ void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShi
 void CActors::GetField_Asteroid2( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
 {
 	const float fRad0 = std::min( sAsteroid.m_fSize * 0.5f + sShip.m_fSize, m_cHashGridAsteroids.GetGridSize() );
-	const float fRad1 = std::min( sAsteroid.m_fSize * 7.0f + sShip.m_fSize, m_cHashGridAsteroids.GetGridSize() );
+	const float fRad1 = std::min( sAsteroid.m_fSize * 10.0f + sShip.m_fSize, m_cHashGridAsteroids.GetGridSize() );
 
 	SVector2 vAst( p - sAsteroid.m_vPos.xy() );
 	float fAstL = SVector2::Length( vAst );
@@ -432,7 +432,7 @@ void CActors::_updateBoids()
 		f = Clamp( f, -1.0f, 1.0f );
 		vAsteroidField = SVector2( -vShipMovNorm.y, vShipMovNorm.x ) * f * SVector2::Length( vAsteroidField );
 
-		SVector2 vBoidMov = vAsteroidField * 1000.0f;
+		SVector2 vBoidMov = vAsteroidField * 800.0f;
 
 
 		sShip.m_vBoidMov += SVector3( vBoidMov.x, vBoidMov.y, 0.0f );
@@ -491,7 +491,7 @@ void CActors::_updateShips()
 			GetField_ShipPlayer( vField, sShip.m_vPos.xy(), sShipPlayer );
 			vField *= ( fSin_Phase_01 * 0.5f + 0.5f ) * 0.7f + 0.3f;
 			//const float fFollowAmount = Clamp( (fEnemyToPlayerDist-Lerp(20.0f, 110.0f, fSin_Phase_01))*0.02f, -0.4f, 1.0f );
-			const float fFollowAmount = 0.2f;
+			const float fFollowAmount = 0.25f;
 			SVector3 vFollowMov = SVector3( vField.x, vField.y, 0.0f );
 
 			// ha allunk az urhajoval ne alljanak kukan egy helybe
@@ -502,7 +502,7 @@ void CActors::_updateShips()
 
 			sShip.m_vMov = Lerp( vMov, sShip.m_vMov, CalcSmoothUpdateWeight( 1.001f, fElapsedTimeMs ) );
 
-			sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sShip.m_vMov, CalcSmoothUpdateWeight( 1.000002f, fElapsedTimeMs ) );
+			sShip.m_vMov = Lerp( SVector3( 0.0f, 0.0f, 0.0f ), sShip.m_vMov, CalcSmoothUpdateWeight( 1.00002f, fElapsedTimeMs ) );
 
 			const float fYaw = atan2f( sShip.m_vMov.y, sShip.m_vMov.x );
 			const float fYawPrev = sShip.m_fYaw;

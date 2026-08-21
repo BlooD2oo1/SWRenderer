@@ -298,7 +298,9 @@ public:
 	template<class TBlendFunc>
 	void DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlendFunc& sBlendFunc );
 	template<class TBlendFunc>
-	void DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX = 0, int iDstY = 0, int iDstWidth = INT_MAX, int iDstHeight = INT_MAX, int iSrcX = 0, int iSrcY = 0 );
+	void DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX = 0, int iDstY = 0, int iSrcX = 0, int iSrcY = 0, int iDstWidth = INT_MAX, int iDstHeight = INT_MAX );
+	//template<class TBlendFunc>
+	//void DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iDstWidth, int iDstHeight, int iSrcX, int iSrcY, int iSrcWidth, int iSrcHeight );
 	template<class TBlendFunc>
 	void DrawText( int x, int y, const char* pText, BGRA8 sColor, const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iCharWidth, int iCharHeight, int iSpacing = 0 );
 
@@ -742,70 +744,137 @@ void CGraphics::DrawRect( int x, int y, int w, int h, BGRA8 sColor, const TBlend
 }
 
 template<class TBlendFunc>
-void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iDstWidth, int iDstHeight, int iSrcX, int iSrcY )
+void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iSrcX, int iSrcY, int iSrcWidth, int iSrcHeight )
 {
-	/*iDstWidth = std::min( iDstWidth, sTex.m_iWidth - iSrcX );
-	iDstHeight = std::min( iDstHeight, sTex.m_iHeight - iSrcY );
-	for ( int iy = 0; iy < iDstHeight; iy++ )
 	{
-		int iDestY = iDstY + iy;
-		if ( iDestY >= 0 && iDestY < m_sFrameBuffer.iHeight )
+		// Early exit for invalid dimensions
+		if ( iSrcWidth <= 0 || iSrcHeight <= 0 ) return;
+
+		// Source Clipping (top/left negative offset)
+		if ( iSrcX < 0 )
 		{
-			for ( int ix = 0; ix < iDstWidth; ix++ )
+			int iClip = -iSrcX;
+			iDstX += iClip;
+			iSrcX = 0;
+			iSrcWidth -= iClip;
+		}
+		if ( iSrcY < 0 )
+		{
+			int iClip = -iSrcY;
+			iDstY += iClip;
+			iSrcY = 0;
+			iSrcHeight -= iClip;
+		}
+
+		// Source Clipping (bottom/right boundary check)
+		if ( iSrcX + iSrcWidth > sTex.m_iWidth )
+		{
+			iSrcWidth = sTex.m_iWidth - iSrcX;
+		}
+		if ( iSrcY + iSrcHeight > sTex.m_iHeight )
+		{
+			iSrcHeight = sTex.m_iHeight - iSrcY;
+		}
+
+		int iDrawW = iSrcWidth;
+		int iDrawH = iSrcHeight;
+
+		// Destination Clipping (top/left negative offset)
+		if ( iDstX < 0 )
+		{
+			int iClip = -iDstX;
+			iSrcX += iClip;
+			iDrawW -= iClip;
+			iDstX = 0;
+		}
+		if ( iDstY < 0 )
+		{
+			int iClip = -iDstY;
+			iSrcY += iClip;
+			iDrawH -= iClip;
+			iDstY = 0;
+		}
+
+		// Destination Clipping (bottom/right boundary check)
+		if ( iDstX + iDrawW > m_sFrameBuffer.iWidth )
+		{
+			iDrawW = m_sFrameBuffer.iWidth - iDstX;
+		}
+		if ( iDstY + iDrawH > m_sFrameBuffer.iHeight )
+		{
+			iDrawH = m_sFrameBuffer.iHeight - iDstY;
+		}
+
+		if ( iDrawW <= 0 || iDrawH <= 0 ) return;
+
+		for ( int iy = 0; iy < iDrawH; ++iy )
+		{
+			BGRA8* pDstRow = &m_sFrameBuffer.pData[( iDstY + iy ) * m_sFrameBuffer.iWidth + iDstX];
+			const uint8_t* pSrcRow = &sTex.m_pData[( iSrcY + iy ) * sTex.m_iWidth + iSrcX];
+
+			for ( int ix = 0; ix < iDrawW; ++ix )
 			{
-				int iDestX = iDstX + ix;
-			
-				if ( iDestX >= 0 && iDestX < m_sFrameBuffer.iWidth )
-				{
-					uint8_t uIndex = sTex.m_pData[(iSrcY+iy) * sTex.m_iWidth + (iSrcX+ix)];
-					BGRA8 sColor;
-					sColor.r = sTex.m_pPalette[uIndex*3+2];
-					sColor.g = sTex.m_pPalette[uIndex*3+1];
-					sColor.b = sTex.m_pPalette[uIndex*3+0];
-					sColor.a = 255;
-					RasterizePixel( iDestX, iDestY, sColor, sBlendFunc );
-				}			
+				uint8_t uIndex = pSrcRow[ix];
+				uint32_t uPalIdx = (uint32_t)uIndex * 3;
+
+				BGRA8 sColor;
+				sColor.b = sTex.m_pPalette[uPalIdx + 0];
+				sColor.g = sTex.m_pPalette[uPalIdx + 1];
+				sColor.r = sTex.m_pPalette[uPalIdx + 2];
+				sColor.a = 255;
+
+				sBlendFunc.Execute( pDstRow[ix], sColor );
 			}
 		}
-	}*/
-
-	int iDrawW = std::min( iDstWidth, sTex.m_iWidth - iSrcX );
-	int iDrawH = std::min( iDstHeight, sTex.m_iHeight - iSrcY );
-
-	if ( iDstX < 0 )
-	{
-		int iClip = -iDstX;
-		iSrcX += iClip;
-		iDrawW -= iClip;
-		iDstX = 0;
 	}
-	if ( iDstY < 0 )
-	{
-		int iClip = -iDstY;
-		iSrcY += iClip;
-		iDrawH -= iClip;
-		iDstY = 0;
-	}
+}
 
-	if ( iDstX + iDrawW > m_sFrameBuffer.iWidth )
-	{
-		iDrawW = m_sFrameBuffer.iWidth - iDstX;
-	}
-	if ( iDstY + iDrawH > m_sFrameBuffer.iHeight )
-	{
-		iDrawH = m_sFrameBuffer.iHeight - iDstY;
-	}
+/*template<class TBlendFunc>
+void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iDstX, int iDstY, int iDstWidth, int iDstHeight, int iSrcX, int iSrcY, int iSrcWidth, int iSrcHeight )
+{
+	// Early exit if dimensions are invalid
+	if ( iDstWidth <= 0 || iDstHeight <= 0 || iSrcWidth <= 0 || iSrcHeight <= 0 ) return;
 
-	if ( iDrawW <= 0 || iDrawH <= 0 ) return;
+	// Clamp source bounds to the actual texture boundaries
+	int iValidSrcX1 = std::max( 0, iSrcX );
+	int iValidSrcY1 = std::max( 0, iSrcY );
+	int iValidSrcX2 = std::min( sTex.m_iWidth, iSrcX + iSrcWidth );
+	int iValidSrcY2 = std::min( sTex.m_iHeight, iSrcY + iSrcHeight );
 
-	for ( int iy = 0; iy < iDrawH; ++iy )
+	if ( iValidSrcX1 >= iValidSrcX2 || iValidSrcY1 >= iValidSrcY2 ) return;
+
+	// Clip destination bounds to framebuffer boundaries
+	int iClipDstX1 = std::max( 0, iDstX );
+	int iClipDstY1 = std::max( 0, iDstY );
+	int iClipDstX2 = std::min( m_sFrameBuffer.iWidth, iDstX + iDstWidth );
+	int iClipDstY2 = std::min( m_sFrameBuffer.iHeight, iDstY + iDstHeight );
+
+	if ( iClipDstX1 >= iClipDstX2 || iClipDstY1 >= iClipDstY2 ) return;
+
+	// Calculate scale factors between source and destination dimensions
+	float fScaleX = (float)iSrcWidth / (float)iDstWidth;
+	float fScaleY = (float)iSrcHeight / (float)iDstHeight;
+
+	for ( int iDstCurrY = iClipDstY1; iDstCurrY < iClipDstY2; ++iDstCurrY )
 	{
-		BGRA8* pDstRow = &m_sFrameBuffer.pData[( iDstY + iy ) * m_sFrameBuffer.iWidth + iDstX];
-		const uint8_t* pSrcRow = &sTex.m_pData[( iSrcY + iy ) * sTex.m_iWidth + iSrcX];
+		// Map the center of the destination pixel back to source texture space (Nearest-Neighbor)
+		int iSampleSrcY = iSrcY + (int)( ( ( iDstCurrY - iDstY ) + 0.5f ) * fScaleY );
 
-		for ( int ix = 0; ix < iDrawW; ++ix )
+		// Ensure the sampled source coordinate lies within valid source bounds
+		if ( iSampleSrcY < iValidSrcY1 || iSampleSrcY >= iValidSrcY2 ) continue;
+
+		BGRA8* pDstRow = &m_sFrameBuffer.pData[iDstCurrY * m_sFrameBuffer.iWidth];
+		const uint8_t* pSrcRow = &sTex.m_pData[iSampleSrcY * sTex.m_iWidth];
+
+		for ( int iDstCurrX = iClipDstX1; iDstCurrX < iClipDstX2; ++iDstCurrX )
 		{
-			uint8_t uIndex = pSrcRow[ix];
+			int iSampleSrcX = iSrcX + (int)( ( ( iDstCurrX - iDstX ) + 0.5f ) * fScaleX );
+
+			// Ensure the sampled source coordinate lies within valid source bounds
+			if ( iSampleSrcX < iValidSrcX1 || iSampleSrcX >= iValidSrcX2 ) continue;
+
+			// Fetch indexed color and look up RGB from palette
+			uint8_t uIndex = pSrcRow[iSampleSrcX];
 			uint32_t uPalIdx = (uint32_t)uIndex * 3;
 
 			BGRA8 sColor;
@@ -814,10 +883,11 @@ void CGraphics::DrawTexture( const TBlendFunc& sBlendFunc, const STextureIndexed
 			sColor.r = sTex.m_pPalette[uPalIdx + 2];
 			sColor.a = 255;
 
-			sBlendFunc.Execute( pDstRow[ix], sColor );
+			// Blend and output to target framebuffer pixel
+			sBlendFunc.Execute( pDstRow[iDstCurrX], sColor );
 		}
 	}
-}
+}*/
 
 template<class TBlendFunc>
 void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const TBlendFunc& sBlendFunc, const STextureIndexed& sTex, int iCharWidth, int iCharHeight, int iSpacing )
@@ -862,7 +932,6 @@ void CGraphics::DrawText( int x, int y, const char* pText, BGRA8 sColor, const T
 		pText++;
 	}
 }
-
 
 template<class TAttribs>
 bool CGraphics::ClipLineZ( SClipVertex<TAttribs>& vPh0, SClipVertex<TAttribs>& vPh1 ) const
