@@ -301,7 +301,9 @@ void CSceneGame::Render()
 		}
 	};
 
-	// player ship
+	// ============================================================================
+	// Player Ship
+	// ============================================================================
 	{
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipPlayer.m_matShip, matViewProjViewPort );
@@ -388,7 +390,9 @@ void CSceneGame::Render()
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipDestroyer().m_pVertices, CEngine::GetInstance().GetMeshShipDestroyer().m_iVertexCount, CEngine::GetInstance().GetMeshShipDestroyer().m_pIndices, CEngine::GetInstance().GetMeshShipDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}
 
-	// enemy ships
+	// ============================================================================
+	// Enemy Ships
+	// ============================================================================
 	for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 	{
 		SShip& sShipEnemy = m_cActors.GetShip( iShipInd );
@@ -430,7 +434,9 @@ void CSceneGame::Render()
 		}
 	}
 
-	// asteroids
+	// ============================================================================
+	// Asteroids
+	// ============================================================================
 	{
 		struct SVertexShaderAsteroid
 		{
@@ -493,7 +499,9 @@ void CSceneGame::Render()
 		}
 	}
 	
-	//bullets
+	// ============================================================================
+	// Bullets
+	// ============================================================================
 	{
 		struct SPixelShaderBasic
 		{
@@ -567,6 +575,9 @@ void CSceneGame::Render()
 		}
 	}
 
+	// ============================================================================
+	// Constellations
+	// ============================================================================
 	{
 		struct SVertexShaderConstellations
 		{
@@ -592,7 +603,7 @@ void CSceneGame::Render()
 		{
 			SMatrix matWorld;
 			SMatrix::BuildEulerXYZ( matWorld, 0.0f, 0.0f, 0.0f );
-			SMatrix::Scale( matWorld, 1000.0f );
+			SMatrix::Scale( matWorld, 8000.0f );
 			SVector3 vPos = m_sCamera.m_vEyeSmooth;
 			vPos.z -= 400.0f;
 			SMatrix::Translate( matWorld, vPos );
