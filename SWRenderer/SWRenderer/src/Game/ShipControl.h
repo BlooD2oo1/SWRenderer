@@ -15,8 +15,6 @@ struct STurret
 
 	void Clear();
 
-	void Update( const SShip& sShip );
-
 	std::vector< SVector3 >	m_aTurretPositions;
 	int			m_iBulletCounter;
 
@@ -61,8 +59,6 @@ struct SShip
 
 	void Clear();
 
-	void Update();
-
 	ShipID		m_iID;		//used by DenseMap
 
 	STurret		m_sTurret;
@@ -73,7 +69,6 @@ struct SShip
 
 	
 	SVector3	m_vPos;	
-	SVector3	m_vBoidMov;
 	SVector3	m_vMov;
 	SVector3	m_vMovPrev;
 	SVector3	m_vDir;
@@ -82,6 +77,10 @@ struct SShip
 	SVector3	m_vRight;
 	SMatrix		m_matShip;
 	SMatrix		m_matShipPrev;	
+
+	SVector3	m_vMov_Boid;
+	SVector3	m_vMov_Action;
+	SVector3	m_vMov_Asteroid;
 
 	float		m_fSize;
 	float		m_fMass;
@@ -143,7 +142,6 @@ public:
 
 private:
 	void _updateHashGrids();
-	void _updateBoids();
 	void _updateShips();
 
 	bool _onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet );

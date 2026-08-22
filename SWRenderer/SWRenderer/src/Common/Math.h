@@ -45,26 +45,58 @@ constexpr T Clamp( const T& x, const T& a, const T& b )
 	return ret;
 }
 
-__forceinline static float CalcSmoothUpdateWeight(float fSmoothness, float fElapsedTime) { return powf(fSmoothness, -fElapsedTime); }
-__forceinline static float CalcSmoothUpdateWeight(double fSmoothness, double fElapsedTime) { return (float)pow(fSmoothness, -fElapsedTime); }
+__forceinline static float CalcSmoothUpdateWeight(float fSmoothness, float fElapsedTime)
+{
+    return powf(fSmoothness, -fElapsedTime);
+}
+
+__forceinline static float CalcSmoothUpdateWeight(double fSmoothness, double fElapsedTime)
+{
+    return (float)pow(fSmoothness, -fElapsedTime);
+}
+
+// Applies frame-independent drag with a custom exponent fDragExponent
+// fDragExponent: drag exponent (0 = friction, 1 = linear, 2 = quadratic, etc.)
+// fDragCoeff: drag coefficient
+static void ApplyCustomDrag(SVector3& vMov, float fDragExponent, float fDragCoeff, float fElapsedTime)
+{
+    float fSpeed = SVector3::Length( vMov );
+    if (fSpeed < 0.0001f) return;
+
+    float fNewSpeed = 0.0f;
+
+    // Linear drag case (fDragExponent = 1) requires exponential decay to avoid division by zero
+    if (std::abs(fDragExponent - 1.0f) < 0.0001f)
+    {
+        fNewSpeed = fSpeed * std::exp(-fDragCoeff * fElapsedTime);
+    } 
+    else
+    {
+        float fExpTerm = 1.0f - fDragExponent;
+        float fInside = std::pow(fSpeed, fExpTerm) - fExpTerm * fDragCoeff * fElapsedTime;
+
+        // If friction stops the object completely, speed becomes 0
+        if (fInside <= 0.0f)
+        {
+            fNewSpeed = 0.0f;
+        } else
+        {
+            fNewSpeed = std::pow(fInside, 1.0f / fExpTerm);
+        }
+    }
+
+    // Scale velocity vector to the new speed
+    vMov = (vMov / fSpeed) * fNewSpeed;
+}
+
+constexpr float SmoothConverge( float fSrc, float fDst, float fSmoothness, float fElapsedTimeMs )
+{
+	return Lerp( fDst, fSrc, CalcSmoothUpdateWeight( fSmoothness, fElapsedTimeMs ) );
+}
 
 constexpr float SmoothConverge( float fSrc, float fDst, float fIncSmoothness, float fDecSmoothness, float fElapsedTimeMs )
 {
     return Lerp( fDst, fSrc, fDst > fSrc ? CalcSmoothUpdateWeight( fIncSmoothness, fElapsedTimeMs ) : CalcSmoothUpdateWeight( fDecSmoothness, fElapsedTimeMs ) );
-}
-
-static constexpr uint32_t Hash(uint32_t x, uint32_t y)
-{
-    uint32_t h = x * 0x8da6b343u + y * 0xd8163841u;
-    h ^= (h >> 13);
-    h *= 0xcb1ab31fu;
-    h ^= (h >> 16);
-    return h;
-}
-
-static constexpr float Rand(uint32_t x, uint32_t y)
-{
-    return (Hash(x, y) & 0xffffff) * (1.0f / 16777215.0f);
 }
 
 static bool SegmentSphereTest( const SVector2& v0, const SVector2& v1, const SVector2& vCenter, float fRadius, float& fT )
@@ -95,11 +127,23 @@ static bool SegmentSphereTest( const SVector2& v0, const SVector2& v1, const SVe
     return false;
 }
 
+/*
+static constexpr uint32_t Hash(uint32_t x, uint32_t y)
+{
+    uint32_t h = x * 0x8da6b343u + y * 0xd8163841u;
+    h ^= (h >> 13);
+    h *= 0xcb1ab31fu;
+    h ^= (h >> 16);
+    return h;
+}
+static constexpr float Rand(uint32_t x, uint32_t y)
+{
+    return (Hash(x, y) & 0xffffff) * (1.0f / 16777215.0f);
+}
 static constexpr float Smooth(float t)
 {
     return t * t * (3.0f - 2.0f * t);
 }
-
 static float Noise2DPeriodic(float x, float y, int period)
 {
     int ix = (int)floorf(x);
@@ -129,3 +173,4 @@ static float Noise2DPeriodic(float x, float y, int period)
 
     return a + (b - a) * sy;
 }
+*/
