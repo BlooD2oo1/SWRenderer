@@ -402,7 +402,7 @@ void CSceneGame::Render()
 			continue;
 		}		
 
-		if ( m_sCamera.FrustumSphereTest( sShipEnemy.m_vPos, 2.0f ) )
+		if ( m_sCamera.FrustumSphereTest( sShipEnemy.m_vPos, m_cActors.GetShipDesc( sShipEnemy.m_eShipType ).fSize ) )
 		{		
 			SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipEnemy.m_matShip, matViewProjViewPort );
 

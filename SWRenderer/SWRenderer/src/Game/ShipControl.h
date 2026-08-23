@@ -57,11 +57,12 @@ struct SShipDesc
 	float		fBoidMul_Separation;
 	float		fBoidMul_Alignment;
 	float		fBoidMul_Cohesion;
+	float		fMovSmooth;
 	float		fMovMul_Boid;
 	float		fMovMul_AsteroidDeflect;
 	float		fMovMul_AsteroidDropOut;
 	float		fMovMul_UserCtrl;
-	float		fMovMul_Follow;
+	float		fMovMul_Follow;	
 	float		fSize;
 	float		fMass;
 
@@ -110,6 +111,7 @@ struct SShip
 	SMatrix		m_matShipPrev;	
 
 	SVector3	m_vMov_Curr;
+	SVector3	m_vMov_CurrPrev;
 
 	float		m_fHP;
 	float		m_fDamageTimerMs;
