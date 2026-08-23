@@ -380,7 +380,7 @@ void CSceneGame::Render()
 	{
 		SMatrix matShip;
 		SMatrix::BuildEulerXYZ( matShip, 0.0f, 0.0f, 1.0f );
-		SMatrix::Scale( matShip, 5.0f );
+		SMatrix::Scale( matShip, 50.0f );
 		SMatrix::Translate( matShip, SVector3( 100.0f, 100.0f, 0.0f ) );
 		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matShip, matViewProjViewPort );
 		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
@@ -430,7 +430,22 @@ void CSceneGame::Render()
 				sVertexShaderBasic.fAlpha = 0.3f;
 			}
 
-			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipScout().m_pVertices, CEngine::GetInstance().GetMeshShipScout().m_iVertexCount, CEngine::GetInstance().GetMeshShipScout().m_pIndices, CEngine::GetInstance().GetMeshShipScout().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
+			const SMesh* pMesh = nullptr;
+			switch ( sShipEnemy.m_eShipType )
+			{
+				default:
+				case SShip::Interceptor:
+				pMesh = &CEngine::GetInstance().GetMeshShipPlayer();
+				break;
+				case SShip::Scout:
+				pMesh = &CEngine::GetInstance().GetMeshShipScout();
+				break;
+				case SShip::Destroyer:
+				pMesh = &CEngine::GetInstance().GetMeshShipDestroyer();
+				break;
+			}
+
+			CGraphics::GetInstance().DrawLineList3D( pMesh->m_pVertices, pMesh->m_iVertexCount, pMesh->m_pIndices, pMesh->m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 		}
 	}
 

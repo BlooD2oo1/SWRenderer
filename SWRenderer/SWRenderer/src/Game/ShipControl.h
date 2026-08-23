@@ -15,7 +15,6 @@ struct STurret
 
 	void Clear();
 
-	std::vector< SVector3 >	m_aTurretPositions;
 	int			m_iBulletCounter;
 
 	struct SBullet
@@ -51,6 +50,24 @@ struct SLaserGun
 	bool						m_bShoot;
 };
 
+struct SShipDesc
+{
+	float		fDragExponent;
+	float		fDragCoeff;
+	float		fBoidMul_Separation;
+	float		fBoidMul_Alignment;
+	float		fBoidMul_Cohesion;
+	float		fMovMul_Boid;
+	float		fMovMul_AsteroidDeflect;
+	float		fMovMul_AsteroidDropOut;
+	float		fMovMul_UserCtrl;
+	float		fMovMul_Follow;
+	float		fSize;
+	float		fMass;
+
+	std::vector< SVector3 >	m_aTurretPositions;
+};
+
 using ShipID = uint32_t;
 const ShipID iShipIDInvalid = 0xffffffff;
 struct SShip
@@ -61,6 +78,20 @@ struct SShip
 
 	ShipID		m_iID;		//used by DenseMap
 
+	enum EControlType
+	{
+		Player,
+		AI,
+	} m_eControlType;
+
+	enum EShipType
+	{
+		Interceptor,
+		Scout,
+		Destroyer,
+		ShipType_Count,
+	} m_eShipType;
+
 	STurret		m_sTurret;
 	SLaserGun	m_sLaserGun;
 
@@ -68,7 +99,7 @@ struct SShip
 	float		m_fRoll;
 
 	
-	SVector3	m_vPos;	
+	SVector3	m_vPos;
 	SVector3	m_vMov;
 	SVector3	m_vMovPrev;
 	SVector3	m_vDir;
@@ -78,12 +109,8 @@ struct SShip
 	SMatrix		m_matShip;
 	SMatrix		m_matShipPrev;	
 
-	SVector3	m_vMov_Boid;
-	SVector3	m_vMov_Action;
-	SVector3	m_vMov_Asteroid;
+	SVector3	m_vMov_Curr;
 
-	float		m_fSize;
-	float		m_fMass;
 	float		m_fHP;
 	float		m_fDamageTimerMs;
 	bool		m_bDead;
@@ -140,6 +167,8 @@ public:
 	void		GetField_Asteroid( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid );
 	void		GetField_Asteroid2( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid );
 
+	inline const SShipDesc&	GetShipDesc( SShip::EShipType eShipType ) const { return m_pShipDescs[eShipType]; }
+
 private:
 	void _updateHashGrids();
 	void _updateShips();
@@ -150,6 +179,8 @@ private:
 private:
 
 	CSceneGame&					m_sSceneGame;
+
+	SShipDesc					m_pShipDescs[SShip::ShipType_Count];
 
 	ShipID						m_iPlayerShipID;
 	DenseMap< SShip, ShipID >	m_mShips;
