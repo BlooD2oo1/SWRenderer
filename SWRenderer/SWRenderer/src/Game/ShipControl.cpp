@@ -6,7 +6,7 @@
 CActors::CActors( CSceneGame& sSceneGame )
 	: m_sSceneGame( sSceneGame )
 	, m_cHashGridShips( 100.0f )
-	, m_cHashGridAsteroids( 300.0f )
+	, m_cHashGridAsteroids( 400.0f )
 {
 	{
 		SShipDesc& sShipDesc = m_pShipDescs[SShip::Interceptor];
@@ -36,9 +36,9 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fBoidMul_Separation = 0.6f;
 		sShipDesc.fBoidMul_Alignment = 1.0f;
 		sShipDesc.fBoidMul_Cohesion = 0.0013f;
-		sShipDesc.fMovSmooth = 1.01f;
+		sShipDesc.fMovSmooth = 1.1f;
 		sShipDesc.fMovMul_Boid = 0.001f;
-		sShipDesc.fMovMul_AsteroidDeflect = 0.0007f;
+		sShipDesc.fMovMul_AsteroidDeflect = 0.001f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
 		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0003f;
@@ -49,14 +49,14 @@ CActors::CActors( CSceneGame& sSceneGame )
 	}
 	{
 		SShipDesc& sShipDesc = m_pShipDescs[SShip::Destroyer];
-		sShipDesc.fDragExponent = 1.0f;
-		sShipDesc.fDragCoeff = 0.001f;
-		sShipDesc.fBoidMul_Separation = 2.6f;
-		sShipDesc.fBoidMul_Alignment = 0.2f;
-		sShipDesc.fBoidMul_Cohesion = 0.0023f;
-		sShipDesc.fMovSmooth = 1.003f;
+		sShipDesc.fDragExponent = 2.0f;
+		sShipDesc.fDragCoeff = 0.01f;
+		sShipDesc.fBoidMul_Separation = 1.6f;
+		sShipDesc.fBoidMul_Alignment = 0.4f;
+		sShipDesc.fBoidMul_Cohesion = 0.0016f;
+		sShipDesc.fMovSmooth = 1.03f;
 		sShipDesc.fMovMul_Boid = 0.001f;
-		sShipDesc.fMovMul_AsteroidDeflect = 0.004f;
+		sShipDesc.fMovMul_AsteroidDeflect = 0.001f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
 		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0002f;
@@ -106,7 +106,8 @@ void CActors::Create()
 		ShipID iShipID = AddShip();
 		SShip& sShipEnemy = GetShipByID( iShipID );
 		sShipEnemy.m_eControlType = SShip::AI;
-		sShipEnemy.m_eShipType = ((rand()%3) == 0) ? SShip::Destroyer : SShip::Scout;
+		sShipEnemy.m_eShipType = SShip::Scout;
+		sShipEnemy.m_eShipType = ((rand()%3) == 0) ? SShip::Destroyer : SShip::Scout;		
 
 		sShipEnemy.m_sTurret.m_fShootFreqHz = 10.0f;
 		sShipEnemy.m_sTurret.m_fBulletSpeed = 0.1f;
@@ -310,7 +311,7 @@ void CActors::GetField_Asteroid( SVector2& vField, const SVector2& p, const SShi
 void CActors::GetField_Asteroid2( SVector2& vField, const SVector2& p, const SShip& sShip, const SAsteroid& sAsteroid )
 {
 	const float fRad0 = std::min( sAsteroid.m_fSize * 0.5f + GetShipDesc( sShip.m_eShipType ).fSize, m_cHashGridAsteroids.GetGridSize() );
-	const float fRad1 = std::min( sAsteroid.m_fSize * 10.0f + GetShipDesc( sShip.m_eShipType ).fSize, m_cHashGridAsteroids.GetGridSize() );
+	const float fRad1 = std::min( sAsteroid.m_fSize * 40.0f + GetShipDesc( sShip.m_eShipType ).fSize, m_cHashGridAsteroids.GetGridSize() );
 
 	SVector2 vAst( p - sAsteroid.m_vPos.xy() );
 	float fAstL = SVector2::Length( vAst );
@@ -321,7 +322,13 @@ void CActors::GetField_Asteroid2( SVector2& vField, const SVector2& p, const SSh
 		vField = vAst/fAstL*f;
 		SVector2 vShipMovNorm( sShip.m_vMov.xy() );
 		SVector2::Normalize( vShipMovNorm, vShipMovNorm );
-		vField *= Clamp( -SVector2::Dot( vField, vShipMovNorm ), 0.0f, 1.0f );
+
+		SVector2 vShipAstNorm( sAsteroid.m_vPos.xy() - sShip.m_vPos.xy() );		
+		SVector2::Normalize( vShipAstNorm, vShipAstNorm );
+		SVector2::Lerp( vShipMovNorm, vShipMovNorm, vShipAstNorm, 0.5f );
+		SVector2::Normalize( vShipMovNorm, vShipMovNorm );
+
+		vField *= Clamp( -SVector2::Dot( vField, vShipMovNorm )-0.5f, 0.0f, 1.0f );
 	}
 	else
 	{

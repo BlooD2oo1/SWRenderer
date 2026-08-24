@@ -189,7 +189,7 @@ void CSceneGame::Render()
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
-//#define DRAW_FIELD
+#define DRAW_FIELD
 #ifdef DRAW_FIELD
 	{
 		struct SVertexShaderBasic
@@ -226,7 +226,7 @@ void CSceneGame::Render()
 		}
 
 		const SShip& sShip = m_cActors.GetShipPlayer();
-		const float fSize = 15.0f;
+		const float fSize = 5.0f;
 		const int iGridSize = 30;
 		for ( int x = -iGridSize; x < iGridSize; x++ )
 		for ( int y = -iGridSize; y < iGridSize; y++ )
@@ -262,7 +262,7 @@ void CSceneGame::Render()
 				f = -std::max( 0.0f, (fHeight - (-f)) / fHeight );
 			}
 			f = Clamp( f, -1.0f, 1.0f );
-			vField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vField ) * 10.0f;
+			vField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vField ) * 100.0f;
 
 			SVertexPW vert0{ SVector3( fX, fY, 0.0f ), 1.0f };
 			SVertexPW vert1{ SVector3( fX + vField.x * fSize*0.8f, fY + vField.y * fSize*0.8f, 0.0f ), 0.0f };
