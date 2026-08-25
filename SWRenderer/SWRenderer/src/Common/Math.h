@@ -24,7 +24,26 @@ constexpr float	LerpAngle( const float f0, const float f1, const float t )
         fDelta += 2.0f * PI;
     }
 	return f0 + t * fDelta;
-    
+}
+
+constexpr float angleDiff(float a, float b)
+{
+    float d = a - b;
+
+    if (d >  PI)
+        d -= 2.0f * PI;
+    if (d < -PI)
+        d += 2.0f * PI;
+
+    return d;
+}
+
+static float angleDiff( const SVector2& a, const SVector2& b)
+{
+    return atan2f(
+        a.x * b.y - a.y * b.x,  // cross
+        a.x * b.x + a.y * b.y   // dot
+    );
 }
 
 template< class T >

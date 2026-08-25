@@ -189,7 +189,7 @@ void CSceneGame::Render()
 
 	//m_cGrid.RenderCoordSys( m_sCamera.m_matViewProj, m_sViewportGameView, SVector3( 0.0f, 0.0f, 0.0f ), 10.0f );
 
-#define DRAW_FIELD
+//#define DRAW_FIELD
 #ifdef DRAW_FIELD
 	{
 		struct SVertexShaderBasic
@@ -239,8 +239,8 @@ void CSceneGame::Render()
 
 			SVector2 vField( 0.0f, 0.0f );
 			SVector2 p( fX, fY );
-			//m_cActors.GetField_ShipPlayer( vField, p, m_cActors.GetShipPlayer() );
-			for ( int iAsteroidInd = 0; iAsteroidInd < (int)aAsteroids.size(); iAsteroidInd++ )
+			m_cActors.GetField_ShipPlayer( vField, p, m_cActors.GetShipPlayer() );
+			/*for ( int iAsteroidInd = 0; iAsteroidInd < (int)aAsteroids.size(); iAsteroidInd++ )
 			{
 				const SAsteroid& sAsteroid = *aAsteroids[iAsteroidInd];
 				if ( m_sCamera.FrustumSphereTest( sAsteroid.m_vPos, sAsteroid.m_fSize*2.0f ) )
@@ -262,7 +262,7 @@ void CSceneGame::Render()
 				f = -std::max( 0.0f, (fHeight - (-f)) / fHeight );
 			}
 			f = Clamp( f, -1.0f, 1.0f );
-			vField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vField ) * 100.0f;
+			vField = SVector2( -sShip.m_vMov.y, sShip.m_vMov.x ) * f * SVector2::Length( vField ) * 100.0f;*/
 
 			SVertexPW vert0{ SVector3( fX, fY, 0.0f ), 1.0f };
 			SVertexPW vert1{ SVector3( fX + vField.x * fSize*0.8f, fY + vField.y * fSize*0.8f, 0.0f ), 0.0f };
@@ -441,7 +441,7 @@ void CSceneGame::Render()
 				pMesh = &CEngine::GetInstance().GetMeshShipScout();
 				break;
 				case SShip::Destroyer:
-				pMesh = &CEngine::GetInstance().GetMeshShipDestroyer();
+				pMesh = &CEngine::GetInstance().GetMeshShipPlayer();
 				break;
 			}
 

@@ -21,6 +21,9 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
 		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0002f;
+		sShipDesc.fSpeedMin = 0.0f;
+		sShipDesc.fAccelMax = 0.0005f;
+		sShipDesc.fAngularAccelMax = 100000.0f;
 		sShipDesc.fSize = 8.0f;
 		sShipDesc.fMass = powf( sShipDesc.fSize, 3.0f );
 		sShipDesc.m_aTurretPositions.clear();
@@ -36,31 +39,37 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fBoidMul_Separation = 0.6f;
 		sShipDesc.fBoidMul_Alignment = 1.0f;
 		sShipDesc.fBoidMul_Cohesion = 0.0013f;
-		sShipDesc.fMovSmooth = 1.1f;
-		sShipDesc.fMovMul_Boid = 0.001f;
-		sShipDesc.fMovMul_AsteroidDeflect = 0.001f;
+		sShipDesc.fMovSmooth = 1.03f;
+		sShipDesc.fMovMul_Boid = 0.003f;
+		sShipDesc.fMovMul_AsteroidDeflect = 0.002f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
 		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0003f;
-		sShipDesc.fSize = 3.5f;
+		sShipDesc.fSpeedMin = 0.02f;
+		sShipDesc.fAccelMax = 0.00005f;
+		sShipDesc.fAngularAccelMax = 0.002f;
+		sShipDesc.fSize = 4.5f;
 		sShipDesc.fMass = powf( sShipDesc.fSize, 3.0f );
 		sShipDesc.m_aTurretPositions.clear();
 		sShipDesc.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
 	}
 	{
 		SShipDesc& sShipDesc = m_pShipDescs[SShip::Destroyer];
-		sShipDesc.fDragExponent = 2.0f;
-		sShipDesc.fDragCoeff = 0.01f;
+		sShipDesc.fDragExponent = 1.0f;
+		sShipDesc.fDragCoeff = 0.001f;
 		sShipDesc.fBoidMul_Separation = 1.6f;
 		sShipDesc.fBoidMul_Alignment = 0.4f;
 		sShipDesc.fBoidMul_Cohesion = 0.0016f;
 		sShipDesc.fMovSmooth = 1.03f;
 		sShipDesc.fMovMul_Boid = 0.001f;
-		sShipDesc.fMovMul_AsteroidDeflect = 0.001f;
+		sShipDesc.fMovMul_AsteroidDeflect = 0.004f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
 		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0002f;
-		sShipDesc.fSize = 15.0f;
+		sShipDesc.fSpeedMin = 0.02f;
+		sShipDesc.fAccelMax = 0.00005f;
+		sShipDesc.fAngularAccelMax = 0.002f;
+		sShipDesc.fSize = 8.0f;
 		sShipDesc.fMass = powf( sShipDesc.fSize, 3.0f );
 		sShipDesc.m_aTurretPositions.clear();
 		sShipDesc.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
@@ -177,17 +186,17 @@ void CActors::GetField_ShipPlayer( SVector2& vField, const SVector2& p, const SS
 
 	SVector2 vShipPos( sShip.m_vPos.xy() );
 	SVector2 vShipDir( sShip.m_vDir.xy() );
-	SVector2 v0( (vShipPos+vShipDir*(2.0f+lD*0.5f)) - p );
-	SVector2 v1( (vShipPos+vShipDir*35.0f) - p );
-	SVector2 v2( (vShipPos+vShipDir*37.0f) - p );
+	SVector2 v0( (vShipPos+vShipDir*(-6.0f+lD*0.5f)) - p );
+	SVector2 v1( (vShipPos+vShipDir*32.0f) - p );
+	SVector2 v2( (vShipPos+vShipDir*40.0f) - p );
 	float l0 = SVector2::Length( v0 );
 	float l1 = SVector2::Length( v1 );
 	float l2 = SVector2::Length( v2 );
 	SVector2::Normalize( vField, v0*0.01f - v1/l1/l1*4.0f - v2/l2/l2*5.0f );
 
 	{
-		float fMulP = Clamp( ( lD - 15.0f ) / 10.0f, -1.0f, 1.0f );
-		float fMulN = Clamp( ( lD - 10.0f ) / 4.0f, -1.0f, 1.0f );
+		float fMulP = Clamp( ( lD - 20.0f ) / 10.0f, -1.0f, 1.0f );
+		float fMulN = Clamp( ( lD - 15.0f ) / 4.0f, -1.0f, 1.0f );
 		if ( fMulP > 0.0f )
 		{
 			vField *= fMulP;
@@ -682,7 +691,9 @@ void CActors::_updateShips()
 
 			const float fYaw = atan2f( sShip.m_vMov.y, sShip.m_vMov.x );
 			const float fYawPrev = sShip.m_fYaw;
-			sShip.m_fYaw = LerpAngle( fYaw, sShip.m_fYaw, CalcSmoothUpdateWeight( 1.02f, fElapsedTimeMs ) );
+			//float fYawLerpWeight = 1.0001f + ( 1.0f - expf( -SVector3::LengthSq( sShip.m_vMov )*1.0f ) );	// ha lassan megy akkor ne forogjon mint egy hulye
+			float fYawLerpWeight = 1.1f;
+			sShip.m_fYaw = LerpAngle( fYaw, sShip.m_fYaw, CalcSmoothUpdateWeight( fYawLerpWeight, fElapsedTimeMs ) );
 			sShip.m_fYawSpeed = (sShip.m_fYaw - fYawPrev) / (fElapsedTimeMs * 0.004f);
 		}
 	}
@@ -719,6 +730,27 @@ void CActors::_updateShips()
 		SVector3::Lerp( sShip.m_vMov_Curr, sShip.m_vMov_Curr, sShip.m_vMov_CurrPrev, CalcSmoothUpdateWeight( GetShipDesc( sShip.m_eShipType ).fMovSmooth, fElapsedTimeMs ) );
 		sShip.m_vMov += sShip.m_vMov_Curr * fElapsedTimeMs;
 		ApplyCustomDrag( sShip.m_vMov, GetShipDesc( sShip.m_eShipType ).fDragExponent, GetShipDesc( sShip.m_eShipType ).fDragCoeff, fElapsedTimeMs );
+
+		//if ( sShip.m_eControlType == SShip::AI )
+		{
+			float fSpeed = SVector2::Length( sShip.m_vMov.xy() );
+			float fSpeedPrev = SVector2::Length( sShip.m_vMovPrev.xy() );
+			float fSpeedDelta = fSpeed - fSpeedPrev;
+			const float fMaxAcceleration = GetShipDesc( sShip.m_eShipType ).fAccelMax;
+			fSpeedDelta = Clamp( fSpeedDelta, -fMaxAcceleration * fElapsedTimeMs, fMaxAcceleration * fElapsedTimeMs );
+			float fSpeedNew = fSpeedPrev + fSpeedDelta;
+			fSpeedNew = std::max( fSpeedNew, GetShipDesc( sShip.m_eShipType ).fSpeedMin );
+
+			float fAngle = atan2f( sShip.m_vMov.y, sShip.m_vMov.x );
+			float fAnglePrev = atan2f( sShip.m_vMovPrev.y, sShip.m_vMovPrev.x );
+			float fAngleDelta = angleDiff( fAngle, fAnglePrev );
+			const float fMaxAngularAccel = GetShipDesc( sShip.m_eShipType ).fAngularAccelMax;
+			fAngleDelta = Clamp( fAngleDelta, -fMaxAngularAccel * fElapsedTimeMs, fMaxAngularAccel * fElapsedTimeMs );
+			float fAngleNew = fAnglePrev + fAngleDelta;
+
+			sShip.m_vMov.xy() = SVector2( cosf( fAngleNew ), sinf( fAngleNew ) ) * fSpeedNew;
+		}
+
 		// Update position using average velocity (trapezoidal integration)
 		sShip.m_vPos += ( sShip.m_vMovPrev + sShip.m_vMov ) * 0.5f * fElapsedTimeMs;
 

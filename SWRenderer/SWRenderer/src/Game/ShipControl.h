@@ -62,7 +62,10 @@ struct SShipDesc
 	float		fMovMul_AsteroidDeflect;
 	float		fMovMul_AsteroidDropOut;
 	float		fMovMul_UserCtrl;
-	float		fMovMul_Follow;	
+	float		fMovMul_Follow;
+	float		fSpeedMin;
+	float		fAccelMax;
+	float		fAngularAccelMax;
 	float		fSize;
 	float		fMass;
 
