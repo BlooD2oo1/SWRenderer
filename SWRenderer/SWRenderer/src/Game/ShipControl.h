@@ -5,6 +5,30 @@
 #include "Common/DenseMap.h"
 #include "Common/SpatialHashGrid.h"
 
+using ShipID = uint32_t;
+const ShipID iShipIDInvalid = 0xffffffff;
+
+enum EControlType
+{
+	Player,
+	AI,
+};
+
+struct SBullet
+{
+	ShipID			m_iShipID;
+	EControlType	m_eShipControlType;
+
+	SVector3	m_vPos;
+	SVector3	m_vPosPrev;
+	SVector3	m_vMov;
+	float		m_fMass;
+	float		m_fTimer;
+	float		m_fTime;
+
+	SVector3	m_vColor;
+};
+
 struct SShip;
 struct STurret
 {
@@ -17,22 +41,11 @@ struct STurret
 
 	int			m_iBulletCounter;
 
-	struct SBullet
-	{
-		SVector3	m_vPos;
-		SVector3	m_vPosPrev;
-		SVector3	m_vMov;
-		float		m_fMass;
-		float		m_fTimer;
-		float		m_fTime;
-	};
-
 	float						m_fShootFreqHz;
 	float						m_fBulletSpeed;
 	SVector3					m_vColor;
 	float						m_fDamage;
 
-	std::vector< SBullet >		m_aBullets;
 	bool						m_bShoot;
 	uint64_t					m_iLastBulletTimeStampNs;	
 };
@@ -72,21 +85,14 @@ struct SShipDesc
 	std::vector< SVector3 >	m_aTurretPositions;
 };
 
-using ShipID = uint32_t;
-const ShipID iShipIDInvalid = 0xffffffff;
 struct SShip
 {
 	SShip();
 
 	void Clear();
 
-	ShipID		m_iID;		//used by DenseMap
-
-	enum EControlType
-	{
-		Player,
-		AI,
-	} m_eControlType;
+	ShipID			m_iID;		//used by DenseMap
+	EControlType	m_eControlType;
 
 	enum EShipType
 	{
@@ -164,6 +170,10 @@ public:
 	SShip&		GetShip( size_t i ) { return m_mShips.GetByInd(i); }
 	SShip&		GetShipByID( ShipID iID ) { return m_mShips.GetByID( iID ); }
 
+	size_t		GetBulletCount() const { return m_aBullets.size(); }
+	SBullet&	GetBullet( size_t i ) { return m_aBullets[i]; }
+
+
 	size_t		GetAsteroidCount() const { return m_aAsteroids.size(); }
 	SAsteroid&	GetAsteroid( size_t i ) { return m_aAsteroids[i]; }
 
@@ -190,7 +200,9 @@ private:
 	ShipID						m_iPlayerShipID;
 	DenseMap< SShip, ShipID >	m_mShips;
 	std::vector< SAsteroid >	m_aAsteroids;
+	std::vector< SBullet >		m_aBullets;
 
 	CSpatialHashGrid< size_t >	m_cHashGridShips;
 	CSpatialHashGrid< size_t >	m_cHashGridAsteroids;
+	CSpatialHashGrid< size_t >	m_cHashGridBullets;
 };

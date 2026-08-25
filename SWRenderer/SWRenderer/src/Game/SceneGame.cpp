@@ -532,58 +532,52 @@ void CSceneGame::Render()
 		SMatrix matViewProjViewportPrev;
 		SMatrix::Mul( matViewProjViewportPrev, m_sCamera.m_matViewProjPrev, m_sViewportGameView.GetViewPortMatrix() );
 
-		for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
+		for ( size_t iBulletInd = 0; iBulletInd < m_cActors.GetBulletCount(); iBulletInd++ )
 		{
-			const SShip& sShip = m_cActors.GetShip( iShipInd );
-			const STurret& sTurret = sShip.m_sTurret;
+			const SBullet& sBullet = m_cActors.GetBullet( iBulletInd );
 
-			for ( int iBulletInd = 0; iBulletInd < sShip.m_sTurret.m_aBullets.size(); iBulletInd++ )
+			SClipVertex<SVertexP::SAttribs> sPh0;
+			SClipVertex<SVertexP::SAttribs> sPh1;
+
 			{
-				const STurret::SBullet& sBullet = sTurret.m_aBullets[iBulletInd];
+				SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
+				SVector4 vPhSrc1( sBullet.m_vPosPrev, 1.0f );
+				SMatrix::Mul( sPh0.vPos, vPhSrc0, matViewProjViewport );
+				SMatrix::Mul( sPh1.vPos, vPhSrc1, matViewProjViewportPrev );
+			}
 
-				SClipVertex<SVertexP::SAttribs> sPh0;
-				SClipVertex<SVertexP::SAttribs> sPh1;
-
+			if ( CGraphics::GetInstance().ClipLineZ( sPh0, sPh1 ) )
+			{
+				if ( CGraphics::GetInstance().ClipLineXY( sPh0, sPh1, m_sViewportGameView ) )
 				{
-					SVector4 vPhSrc0( sBullet.m_vPos, 1.0f );
-					SVector4 vPhSrc1( sBullet.m_vPosPrev, 1.0f );
-					SMatrix::Mul( sPh0.vPos, vPhSrc0, matViewProjViewport );
-					SMatrix::Mul( sPh1.vPos, vPhSrc1, matViewProjViewportPrev );
-				}
-
-				if ( CGraphics::GetInstance().ClipLineZ( sPh0, sPh1 ) )
-				{
-					if ( CGraphics::GetInstance().ClipLineXY( sPh0, sPh1, m_sViewportGameView ) )
 					{
-						{
-							float fWRec0 = 1.0f / sPh0.vPos.w;
-							sPh0.vPos.x = sPh0.vPos.x * fWRec0;
-							sPh0.vPos.y = sPh0.vPos.y * fWRec0;
+						float fWRec0 = 1.0f / sPh0.vPos.w;
+						sPh0.vPos.x = sPh0.vPos.x * fWRec0;
+						sPh0.vPos.y = sPh0.vPos.y * fWRec0;
 
-							float fWRec1 = 1.0f / sPh1.vPos.w;
-							sPh1.vPos.x = sPh1.vPos.x * fWRec1;
-							sPh1.vPos.y = sPh1.vPos.y * fWRec1;
-						}
+						float fWRec1 = 1.0f / sPh1.vPos.w;
+						sPh1.vPos.x = sPh1.vPos.x * fWRec1;
+						sPh1.vPos.y = sPh1.vPos.y * fWRec1;
+					}
 
-						SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
-						float fL = SVector2::Length( vL );
+					SVector2 vL( sPh0.vPos.x - sPh1.vPos.x, sPh0.vPos.y - sPh1.vPos.y );
+					float fL = SVector2::Length( vL );
 
-						float fAlpha = sBullet.m_fTimer / sBullet.m_fTime;
-						fAlpha *= fAlpha * fAlpha;
-						fAlpha *= 0.7f;
-						fAlpha = 1.0f - fAlpha;
-						SVector3 vColor = sTurret.m_vColor;
+					float fAlpha = sBullet.m_fTimer / sBullet.m_fTime;
+					fAlpha *= fAlpha * fAlpha;
+					fAlpha *= 0.7f;
+					fAlpha = 1.0f - fAlpha;
+					SVector3 vColor = sBullet.m_vColor;
 
-						sPixelShaderBasic.sColor = BGRA8( vColor.x, vColor.y, vColor.z, fAlpha );
+					sPixelShaderBasic.sColor = BGRA8( vColor.x, vColor.y, vColor.z, fAlpha );
 
-						if ( fL > 1.5f )
-						{
-							CGraphics::GetInstance().RasterizeLineFlat( sPh0.vPos.xy(), sPh1.vPos.xy(), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
-						}
-						else
-						{
-							CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPixelShaderBasic.sColor, SBlendFuncAdditive() );
-						}
+					if ( fL > 1.5f )
+					{
+						CGraphics::GetInstance().RasterizeLineFlat( sPh0.vPos.xy(), sPh1.vPos.xy(), sPh0.sAttribs, sPixelShaderBasic, SBlendFuncAdditive() );
+					}
+					else
+					{
+						CGraphics::GetInstance().RasterizePixel( (int)sPh0.vPos.x, (int)sPh0.vPos.y, sPixelShaderBasic.sColor, SBlendFuncAdditive() );
 					}
 				}
 			}
@@ -699,20 +693,16 @@ void CSceneGame::Render()
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
-		for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
+		for ( size_t iBulletInd = 0; iBulletInd < m_cActors.GetBulletCount(); iBulletInd++ )
 		{
-			const SShip& sShip = m_cActors.GetShip( iShipInd );
+			const SBullet& sBullet = m_cActors.GetBullet( iBulletInd );
+
+			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x99, 0xff, 0x22 );
 
 			SVertexP sP;
-			
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x99, 0xff, 0x22 );
-			for ( int iBulletInd = 0; iBulletInd < sShip.m_sTurret.m_aBullets.size(); iBulletInd++ )
-			{
-				const STurret::SBullet& sBullet = sShip.m_sTurret.m_aBullets[iBulletInd];
-				sP.vPos = sBullet.m_vPos;
+			sP.vPos = sBullet.m_vPos;
 
-				CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
-			}
+			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
 		for ( size_t iAsteroidInd = 0; iAsteroidInd < m_cActors.GetAsteroidCount(); iAsteroidInd++ )

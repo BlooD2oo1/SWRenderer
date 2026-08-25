@@ -7,6 +7,7 @@ CActors::CActors( CSceneGame& sSceneGame )
 	: m_sSceneGame( sSceneGame )
 	, m_cHashGridShips( 100.0f )
 	, m_cHashGridAsteroids( 400.0f )
+	, m_cHashGridBullets( 50.0f )
 {
 	{
 		SShipDesc& sShipDesc = m_pShipDescs[SShip::Interceptor];
@@ -91,6 +92,7 @@ void CActors::Clear()
 
 	m_cHashGridShips.Clear();
 	m_cHashGridAsteroids.Clear();
+	m_cHashGridBullets.Clear();
 }
 
 void CActors::Create()
@@ -100,7 +102,7 @@ void CActors::Create()
 	{
 		m_iPlayerShipID = AddShip();
 		SShip& sShipPlayer = GetShipByID( m_iPlayerShipID );
-		sShipPlayer.m_eControlType = SShip::Player;
+		sShipPlayer.m_eControlType = Player;
 		sShipPlayer.m_eShipType = SShip::Interceptor;		
 		//sShipPlayer.m_vMov.x = 0.05f;
 		sShipPlayer.m_sTurret.m_fShootFreqHz = 30.0f;
@@ -114,7 +116,7 @@ void CActors::Create()
 	{
 		ShipID iShipID = AddShip();
 		SShip& sShipEnemy = GetShipByID( iShipID );
-		sShipEnemy.m_eControlType = SShip::AI;
+		sShipEnemy.m_eControlType = AI;
 		sShipEnemy.m_eShipType = SShip::Scout;
 		sShipEnemy.m_eShipType = ((rand()%3) == 0) ? SShip::Destroyer : SShip::Scout;		
 
@@ -359,6 +361,13 @@ void CActors::_updateHashGrids()
 		SShip& sShip = GetShip( i );
 		m_cHashGridShips.Add( sShip.m_vPos.xy(), i );
 	}
+
+	m_cHashGridBullets.Clear();
+	for ( size_t i = 0; i < GetBulletCount(); i++ )
+	{
+		const SBullet& sBullet = GetBullet( i );
+		m_cHashGridBullets.Add( sBullet.m_vPos.xy(), i );
+	}
 }
 
 void CActors::_updateShips()
@@ -476,7 +485,7 @@ void CActors::_updateShips()
 				if ( fDistSq < fSizeSq )
 				{
 					float fDamage = 0.8f * fElapsedTimeMs;
-					if ( sShip.m_eControlType == SShip::Player )
+					if ( sShip.m_eControlType == Player )
 					{
 						fDamage = 0.05f * fElapsedTimeMs;
 					}
@@ -509,7 +518,7 @@ void CActors::_updateShips()
 		
 		vAsteroidField += SVector2( -vShipMovNorm.y, vShipMovNorm.x ) * f * SVector2::Length( vAsteroidField );
 
-		if ( sShip.m_eControlType == SShip::AI )
+		if ( sShip.m_eControlType == AI )
 		{
 			sShip.m_vMov_Curr += SVector3( vAsteroidField.x, vAsteroidField.y, 0.0f ) * GetShipDesc( sShip.m_eShipType ).fMovMul_AsteroidDeflect;
 		}
@@ -521,43 +530,55 @@ void CActors::_updateShips()
 	// Ship - Ship Weapon Damage Update
 	// ============================================================================
 
-	for ( size_t i = 0; i < GetShipCount(); i++ )
+	for ( size_t iShipInd = 0; iShipInd < GetShipCount(); iShipInd++ )
 	{
-		SShip& sShipPlayer = GetShipPlayer();
+		SShip& sShip = GetShip( iShipInd );
 
-		SShip& sShip = GetShip( i );
-
-		if ( sShip.m_eControlType == SShip::Player ) continue;
-
-		for ( int iBulletInd = 0; iBulletInd < sShipPlayer.m_sTurret.m_aBullets.size(); iBulletInd++ )
+		const auto aNeighborGrid = m_cHashGridBullets.Get3x3Neighbors( sShip.m_vPos.xy() );
+		for ( size_t iNeighbourGridInd = 0; iNeighbourGridInd < aNeighborGrid.size(); ++iNeighbourGridInd )
 		{
-			STurret::SBullet& sBullet = sShipPlayer.m_sTurret.m_aBullets[iBulletInd];
-			float fT = 0.0f;
-			if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sShip.m_vPos.xy(), GetShipDesc( sShip.m_eShipType ).fSize, fT ) )
+			const std::vector< size_t >* pBulletInds = aNeighborGrid[iNeighbourGridInd];
+			if ( !pBulletInds )
 			{
-				SVector2 vSegmentDir( sBullet.m_vPos.xy() - sBullet.m_vPosPrev.xy() );
-				SVector2::Normalize( vSegmentDir, vSegmentDir );
-				SVector2 vAttackPoint( sBullet.m_vPosPrev.xy() + vSegmentDir * fT );
-				float fAttackForce = SVector2::Dot( vSegmentDir, sBullet.m_vMov.xy() );
-				SVector2 vMov = (sShip.m_vPos.xy() - vAttackPoint) * fAttackForce / GetShipDesc( sShip.m_eShipType ).fSize * sBullet.m_fMass;
-				vMov /= fElapsedTimeMs;
-				sShip.m_vMov_Curr.xy() += vMov;
+				continue;
+			}
+			for ( size_t iBulletIndInd = 0; iBulletIndInd < pBulletInds->size(); iBulletIndInd++ )
+			{
+				size_t iBulletInd = (*pBulletInds)[iBulletIndInd];
+				SBullet& sBullet = GetBullet( iBulletInd );
+				if ( sBullet.m_iShipID == sShip.m_iID ) continue;
+				if ( sBullet.m_eShipControlType == sShip.m_eControlType ) continue;
 
-				_onDamageShipByBullet( sShip, sShipPlayer.m_sTurret.m_fDamage, sBullet.m_vMov );
+				float fT = 0.0f;
 
-				SAudioEvent sAudioEvent;
-				sAudioEvent.type = SAudioEvent::GunHit;
-				sAudioEvent.fVolume = 0.15f;
-				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 500;
-				sAudioEvent.iSampleCounter = 0;
-				sAudioEvent.fPhase = 0.0f;	
-				sAudioEvent.sClick.iButton = 1;
-				sAudioEvent.sGun.vPos = sBullet.m_vPos;
-				sAudioEvent.sGun.fPitch = 600.0f;
-				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+				if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sShip.m_vPos.xy(), GetShipDesc( sShip.m_eShipType ).fSize, fT ) )
+				{
+					SVector2 vSegmentDir( sBullet.m_vPos.xy() - sBullet.m_vPosPrev.xy() );
+					SVector2::Normalize( vSegmentDir, vSegmentDir );
+					SVector2 vAttackPoint( sBullet.m_vPosPrev.xy() + vSegmentDir * fT );
+					float fAttackForce = SVector2::Dot( vSegmentDir, sBullet.m_vMov.xy() );
+					SVector2 vMov = (sShip.m_vPos.xy() - vAttackPoint) * fAttackForce / GetShipDesc( sShip.m_eShipType ).fSize * sBullet.m_fMass;
+					vMov /= fElapsedTimeMs;
+					
+					sShip.m_vMov_Curr.xy() += vMov;
+					
+					_onDamageShipByBullet( sShip, 10.0f, sBullet.m_vMov );
 
-				sBullet.m_fTime = sBullet.m_fTimer;
+					SAudioEvent sAudioEvent;
+					sAudioEvent.type = SAudioEvent::GunHit;
+					sAudioEvent.fVolume = 0.15f;
+					sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+					sAudioEvent.iLifeTimeNs = 1000 * 1000 * 500;
+					sAudioEvent.iSampleCounter = 0;
+					sAudioEvent.fPhase = 0.0f;	
+					sAudioEvent.sClick.iButton = 1;
+					sAudioEvent.sGun.vPos = sBullet.m_vPos;
+					sAudioEvent.sGun.fPitch = 600.0f;
+					CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+
+					sBullet.m_fTime = sBullet.m_fTimer;
+				}
+
 			}
 		}
 	}
@@ -571,25 +592,38 @@ void CActors::_updateShips()
 		SShip& sShipPlayer = GetShipPlayer();
 
 		SAsteroid& sAsteroid = GetAsteroid( i );
-		for ( int iBulletInd = 0; iBulletInd < sShipPlayer.m_sTurret.m_aBullets.size(); iBulletInd++ )
-		{
-			STurret::SBullet& sBullet = sShipPlayer.m_sTurret.m_aBullets[iBulletInd];
-			float fT = 0.0f;
-			if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sAsteroid.m_vPos.xy(), sAsteroid.m_fSize, fT ) )
-			{
-				SAudioEvent sAudioEvent;
-				sAudioEvent.type = SAudioEvent::GunHit;
-				sAudioEvent.fVolume = 0.1f;
-				sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
-				sAudioEvent.iLifeTimeNs = 1000 * 1000 * 200;
-				sAudioEvent.iSampleCounter = 0;
-				sAudioEvent.fPhase = 0.0f;	
-				sAudioEvent.sClick.iButton = 1;
-				sAudioEvent.sGun.vPos = sBullet.m_vPos;
-				sAudioEvent.sGun.fPitch = 600.0f;
-				CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
 
-				sBullet.m_fTime = sBullet.m_fTimer;
+		const auto aNeighborGrid = m_cHashGridBullets.Get3x3Neighbors( sAsteroid.m_vPos.xy() );
+		for ( size_t iNeighbourGridInd = 0; iNeighbourGridInd < aNeighborGrid.size(); ++iNeighbourGridInd )
+		{
+			const std::vector< size_t >* pBulletInds = aNeighborGrid[iNeighbourGridInd];
+			if ( !pBulletInds )
+			{
+				continue;
+			}
+			for ( size_t iBulletIndInd = 0; iBulletIndInd < pBulletInds->size(); iBulletIndInd++ )
+			{
+				size_t iBulletInd = (*pBulletInds)[iBulletIndInd];
+				SBullet& sBullet = GetBullet( iBulletInd );
+
+				float fT = 0.0f;
+
+				if ( SegmentSphereTest( sBullet.m_vPosPrev.xy(), sBullet.m_vPos.xy(), sAsteroid.m_vPos.xy(), sAsteroid.m_fSize, fT ) )
+				{
+					SAudioEvent sAudioEvent;
+					sAudioEvent.type = SAudioEvent::GunHit;
+					sAudioEvent.fVolume = 0.1f;
+					sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
+					sAudioEvent.iLifeTimeNs = 1000 * 1000 * 200;
+					sAudioEvent.iSampleCounter = 0;
+					sAudioEvent.fPhase = 0.0f;	
+					sAudioEvent.sClick.iButton = 1;
+					sAudioEvent.sGun.vPos = sBullet.m_vPos;
+					sAudioEvent.sGun.fPitch = 600.0f;
+					CAudio::GetInstance().MainThread_PushAudioEvent( sAudioEvent );
+					
+					sBullet.m_fTime = sBullet.m_fTimer;
+				}
 			}
 		}
 	}
@@ -601,12 +635,18 @@ void CActors::_updateShips()
 	for ( size_t i = 0; i < GetShipCount(); )
 	{
 		SShip& sShip = GetShip( i );
-		if ( sShip.m_eControlType == SShip::AI )
+		if ( sShip.m_bDead )
 		{
-			if ( sShip.m_bDead )
+			if ( sShip.m_eControlType == AI )
 			{
+
 				m_mShips.Delete( sShip.m_iID );
 				continue;
+			}
+			else
+			{
+				sShip.m_fHP = 100.0f;
+				sShip.m_bDead = false;
 			}
 		}
 		i++;
@@ -619,7 +659,7 @@ void CActors::_updateShips()
 		// ============================================================================
 		// Player Ship Update
 		// ============================================================================
-		if ( sShip.m_eControlType == SShip::Player )
+		if ( sShip.m_eControlType == Player )
 		{
 			float fYawMultiplier = sShip.m_sTurret.m_bShoot ? 0.5f : 1.0f;
 
@@ -650,7 +690,7 @@ void CActors::_updateShips()
 		// ============================================================================
 		// Enemy Ship Update
 		// ============================================================================
-		if ( sShip.m_eControlType == SShip::AI )
+		if ( sShip.m_eControlType == AI )
 		{
 
 			SShip& sShipPlayer = GetShipPlayer();
@@ -815,8 +855,14 @@ void CActors::_updateShips()
 
 					float fFrameW = (float)(iTNs - sTurret.m_iLastBulletTimeStampNs) / (float)(CEngine::GetInstance().GetTimeStampNs() - sTurret.m_iLastBulletTimeStampNs);
 
-					sTurret.m_aBullets.emplace_back();
-					STurret::SBullet& sBullet = sTurret.m_aBullets.back();
+					m_aBullets.emplace_back();					
+					SBullet& sBullet = m_aBullets.back();
+
+					sBullet.m_iShipID = sShip.m_iID;
+					sBullet.m_eShipControlType = sShip.m_eControlType;
+
+					sBullet.m_vColor = sShip.m_sTurret.m_vColor;
+
 					sBullet.m_vPos = Lerp( vGunPosWorldPrev, vGunPosWorld, fFrameW );
 
 					SVector3 vBulletDir = Lerp( vGunDirPrev, vGunDir, fFrameW );
@@ -843,26 +889,28 @@ void CActors::_updateShips()
 
 				sTurret.m_iLastBulletTimeStampNs = iTNs;
 			}
-
-			float fElapsedTimeMs = CEngine::GetInstance().GetElapsedTimeMs();
-
-			for ( size_t iBulletInd = 0; iBulletInd < sTurret.m_aBullets.size(); )
-			{
-				STurret::SBullet& sBullet = sTurret.m_aBullets[iBulletInd];
-				sBullet.m_fTimer += fElapsedTimeMs;
-				if ( sBullet.m_fTimer > sBullet.m_fTime )
-				{
-					sTurret.m_aBullets[iBulletInd] = sTurret.m_aBullets.back();
-					sTurret.m_aBullets.pop_back();
-					continue;
-				}
-				sBullet.m_vPosPrev = sBullet.m_vPos;
-				sBullet.m_vPos += sBullet.m_vMov * fElapsedTimeMs;
-
-				++iBulletInd;
-			}
 		}
 	}
+
+	// ============================================================================
+	// Bullets Update
+	// ============================================================================
+
+	for ( size_t iBulletInd = 0; iBulletInd < m_aBullets.size(); )
+	{
+		SBullet& sBullet = m_aBullets[iBulletInd];
+		sBullet.m_fTimer += fElapsedTimeMs;
+		if ( sBullet.m_fTimer > sBullet.m_fTime )
+		{
+			m_aBullets[iBulletInd] = m_aBullets.back();
+			m_aBullets.pop_back();
+			continue;
+		}
+		sBullet.m_vPosPrev = sBullet.m_vPos;
+		sBullet.m_vPos += sBullet.m_vMov * fElapsedTimeMs;
+		++iBulletInd;
+	}
+
 }
 
 bool CActors::_onDamageShipByBullet( SShip& sShip, float fDamage, const SVector3& vMovBullet )
@@ -1006,7 +1054,6 @@ void STurret::Clear()
 
 	m_fDamage = 1.0f;
 
-	m_aBullets.clear();
 	m_bShoot = false;
 	m_iLastBulletTimeStampNs = 0;
 }
