@@ -37,10 +37,10 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fDragExponent = 1.0f;
 		sShipDesc.fDragCoeff = 0.001f;		
 		sShipDesc.fBoidMul_Separation = 0.6f;
-		sShipDesc.fBoidMul_Alignment = 1.0f;
+		sShipDesc.fBoidMul_Alignment = 0.3f;
 		sShipDesc.fBoidMul_Cohesion = 0.0013f;
 		sShipDesc.fMovSmooth = 1.03f;
-		sShipDesc.fMovMul_Boid = 0.003f;
+		sShipDesc.fMovMul_Boid = 0.006f;
 		sShipDesc.fMovMul_AsteroidDeflect = 0.002f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
 		sShipDesc.fMovMul_Follow = 0.0003f;
