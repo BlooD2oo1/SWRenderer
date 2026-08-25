@@ -26,6 +26,7 @@ struct SBullet
 	float		m_fTimer;
 	float		m_fTime;
 
+	float		m_fDamage;
 	SVector3	m_vColor;
 };
 
@@ -74,7 +75,6 @@ struct SShipDesc
 	float		fMovMul_Boid;
 	float		fMovMul_AsteroidDeflect;
 	float		fMovMul_AsteroidDropOut;
-	float		fMovMul_UserCtrl;
 	float		fMovMul_Follow;
 	float		fSpeedMin;
 	float		fAccelMax;
@@ -107,7 +107,6 @@ struct SShip
 
 	float		m_fYaw;
 	float		m_fRoll;
-
 	
 	SVector3	m_vPos;
 	SVector3	m_vMov;
@@ -127,12 +126,12 @@ struct SShip
 	bool		m_bDead;
 	float		m_fPhase_01;
 
-	float		m_fYawSpeed;
-	float		m_fYaw_ctrl;	
-	float		m_fAccForward;
-	float		m_fAccForward_ctrl;
-	float		m_fAccRight;
-	float		m_fAccRight_ctrl;
+	float		m_fUser_YawSpeed;
+	float		m_fUser_YawCtrl;	
+	float		m_fUser_AccForward;
+	float		m_fUser_AccForwardCtrl;
+	float		m_fUser_AccRight;
+	float		m_fUser_AccRightCtrl;
 };
 
 struct SAsteroid

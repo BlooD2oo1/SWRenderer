@@ -20,7 +20,6 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fMovMul_Boid = 0.001f;
 		sShipDesc.fMovMul_AsteroidDeflect = 0.0003f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
-		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0002f;
 		sShipDesc.fSpeedMin = 0.0f;
 		sShipDesc.fAccelMax = 0.0005f;
@@ -44,10 +43,9 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fMovMul_Boid = 0.003f;
 		sShipDesc.fMovMul_AsteroidDeflect = 0.002f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
-		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0003f;
 		sShipDesc.fSpeedMin = 0.02f;
-		sShipDesc.fAccelMax = 0.00005f;
+		sShipDesc.fAccelMax = 0.000018f;
 		sShipDesc.fAngularAccelMax = 0.002f;
 		sShipDesc.fSize = 4.5f;
 		sShipDesc.fMass = powf( sShipDesc.fSize, 3.0f );
@@ -65,12 +63,11 @@ CActors::CActors( CSceneGame& sSceneGame )
 		sShipDesc.fMovMul_Boid = 0.001f;
 		sShipDesc.fMovMul_AsteroidDeflect = 0.004f;
 		sShipDesc.fMovMul_AsteroidDropOut = 0.0003f;
-		sShipDesc.fMovMul_UserCtrl = 0.00013f;
 		sShipDesc.fMovMul_Follow = 0.0002f;
 		sShipDesc.fSpeedMin = 0.02f;
-		sShipDesc.fAccelMax = 0.00005f;
-		sShipDesc.fAngularAccelMax = 0.002f;
-		sShipDesc.fSize = 8.0f;
+		sShipDesc.fAccelMax = 0.000018f;
+		sShipDesc.fAngularAccelMax = 0.001f;
+		sShipDesc.fSize = 18.0f;
 		sShipDesc.fMass = powf( sShipDesc.fSize, 3.0f );
 		sShipDesc.m_aTurretPositions.clear();
 		sShipDesc.m_aTurretPositions.push_back( SVector3( 0.3f, 0.0f, 0.0f ) );
@@ -562,7 +559,7 @@ void CActors::_updateShips()
 					
 					sShip.m_vMov_Curr.xy() += vMov;
 					
-					_onDamageShipByBullet( sShip, 10.0f, sBullet.m_vMov );
+					_onDamageShipByBullet( sShip, sBullet.m_fDamage, sBullet.m_vMov );
 
 					SAudioEvent sAudioEvent;
 					sAudioEvent.type = SAudioEvent::GunHit;
@@ -663,26 +660,23 @@ void CActors::_updateShips()
 		{
 			float fYawMultiplier = sShip.m_sTurret.m_bShoot ? 0.5f : 1.0f;
 
-			sShip.m_fYawSpeed = SmoothConverge( sShip.m_fYawSpeed, sShip.m_fYaw_ctrl * fYawMultiplier, 1.01f, 1.01f, fElapsedTimeMs );
-			sShip.m_fAccForward = SmoothConverge( sShip.m_fAccForward, sShip.m_fAccForward_ctrl, 1.01f, 1.01f, fElapsedTimeMs );
-			sShip.m_fAccRight = SmoothConverge( sShip.m_fAccRight, sShip.m_fAccRight_ctrl, 1.001f, 1.01f, fElapsedTimeMs );
+			sShip.m_fUser_YawSpeed = SmoothConverge( sShip.m_fUser_YawSpeed, sShip.m_fUser_YawCtrl * fYawMultiplier, 1.01f, 1.01f, fElapsedTimeMs );
+			sShip.m_fUser_AccForward = SmoothConverge( sShip.m_fUser_AccForward, sShip.m_fUser_AccForwardCtrl, 1.01f, 1.01f, fElapsedTimeMs );
+			sShip.m_fUser_AccRight = SmoothConverge( sShip.m_fUser_AccRight, sShip.m_fUser_AccRightCtrl, 1.001f, 1.01f, fElapsedTimeMs );
 
-			sShip.m_fYaw += sShip.m_fYawSpeed * 0.004f * fElapsedTimeMs;
+			sShip.m_fYaw += sShip.m_fUser_YawSpeed * 0.004f * fElapsedTimeMs;
 			SVector3 vShipForward( cosf( sShip.m_fYaw ), sinf( sShip.m_fYaw ), 0.0f );
 			SVector3 vShipRight( -vShipForward.y, vShipForward.x, 0.0f );
-			sShip.m_vMov_Curr += vShipForward * sShip.m_fAccForward * GetShipDesc( sShip.m_eShipType ).fMovMul_UserCtrl;
-			sShip.m_vMov_Curr += vShipRight * sShip.m_fAccRight * GetShipDesc( sShip.m_eShipType ).fMovMul_UserCtrl;
+			sShip.m_vMov_Curr += vShipForward * sShip.m_fUser_AccForward * 0.00013f;
+			sShip.m_vMov_Curr += vShipRight * sShip.m_fUser_AccRight * 0.00013f;
 
-
-
-
-			// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship ne tudjon "csuszni" a levegoben
+			// m_vMov felbontasa m_vDir es m_vRight iranyara, hogy a ship kevesbe "csusszon" a levegoben
 			{
 				SVector3 vMovForward( sShip.m_vDir );
 				vMovForward = vMovForward * SVector3::Dot( sShip.m_vMov, vMovForward );
 				SVector3 vMovRight( -sShip.m_vDir.y, sShip.m_vDir.x, 0.0f );
 				vMovRight = vMovRight * SVector3::Dot( sShip.m_vMov, vMovRight );
-				vMovRight *= CalcSmoothUpdateWeight( 1.0f + fabsf( sShip.m_fAccForward ) * 0.0005f, fElapsedTimeMs );
+				vMovRight *= CalcSmoothUpdateWeight( 1.0f + fabsf( sShip.m_fUser_AccForward ) * 0.0005f, fElapsedTimeMs );
 				sShip.m_vMov = vMovForward + vMovRight;
 			}
 		}
@@ -692,12 +686,10 @@ void CActors::_updateShips()
 		// ============================================================================
 		if ( sShip.m_eControlType == AI )
 		{
-
 			SShip& sShipPlayer = GetShipPlayer();
 
-			SVector3 vEnemyToPlayerDir( sShipPlayer.m_vPos - sShip.m_vPos );
-			const float fEnemyToPlayerDist = SVector3::Length( vEnemyToPlayerDir );
-			SVector3::Normalize( vEnemyToPlayerDir, vEnemyToPlayerDir );
+			SVector3 vEnemyToPlayerDirNorm( sShipPlayer.m_vPos - sShip.m_vPos );
+			SVector3::Normalize( vEnemyToPlayerDirNorm, vEnemyToPlayerDirNorm );
 			const float fSin_Phase_01 = sinf( sShip.m_fPhase_01 );
 
 			SVector2 vField( 0.0f, 0.0f );
@@ -710,7 +702,7 @@ void CActors::_updateShips()
 			{
 				fFollowAmount *= ( fSin_Phase_01 * 0.5f + 0.5f ) * 0.7f + 0.3f;
 
-				if ( fSin_Phase_01 > 0.98f && fSin_Phase_01 < 1.0f && SVector3::Dot( sShip.m_vDir, vEnemyToPlayerDir ) > 0.8f )
+				if ( fSin_Phase_01 > 0.9f && fSin_Phase_01 < 1.0f && SVector3::Dot( sShip.m_vDir, vEnemyToPlayerDirNorm ) > 0.8f )
 				{
 					if ( !sShip.m_sTurret.m_bShoot )
 					{
@@ -734,7 +726,7 @@ void CActors::_updateShips()
 			//float fYawLerpWeight = 1.0001f + ( 1.0f - expf( -SVector3::LengthSq( sShip.m_vMov )*1.0f ) );	// ha lassan megy akkor ne forogjon mint egy hulye
 			float fYawLerpWeight = 1.1f;
 			sShip.m_fYaw = LerpAngle( fYaw, sShip.m_fYaw, CalcSmoothUpdateWeight( fYawLerpWeight, fElapsedTimeMs ) );
-			sShip.m_fYawSpeed = (sShip.m_fYaw - fYawPrev) / (fElapsedTimeMs * 0.004f);
+			sShip.m_fUser_YawSpeed = (sShip.m_fYaw - fYawPrev) / (fElapsedTimeMs * 0.004f);
 		}
 	}
 
@@ -745,27 +737,6 @@ void CActors::_updateShips()
 	for ( size_t i = 0; i < GetShipCount(); i++ )
 	{
 		SShip& sShip = GetShip( i );
-
-		// Get current speed and direction
-		/*float fSpeed = SVector2::Length( sShip.m_vMov.xy() );
-		if ( fSpeed > 0.0001f )
-		{
-			SVector2 vForward = sShip.m_vMov.xy() / fSpeed;
-			SVector2 vRight   = SVector2( -vForward.y, vForward.x );
-
-			// Decompose m_vMov_Curr into tangential and lateral acceleration
-			float fForwardAccel = SVector2::Dot( sShip.m_vMov_Curr.xy(), vForward );
-			float fLateralAccel = SVector2::Dot( sShip.m_vMov_Curr.xy(), vRight );
-
-			// Limit maximum lateral acceleration based on current speed: a_perp_max = speed * omega_max
-			float fMaxAngularVel  = 0.001f;//GetShipDesc( sShip.m_eShipType ).fMaxAngularVel; // Max turn rate in rad/ms
-			float fMaxLatAccel    = fSpeed * fMaxAngularVel;
-
-			fLateralAccel = Clamp( fLateralAccel, -fMaxLatAccel, fMaxLatAccel );
-
-			// Reconstruct the constrained acceleration vector
-			sShip.m_vMov_Curr.xy() = ( vForward * fForwardAccel ) + ( vRight * fLateralAccel );
-		}*/
 
 		SVector3::Lerp( sShip.m_vMov_Curr, sShip.m_vMov_Curr, sShip.m_vMov_CurrPrev, CalcSmoothUpdateWeight( GetShipDesc( sShip.m_eShipType ).fMovSmooth, fElapsedTimeMs ) );
 		sShip.m_vMov += sShip.m_vMov_Curr * fElapsedTimeMs;
@@ -794,7 +765,7 @@ void CActors::_updateShips()
 		// Update position using average velocity (trapezoidal integration)
 		sShip.m_vPos += ( sShip.m_vMovPrev + sShip.m_vMov ) * 0.5f * fElapsedTimeMs;
 
-		sShip.m_fRoll = SmoothConverge( -sShip.m_fYawSpeed, sShip.m_fRoll, 1.0002f, fElapsedTimeMs );
+		sShip.m_fRoll = SmoothConverge( -sShip.m_fUser_YawSpeed, sShip.m_fRoll, 1.0002f, fElapsedTimeMs );
 
 		sShip.m_vMovPrev = sShip.m_vMov;
 		sShip.m_vDirPrev = sShip.m_vDir;
@@ -870,8 +841,10 @@ void CActors::_updateShips()
 
 					sBullet.m_fMass = 0.01f;
 
-					sBullet.m_fTime = 1000.0f;
+					sBullet.m_fTime = 2000.0f;
 					sBullet.m_fTimer = 0.0f;
+
+					sBullet.m_fDamage = sTurret.m_fDamage;
 
 					SAudioEvent sAudioEvent;
 					sAudioEvent.type = SAudioEvent::GunShot;
@@ -1034,12 +1007,12 @@ void SShip::Clear()
 	m_bDead = false;
 	m_fPhase_01 = 0.0f;
 
-	m_fYawSpeed = 0.0f;
-	m_fYaw_ctrl = 0.0f;	
-	m_fAccForward = 0.0f;
-	m_fAccForward_ctrl = 0.0f;
-	m_fAccRight = 0.0f;
-	m_fAccRight_ctrl = 0.0f;
+	m_fUser_YawSpeed = 0.0f;
+	m_fUser_YawCtrl = 0.0f;	
+	m_fUser_AccForward = 0.0f;
+	m_fUser_AccForwardCtrl = 0.0f;
+	m_fUser_AccRight = 0.0f;
+	m_fUser_AccRightCtrl = 0.0f;
 }
 
 ////////////////////////////////////////////////////////////////

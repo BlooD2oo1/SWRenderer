@@ -101,8 +101,8 @@ void CSceneGame::Update()
 	{
 		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
 
-		CEngine::GetInstance().GetAudioFrameData().m_fShipAcc = sShipPlayer.m_fAccForward + sShipPlayer.m_fAccRight;
-		CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed = sShipPlayer.m_fYawSpeed;
+		CEngine::GetInstance().GetAudioFrameData().m_fShipAcc = sShipPlayer.m_fUser_AccForward + sShipPlayer.m_fUser_AccRight;
+		CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed = sShipPlayer.m_fUser_YawSpeed;
 		CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed = SVector3::Length( sShipPlayer.m_vMov ) / 0.1f;
 
 		//LOG( "ShipAcc=%.8f, ShipYawSpeed=%.8f, ShipSpeed=%.8f\n", CEngine::GetInstance().GetAudioFrameData().m_fShipAcc, CEngine::GetInstance().GetAudioFrameData().m_fShipYawSpeed, CEngine::GetInstance().GetAudioFrameData().m_fShipSpeed );
@@ -441,7 +441,7 @@ void CSceneGame::Render()
 				pMesh = &CEngine::GetInstance().GetMeshShipScout();
 				break;
 				case SShip::Destroyer:
-				pMesh = &CEngine::GetInstance().GetMeshShipPlayer();
+				pMesh = &CEngine::GetInstance().GetMeshShipDestroyer();
 				break;
 			}
 
@@ -725,7 +725,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	case KEY_UP:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fAccForward_ctrl = 1.0f;
+		sShipPlayer.m_fUser_AccForwardCtrl = 1.0f;
 
 		fAction += 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
@@ -734,7 +734,7 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	case KEY_DOWN:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fAccForward_ctrl = -0.2f;
+		sShipPlayer.m_fUser_AccForwardCtrl = -0.2f;
 
 		fAction -= 0.1f;
 		fAction = Clamp( fAction, 0.0f, 1.0f );
@@ -743,8 +743,8 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	case KEY_LEFT:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fYaw_ctrl = -1.0f;
-		//m_sShipPlayer.m_fAccRight_ctrl = -1.0f;
+		sShipPlayer.m_fUser_YawCtrl = -1.0f;
+		//m_sShipPlayer.m_fUser_AccRightCtrl = -1.0f;
 
 		fClimax += 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
@@ -753,8 +753,8 @@ bool CSceneGame::On_KeyDown( uint32_t key )
 	case KEY_RIGHT:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fYaw_ctrl = 1.0f;
-		//m_sShipPlayer.m_fAccRight_ctrl = 1.0f;
+		sShipPlayer.m_fUser_YawCtrl = 1.0f;
+		//m_sShipPlayer.m_fUser_AccRightCtrl = 1.0f;
 
 		fClimax -= 0.1f;
 		fClimax = Clamp( fClimax, 0.0f, 1.0f );
@@ -787,26 +787,26 @@ bool CSceneGame::On_KeyUp( uint32_t key )
 	case KEY_UP:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fAccForward_ctrl = 0.0f;
+		sShipPlayer.m_fUser_AccForwardCtrl = 0.0f;
 	}
 	return true;
 	case KEY_DOWN:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fAccForward_ctrl = 0.0f;
+		sShipPlayer.m_fUser_AccForwardCtrl = 0.0f;
 	}
 	return true;
 	case KEY_LEFT:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fYaw_ctrl = 0.0f;
+		sShipPlayer.m_fUser_YawCtrl = 0.0f;
 		//m_sShipPlayer.m_fAccLeft_ctrl = 0.0f;
 	}
 	return true;
 	case KEY_RIGHT:
 	{
 		SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		sShipPlayer.m_fYaw_ctrl = 0.0f;
+		sShipPlayer.m_fUser_YawCtrl = 0.0f;
 		//m_sShipPlayer.m_fAccLeft_ctrl = 0.0f;
 	}
 	return true;
