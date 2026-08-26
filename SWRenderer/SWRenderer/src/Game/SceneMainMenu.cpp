@@ -119,11 +119,12 @@ int FindMenuInd( const SMenuItemDesc& sMenu, const SMenuItemDesc* pSelectedMenu 
 	return -1;
 }
 
-void PlayMenuSound()
+void PlayMenuSound( int iType )
 {
 	SAudioEvent sAudioEvent;
 	sAudioEvent.type = SAudioEvent::MenuSelect;
-	sAudioEvent.fVolume = 0.2f;
+	sAudioEvent.sMenu.iType = iType;
+	sAudioEvent.fVolume = 0.05f;
 	sAudioEvent.iTimeStampNs = CEngine::GetInstance().GetTimeStampNs();
 	sAudioEvent.iLifeTimeNs = 1000 * 1000 * 450;
 	sAudioEvent.iSampleCounter = 0;
@@ -141,7 +142,7 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			if ( iCurrInd > 0 )
 			{
 				m_pSelectedMenu = &m_pSelectedMenu->pParentMenu->aSubMenus[iCurrInd - 1];
-				PlayMenuSound();
+				PlayMenuSound( 0 );
 			}				
 		}
 		return true;
@@ -152,7 +153,7 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			if ( iCurrInd >= 0 && iCurrInd < (int)m_pSelectedMenu->pParentMenu->aSubMenus.size() - 1 )
 			{
 				m_pSelectedMenu = &m_pSelectedMenu->pParentMenu->aSubMenus[iCurrInd + 1];
-				PlayMenuSound();
+				PlayMenuSound( 0 );
 			}
 		}
 		return true;
@@ -166,16 +167,19 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 				if ( !m_pSelectedMenu->aSubMenus.empty() )
 				{
 					m_pSelectedMenu = &m_pSelectedMenu->aSubMenus[0];
-					PlayMenuSound();
+					PlayMenuSound( 1 );
 				}
 				break;
 			case Menu_Level:
 				CEngine::GetInstance().SetScene( EScene_Game );
+				PlayMenuSound( 1 );
 				break;
 			case Menu_Logs:
+				PlayMenuSound( 1 );
 				break;
 			case Menu_Credits:
 				CEngine::GetInstance().SetScene( EScene_Credits );
+				PlayMenuSound( 1 );
 				break;
 			case Menu_Exit:
 				g_bRunning = false;
@@ -192,12 +196,12 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 			if ( m_pSelectedMenu->pParentMenu == &m_sMainMenu )
 			{
 				m_pSelectedMenu = &m_sMainMenu.aSubMenus[m_sMainMenu.aSubMenus.size() - 1];
-				PlayMenuSound();
+				PlayMenuSound( 2 );
 			}
 			else
 			{
 				m_pSelectedMenu = m_pSelectedMenu->pParentMenu;
-				PlayMenuSound();
+				PlayMenuSound( 2 );
 			}
 
 		return true;

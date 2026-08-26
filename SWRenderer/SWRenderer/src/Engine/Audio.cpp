@@ -586,17 +586,29 @@ void CAudio::AudioThread_Update( SAudioBuffer& sAudioBuffer )
 				const float fLifeTimeMs = (float)sAudioEvent.iLifeTimeNs / 1000000.0f;
 
 				// Frequency sweep influenced by lifetime - longer lifetime = slower sweep
-				float fSweepRate = 8.0f * (150.0f / fLifeTimeMs);
-				float fFreqHz = 800.0f * expf( -fTimeW * fSweepRate ) + 200.0f;
+				float fSweepRate = 20.0f * (150.0f / fLifeTimeMs);
+				float fFreqHz = -50.0f * expf( -fTimeW * fSweepRate );
+				switch ( sAudioEvent.sMenu.iType)
+				{
+				case 0:
+					fFreqHz += 300.0f;
+					break;
+				default:
+				case 1:
+				case 2:
+					fFreqHz += 100.0f;
+					break;
+				}
+				
 
 				sAudioEvent.fPhase += fFreqHz / (float)sAudioBuffer.iSampleRate;
 				if ( sAudioEvent.fPhase >= 1.0f ) sAudioEvent.fPhase -= 1.0f;
 
 				// Envelope decay rate also influenced by lifetime
-				float fDecayRate = 18.0f * (150.0f / fLifeTimeMs);
+				float fDecayRate = 25.0f * (150.0f / fLifeTimeMs);
 				float fEnv = Env_ExpDecay( fTimeW, fDecayRate );
 
-				float fMenuTone = Osc_Pulse( sAudioEvent.fPhase, 0.25f );
+				float fMenuTone = Osc_Pulse( sAudioEvent.fPhase, 0.45f );
 				fSampleOut = FX_Bitcrush( fMenuTone, 14.0f ) * fEnv;
 			}
 

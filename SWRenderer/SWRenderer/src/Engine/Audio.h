@@ -92,6 +92,7 @@ struct SAudioEvent
 		struct
 		{
 			uint32_t iMenu;
+			int iType;
 		} sMenu;
 		
 		struct
