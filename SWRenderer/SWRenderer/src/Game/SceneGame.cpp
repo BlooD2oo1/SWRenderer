@@ -441,7 +441,7 @@ void CSceneGame::Render()
 				pMesh = &CEngine::GetInstance().GetMeshShipScout();
 				break;
 				case SShip::Destroyer:
-				pMesh = &CEngine::GetInstance().GetMeshShipDestroyer();
+				pMesh = &CEngine::GetInstance().GetMeshShipPlayer();
 				break;
 			}
 
