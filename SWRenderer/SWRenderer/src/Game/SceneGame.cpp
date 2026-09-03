@@ -119,7 +119,7 @@ void CSceneGame::Update()
 void CSceneGame::Render()
 {
 #ifdef EDITOR
-	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( (uint8_t)8, 5, 1, 0 ) );
+	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 8, 5, 1, 0 ) );
 #endif
 	////////////////////////////////////////////////////////////////
 	// HUD
@@ -618,10 +618,10 @@ void CSceneGame::Render()
 			SMatrix::Translate( matWorld, vPos );
 			SMatrix::Mul( sVertexShaderConstellations.matWorldViewProjViewPort, matWorld, matViewProjViewPort );
 
-			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)24, 16, 2, 255 );
+			sPixelShaderConstellations.sColor = BGRA8( 24, 16, 2, 255 );
 			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, CEngine::GetInstance().GetMeshConstellations().m_pIndices, CEngine::GetInstance().GetMeshConstellations().m_iIndexCount/2, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 
-			sPixelShaderConstellations.sColor = BGRA8( (uint8_t)40, 25, 2, 255 );
+			sPixelShaderConstellations.sColor = BGRA8( 40, 25, 2, 255 );
 			CGraphics::GetInstance().DrawPointList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 		}
 	}
@@ -679,7 +679,7 @@ void CSceneGame::Render()
 			SVertexP sP;
 			sP.vPos = m_cActors.GetShipPlayer().m_vPos;
 
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x22, 0xff, 0x22, 0xff );
+			sPixelShaderBasic.sColor = BGRA8( 0x22, 0xff, 0x22, 0xff );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
@@ -689,7 +689,7 @@ void CSceneGame::Render()
 			SVertexP sP;
 			sP.vPos = sShip.m_vPos;
 
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x00, 0xff, 0xbb );
+			sPixelShaderBasic.sColor = BGRA8( 0x11, 0x00, 0xff, 0xbb );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
@@ -697,7 +697,7 @@ void CSceneGame::Render()
 		{
 			const SBullet& sBullet = m_cActors.GetBullet( iBulletInd );
 
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x11, 0x99, 0xff, 0x22 );
+			sPixelShaderBasic.sColor = BGRA8( 0x11, 0x99, 0xff, 0x22 );
 
 			SVertexP sP;
 			sP.vPos = sBullet.m_vPos;
@@ -710,7 +710,7 @@ void CSceneGame::Render()
 			const SAsteroid& sAsteroid = m_cActors.GetAsteroid(iAsteroidInd);
 			SVertexP sP;
 			sP.vPos = sAsteroid.m_vPos;
-			sPixelShaderBasic.sColor = BGRA8( (uint8_t)0x88, 0x99, 0x55, 0x55 );
+			sPixelShaderBasic.sColor = BGRA8( 0x88, 0x99, 0x55, 0x55 );
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
