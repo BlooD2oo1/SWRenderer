@@ -13,5 +13,11 @@ extern int iPixelSizeX;
 extern int iPixelSizeY;
 
 uint32_t* Graphics_Init(HWND hwnd);
-void Graphics_Present(HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs );
+void Graphics_Draw( HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs );
+void Graphics_Present(HWND hwnd);
+
+// Expose accessors for present buffer DC and dimensions
+HDC Graphics_GetPresentDC();
+void Graphics_GetPresentSize(int& outW, int& outH);
+
 void Graphics_Shotdown();

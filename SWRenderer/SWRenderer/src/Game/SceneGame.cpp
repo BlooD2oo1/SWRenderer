@@ -1,6 +1,7 @@
 #include "SceneGame.h"
 #include "Common/PCXLoader.h"
 #include "Engine/Engine.h"
+#include "Game/Settings.h"
 
 CSceneGame::CSceneGame()
 	: m_cActors( *this )
@@ -90,11 +91,6 @@ void CSceneGame::Update()
 		m_sCamera.m_vUp.x = vDir2D.x;
 		m_sCamera.m_vUp.y = vDir2D.y;
 
-#ifdef EDITOR
-		m_sCamera.m_vLookAtSmooth = SVector3( 0.0f, 0.0f, 0.0f );
-		m_sCamera.m_vEyeSmooth = SVector3( 0.0f, 0.0f, 1000.0f );
-		m_sCamera.m_vUp = SVector3( 0.0f, 1.0f, 0.0f );
-#endif		
 		m_sCamera.UpdateMatrices();
 	}	
 	
@@ -118,9 +114,6 @@ void CSceneGame::Update()
 
 void CSceneGame::Render()
 {
-#ifdef EDITOR
-	CGraphics::GetInstance().ClearFrameBuffer( BGRA8( 8, 5, 1, 0 ) );
-#endif
 	////////////////////////////////////////////////////////////////
 	// HUD
 	////////////////////////////////////////////////////////////////
@@ -183,7 +176,7 @@ void CSceneGame::Render()
 
 	m_cStarfield.Render( m_sCamera, m_sViewportGameView );
 
-	m_cGrid.RenderToScene( 100.0f, 6/2, m_sCamera.m_matViewProj, m_sViewportGameView, m_cActors.GetShipPlayer().m_vPos );
+	m_cGrid.RenderToScene( CSettings::GetInstance().m_fGridSpacing, CSettings::GetInstance().m_iGridHalfSize, m_sCamera.m_matViewProj, m_sViewportGameView, m_cActors.GetShipPlayer().m_vPos );
 
 	m_cEffects.Render( m_sCamera, m_sViewportGameView );
 
@@ -301,38 +294,6 @@ void CSceneGame::Render()
 		}
 	};
 
-	// ============================================================================
-	// Player Ship
-	// ============================================================================
-	{
-		const SShip& sShipPlayer = m_cActors.GetShipPlayer();
-		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipPlayer.m_matShip, matViewProjViewPort );
-		
-		sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
-		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.6f, 1.0f ) * 0.33f;
-		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
-		sVertexShaderBasic.fAlpha = 0.8f;
-		if ( sShipPlayer.m_sTurret.m_bShoot )
-		{
-			sVertexShaderBasic.vColor2 = SVector3( 0.6f, 0.5f, 1.0f ) * 0.33f;
-		}
-		if ( sShipPlayer.m_fDamageTimerMs > 0.0f )
-		{
-			sVertexShaderBasic.vColor0.x *= 0.2f;
-			sVertexShaderBasic.vColor0.y *= 0.2f;
-			sVertexShaderBasic.vColor0.z = 1.0f;
-			sVertexShaderBasic.vColor1.x *= 0.2f;
-			sVertexShaderBasic.vColor1.y *= 0.2f;
-			sVertexShaderBasic.vColor1.z = 1.0f;
-			sVertexShaderBasic.vColor2.x *= 0.2f;
-			sVertexShaderBasic.vColor2.y *= 0.2f;
-			sVertexShaderBasic.vColor2.z = 1.0f;
-			sVertexShaderBasic.fAlpha = 0.3f;
-		}
-
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipPlayer().m_pVertices, CEngine::GetInstance().GetMeshShipPlayer().m_iVertexCount, CEngine::GetInstance().GetMeshShipPlayer().m_pIndices, CEngine::GetInstance().GetMeshShipPlayer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
-	}
-
 	// underwater decor
 	/*{
 		SMatrix matShip;
@@ -377,46 +338,28 @@ void CSceneGame::Render()
 		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshAsteroidBig().m_pVertices, CEngine::GetInstance().GetMeshAsteroidBig().m_iVertexCount, CEngine::GetInstance().GetMeshAsteroidBig().m_pIndices, CEngine::GetInstance().GetMeshAsteroidBig().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
 	}*/
 
-	{
-		SMatrix matShip;
-		SMatrix::BuildEulerXYZ( matShip, 0.0f, 0.0f, 1.0f );
-		SMatrix::Scale( matShip, 50.0f );
-		SMatrix::Translate( matShip, SVector3( 100.0f, 100.0f, 0.0f ) );
-		SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, matShip, matViewProjViewPort );
-		sVertexShaderBasic.vColor1 = SVector3( 1.0f, 0.7f, 0.6f ) * 0.33f;
-		sVertexShaderBasic.vColor2 = SVector3( 1.0f, 0.6f, 0.5f ) * 0.33f;
-		sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.4f, 0.4f ) * 0.33f;
-		sVertexShaderBasic.fAlpha = 0.8f;
-		CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshShipDestroyer().m_pVertices, CEngine::GetInstance().GetMeshShipDestroyer().m_iVertexCount, CEngine::GetInstance().GetMeshShipDestroyer().m_pIndices, CEngine::GetInstance().GetMeshShipDestroyer().m_iIndexCount/2, m_sViewportGameView, sVertexShaderBasic, SPixelShaderBasic(), SBlendFuncAdditive() );
-	}
-
 	// ============================================================================
-	// Enemy Ships
+	// Ships
 	// ============================================================================
 	for ( size_t iShipInd = 0; iShipInd < m_cActors.GetShipCount(); iShipInd++ )
 	{
-		SShip& sShipEnemy = m_cActors.GetShip( iShipInd );
-
-		if ( sShipEnemy.m_iID == m_cActors.GetShipIDPlayer() )
-		{
-			continue;
-		}		
-
-		if ( m_sCamera.FrustumSphereTest( sShipEnemy.m_vPos, m_cActors.GetShipDesc( sShipEnemy.m_eShipType ).fSize ) )
+		SShip& sShip = m_cActors.GetShip( iShipInd );
+		const SShipDesc& sShipDesc = CSettings::GetInstance().m_pShipDescs[sShip.m_eShipType];
+		if ( m_sCamera.FrustumSphereTest( sShip.m_vPos, sShipDesc.fSize ) )
 		{		
-			SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShipEnemy.m_matShip, matViewProjViewPort );
+			SMatrix::Mul( sVertexShaderBasic.matWorldViewProjViewPort, sShip.m_matShip, matViewProjViewPort );
 
-			sVertexShaderBasic.vColor0 = SVector3( 1.0f, 0.5f, 0.0f ) * 0.33f;
-			sVertexShaderBasic.vColor1 = SVector3( 0.0f, 0.9f, 1.0f ) * 0.33f;
-			sVertexShaderBasic.vColor2 = SVector3( 0.0f, 0.8f, 1.0f ) * 0.33f;
-			sVertexShaderBasic.fAlpha = 0.6f;
+			sVertexShaderBasic.vColor0 = sShipDesc.m_vColor0;
+			sVertexShaderBasic.vColor1 = sShipDesc.m_vColor1;
+			sVertexShaderBasic.vColor2 = sShipDesc.m_vColor2;
+			sVertexShaderBasic.fAlpha = sShipDesc.m_fAlpha;
 
-			if ( sShipEnemy.m_sTurret.m_bShoot )
+			if ( sShip.m_sTurret.m_bShoot )
 			{
-				sVertexShaderBasic.vColor2 = SVector3( 0.1f, 0.4f, 1.0f ) * 0.33f;
+				sVertexShaderBasic.vColor2 = sShipDesc.m_vColor2Shoot;
 			}
 
-			if ( sShipEnemy.m_fDamageTimerMs > 0.0f )
+			if ( sShip.m_fDamageTimerMs > 0.0f )
 			{
 				sVertexShaderBasic.vColor0.x *= 0.2f;
 				sVertexShaderBasic.vColor0.y *= 0.2f;
@@ -431,16 +374,16 @@ void CSceneGame::Render()
 			}
 
 			const SMesh* pMesh = nullptr;
-			switch ( sShipEnemy.m_eShipType )
+			switch ( sShip.m_eShipType )
 			{
 				default:
-				case SShip::Interceptor:
+				case Interceptor:
 				pMesh = &CEngine::GetInstance().GetMeshShipPlayer();
 				break;
-				case SShip::Scout:
+				case Scout:
 				pMesh = &CEngine::GetInstance().GetMeshShipScout();
 				break;
-				case SShip::Destroyer:
+				case InterceptorEnemy:
 				pMesh = &CEngine::GetInstance().GetMeshShipPlayer();
 				break;
 			}
@@ -479,8 +422,8 @@ void CSceneGame::Render()
 			}
 		} sVertexShaderAsteroid;
 		sVertexShaderAsteroid.matViewProjViewPort = matViewProjViewPort;
-		sVertexShaderAsteroid.vColor0 = SVector4( 1.0f, 0.6f, 0.6f, 0.4f );
-		sVertexShaderAsteroid.vColor1 = SVector4( 1.0f, 0.9f, 0.4f, 0.7f );
+		sVertexShaderAsteroid.vColor0 = CSettings::GetInstance().m_vAsteroidColor0;
+		sVertexShaderAsteroid.vColor1 = CSettings::GetInstance().m_vAsteroidColor1;
 		for ( size_t iAsteroidInd = 0; iAsteroidInd < m_cActors.GetAsteroidCount(); iAsteroidInd++ )
 		{
 			const SAsteroid& sAsteroid = m_cActors.GetAsteroid(iAsteroidInd);
@@ -618,10 +561,11 @@ void CSceneGame::Render()
 			SMatrix::Translate( matWorld, vPos );
 			SMatrix::Mul( sVertexShaderConstellations.matWorldViewProjViewPort, matWorld, matViewProjViewPort );
 
-			sPixelShaderConstellations.sColor = BGRA8( 24, 16, 2, 255 );
+
+			sPixelShaderConstellations.sColor = CSettings::GetInstance().m_sConstellationColorWire;
 			CGraphics::GetInstance().DrawLineList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, CEngine::GetInstance().GetMeshConstellations().m_pIndices, CEngine::GetInstance().GetMeshConstellations().m_iIndexCount/2, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 
-			sPixelShaderConstellations.sColor = BGRA8( 40, 25, 2, 255 );
+			sPixelShaderConstellations.sColor = CSettings::GetInstance().m_sConstellationColorPoints;
 			CGraphics::GetInstance().DrawPointList3D( CEngine::GetInstance().GetMeshConstellations().m_pVertices, CEngine::GetInstance().GetMeshConstellations().m_iVertexCount, m_sViewportGameView, sVertexShaderConstellations, sPixelShaderConstellations, SBlendFuncAdditive() );
 		}
 	}
@@ -631,7 +575,7 @@ void CSceneGame::Render()
 	////////////////////////////////////////////////////////////////
 
 	{
-		float fMiniMapScale = 2000.0f;
+		const float fMiniMapScale = CSettings::GetInstance().m_fMiniMapScale;
 
 		SMatrix matMiniMap;
 		{
@@ -714,7 +658,7 @@ void CSceneGame::Render()
 			CGraphics::GetInstance().DrawPoint3D( sP, m_sViewportMiniMap, sVertexShaderBasic, sPixelShaderBasic, SBlendFuncAdditive() );
 		}
 
-		m_cGrid.RenderToMiniMap( 50.0f*5.0f, 10/2, matMiniMap, m_sViewportMiniMap, m_cActors.GetShipPlayer().m_vPos );
+		m_cGrid.RenderToMiniMap( fMiniMapScale/10.0f*SQRT2, 10/2, matMiniMap, m_sViewportMiniMap, m_cActors.GetShipPlayer().m_vPos );
 	}
 }
 

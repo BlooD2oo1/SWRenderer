@@ -67,7 +67,7 @@ uint32_t* Graphics_Init(HWND hwnd)
 	return pFramebuffer;	
 }
 
-void Graphics_Present(HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs )
+void Graphics_Draw( HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs )
 {
 	RECT clientRect;
 	GetClientRect( hwnd, &clientRect );
@@ -108,39 +108,31 @@ void Graphics_Present(HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs 
 		swprintf(msg, 256, L"Render(%dx%d) %.3f ms (%.2f fps)", WIDTH, HEIGHT, (double)iRenderTimeNs/1000000.0, 1000000000.0/(double)iRenderTimeNs);
 		TextOut(hDCPresent, 0, 20, msg, (int)wcslen(msg));
 	}
-
-	{
-		HDC windowDC = GetDC(hwnd);
-		BitBlt(windowDC, 0, 0, clientW, clientH, hDCPresent, 0, 0, SRCCOPY);
-		ReleaseDC(hwnd, windowDC);
-	}
 }
-/*
-void Graphics_Present(HWND hwnd, uint64_t iUpdateTimeNs, uint64_t iRenderTimeNs )
+
+void Graphics_Present(HWND hwnd)
 {
-	{
-		SetStretchBltMode(hDCPresent, COLORONCOLOR);  // nearest neighbour
-		StretchBlt(hDCPresent, 0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, hDCFrameBuffer, 0, 0, WIDTH, HEIGHT, SRCCOPY);
-	}
+	RECT clientRect;
+	GetClientRect( hwnd, &clientRect );
 
-	{
-		SetBkMode(hDCPresent, TRANSPARENT);
-		SetTextColor(hDCPresent, RGB(255, 255, 255));
+	int clientW = clientRect.right - clientRect.left;
+	int clientH = clientRect.bottom - clientRect.top;
 
-		wchar_t msg[256];
-		swprintf(msg, 256, L"Update %.3f ms (%.2f fps)", (double)iUpdateTimeNs/1000000.0, 1000000000.0/(double)iUpdateTimeNs );
-		TextOut(hDCPresent, 0, 0, msg, (int)wcslen(msg));
-		swprintf(msg, 256, L"Render(%dx%d) %.3f ms (%.2f fps)", WIDTH, HEIGHT, (double)iRenderTimeNs/1000000.0, 1000000000.0/(double)iRenderTimeNs);
-		TextOut(hDCPresent, 0, 20, msg, (int)wcslen(msg));
-	}
-
-	{
-		HDC windowDC = GetDC(hwnd);
-		BitBlt(windowDC, 0, 0, WIDTH * iPixelSizeX, HEIGHT * iPixelSizeY, hDCPresent, 0, 0, SRCCOPY);
-		ReleaseDC(hwnd, windowDC);
-	}
+	HDC windowDC = GetDC(hwnd);
+	BitBlt(windowDC, 0, 0, clientW, clientH, hDCPresent, 0, 0, SRCCOPY);
+	ReleaseDC(hwnd, windowDC);
 }
-*/
+
+HDC Graphics_GetPresentDC()
+{
+	return hDCPresent;
+}
+
+void Graphics_GetPresentSize(int& outW, int& outH)
+{
+	outW = iPresentW; outH = iPresentH;
+}
+
 void Graphics_Shotdown()
 {
 	DeleteObject(hBitmapFrameBuffer);

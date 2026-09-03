@@ -85,6 +85,7 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Common\BData.cpp" />
     <ClCompile Include="src\Common\Math.cpp" />
     <ClCompile Include="src\Common\Threading.cpp" />
     <ClCompile Include="src\Common\Time.cpp" />
@@ -99,13 +100,23 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClCompile Include="src\Game\SceneCredits.cpp" />
     <ClCompile Include="src\Game\SceneGame.cpp" />
     <ClCompile Include="src\Game\SceneMainMenu.cpp" />
+    <ClCompile Include="src\Game\Settings.cpp" />
     <ClCompile Include="src\Game\ShipControl.cpp" />
     <ClCompile Include="src\Game\Starfield.cpp" />
+    <ClCompile Include="src\ImGui\imgui.cpp" />
+    <ClCompile Include="src\ImGui\ImGuiDX11.cpp" />
+    <ClCompile Include="src\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="src\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="src\ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="src\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="src\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="src\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\winAudio.cpp" />
     <ClCompile Include="src\winGraphics.cpp" />
     <ClCompile Include="src\winmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Common\BData.h" />
     <ClInclude Include="src\Common\Defines.h" />
     <ClInclude Include="src\Common\DenseMap.h" />
     <ClInclude Include="src\Common\flat_hash_map.hpp" />
@@ -130,8 +141,18 @@ copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Bin\$(TargetName)_$(
     <ClInclude Include="src\Game\SceneCredits.h" />
     <ClInclude Include="src\Game\SceneGame.h" />
     <ClInclude Include="src\Game\SceneMainMenu.h" />
+    <ClInclude Include="src\Game\Settings.h" />
     <ClInclude Include="src\Game\ShipControl.h" />
     <ClInclude Include="src\Game\Starfield.h" />
+    <ClInclude Include="src\ImGui\imconfig.h" />
+    <ClInclude Include="src\ImGui\imgui.h" />
+    <ClInclude Include="src\ImGui\ImGuiDX11.h" />
+    <ClInclude Include="src\ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="src\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="src\ImGui\imgui_internal.h" />
+    <ClInclude Include="src\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="src\ImGui\imstb_textedit.h" />
+    <ClInclude Include="src\ImGui\imstb_truetype.h" />
     <ClInclude Include="src\winAudio.h" />
     <ClInclude Include="src\winGraphics.h" />
   </ItemGroup>

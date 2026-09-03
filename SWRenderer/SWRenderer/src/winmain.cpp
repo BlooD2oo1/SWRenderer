@@ -15,6 +15,12 @@
 #include "Common/Time.h"
 #include "Engine/Engine.h"
 
+#ifdef EDITOR
+#include "ImGui/ImGuiDX11.h"
+#include "ImGui/imgui.h"
+	ImGuiDX11 g_imgui;
+#endif
+
 //#define VSYNC
 #ifdef VSYNC
 #include <dwmapi.h>
@@ -32,7 +38,7 @@ constexpr double TARGET_FRAME_TIME = 1.0 / TARGET_FPS;
 
 bool bFullScreenBorderless = false;
 
-bool bLockMouse = true;
+bool bLockMouse = false;
 
 static WINDOWPLACEMENT g_wpPrev = { sizeof(g_wpPrev) };
 
@@ -86,6 +92,41 @@ void EnableDPIAwareness()
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+#ifdef EDITOR
+	if (g_imgui.HandleWndProc(hwnd, msg, wParam, lParam))
+		return true;
+	ImGuiIO* pIO = ImGui::GetCurrentContext() ? &ImGui::GetIO() : nullptr;
+
+	switch (msg)
+	{
+		case WM_MOUSEMOVE:
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:
+		case WM_MOUSEWHEEL:
+		if (pIO && pIO->WantCaptureMouse)
+			return 0;
+		break;
+
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+		case WM_CHAR:
+		if (pIO && pIO->WantCaptureKeyboard)
+			return 0;
+		break;
+
+		case WM_SIZE:
+		if (wParam != SIZE_MINIMIZED)
+			g_imgui.OnResize((UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+		return 0;
+	}
+#endif
+
 	switch (msg)
 	{
 		case WM_CLOSE:
@@ -95,7 +136,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
-		case WM_SETCURSOR:
+		/*case WM_SETCURSOR:
 		{
 			if (LOWORD(lParam) == HTCLIENT)
 			{
@@ -105,7 +146,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					return TRUE;
 				}
 			}
-		}
+		}*/
 
 		case WM_SYSKEYDOWN:
 		{
@@ -182,11 +223,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_MBUTTONDOWN:
 			CEngine::GetInstance().On_MouseButtonDown(2);
 			bLockMouse = !bLockMouse;
-			if ( !bLockMouse )
+			/*if ( !bLockMouse )
 			{
 				HCURSOR hDefault = LoadCursor(nullptr, IDC_ARROW);
 				SetCursor(hDefault);
-			}
+			}*/
 			return 0;
 
 		case WM_MBUTTONUP:
@@ -291,6 +332,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 	ShowWindow(hwnd, SW_SHOW);
 
 	uint32_t* pFrameBuffer = Graphics_Init( hwnd );
+#ifdef EDITOR
+	g_imgui.Init(hwnd);
+#endif
 
 	SFrameBuffer sFrameBuffer((BGRA8*)pFrameBuffer, WIDTH, HEIGHT);
 	CEngine::GetInstance().Create(sFrameBuffer);
@@ -340,7 +384,76 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		CEngine::GetInstance().Render();
 		uint64_t iRenderTimeNs = cPerfRender.EndPerfNs();
 
-		Graphics_Present(hwnd, iUpdateTimeNs, iRenderTimeNs);
+		Graphics_Draw( hwnd, iUpdateTimeNs, iRenderTimeNs );
+
+#ifdef EDITOR
+		{
+			int presentW = 0, presentH = 0;
+			Graphics_GetPresentSize(presentW, presentH);
+
+			// 2. ImGui frame begin
+			g_imgui.BeginFrame();
+
+			// 3. Update DirectX texture directly from hDCPresent
+			ID3D11ShaderResourceView* pPresentSRV = g_imgui.UpdateFromPresentDC(Graphics_GetPresentDC(), presentW, presentH);
+
+			// 4. Set position and size to cover the entire client window (starting at 0, 0)
+			const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+			ImGui::SetNextWindowPos(mainViewport->Pos);
+			ImGui::SetNextWindowSize(mainViewport->Size);
+
+			// Configure flags for a fixed, borderless background viewport window
+			ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoDecoration |
+				ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoSavedSettings |
+				ImGuiWindowFlags_NoBringToFrontOnFocus |
+				ImGuiWindowFlags_NoFocusOnAppearing |
+				ImGuiWindowFlags_NoBackground |
+				ImGuiWindowFlags_NoInputs;
+
+			// Remove window padding and borders so the image covers 100% of the viewport area without scrollbars
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+			int iImGuiID = 0;
+
+			ImGui::Begin("Game Viewport", nullptr, viewportFlags);
+
+			if (pPresentSRV)
+			{
+				// Render the texture to fill the exact size of the window client area
+				ImGui::Image((ImTextureID)pPresentSRV, mainViewport->Size);
+			}
+
+			ImGui::End();
+
+			// Restore pushed style variables
+			ImGui::PopStyleVar(2);
+
+			// 5. Render additional overlay UI windows (these will sit on top of the Game Viewport)
+			ImGui::Begin("Editor Panel");
+			ImGui::Text("Update %.3f ms (%.2f fps)", (double)iUpdateTimeNs/1000000.0, 1000000000.0/(double)iUpdateTimeNs );
+			ImGui::Text("Render(%dx%d) %.3f ms (%.2f fps)", WIDTH, HEIGHT, (double)iRenderTimeNs/1000000.0, 1000000000.0/(double)iRenderTimeNs);
+
+			CSettings::GetInstance().ImGui();
+			
+			ImGui::End();
+
+			// Clear ImGui window focus on the very first frame
+			static bool bFirstFrame = true;
+			if (bFirstFrame)
+			{
+				ImGui::SetWindowFocus(nullptr);
+				bFirstFrame = false;
+			}
+
+			// 6. Draw ImGui and Present via DX11 SwapChain
+			g_imgui.EndFrame();
+		}
+#else
+		Graphics_Present(hwnd);
+#endif
 
 #ifdef FRAME_CAP
 		// frameTime is measured by CPerf; we'll use chrono for the wait so it's independent of the perf helper.
