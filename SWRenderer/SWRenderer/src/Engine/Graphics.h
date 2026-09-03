@@ -6,41 +6,6 @@
 #include "Common/Log.h"
 #include <vector>
 
-struct BGRA8
-{
-	union
-	{
-		struct
-		{
-			uint8_t r;
-			uint8_t g;
-			uint8_t b;
-			uint8_t a;
-		};
-		uint32_t rgba;
-	};
-
-	BGRA8()	{}
-
-	BGRA8( uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a )
-		: r(_r), g(_g), b(_b), a(_a)
-	{
-	}
-
-	BGRA8( uint32_t _rgba )
-		: rgba(_rgba)
-	{
-	}
-
-	BGRA8( float fR, float fG, float fB, float fA )
-	{
-		r = (uint8_t)( Clamp( fR, 0.0f, 1.0f ) * 255.0f );
-		g = (uint8_t)( Clamp( fG, 0.0f, 1.0f ) * 255.0f );
-		b = (uint8_t)( Clamp( fB, 0.0f, 1.0f ) * 255.0f );
-		a = (uint8_t)( Clamp( fA, 0.0f, 1.0f ) * 255.0f );
-	}
-};
-
 struct SFrameBuffer
 {
 	SFrameBuffer()
@@ -250,17 +215,17 @@ struct SBlendFuncAlpha
 
 class CGraphics
 {
-public:
-	__forceinline static void		CreateInstance() { SAFE_DELETE( m_pThis ); m_pThis = new CGraphics(); }
-	__forceinline static CGraphics&	GetInstance() { return *m_pThis; }
-	__forceinline static bool		HasInstance() { return m_pThis == nullptr ? false : true; }
-	__forceinline static void		Destroy() { SAFE_DELETE( m_pThis ); }
 private:
-	static CGraphics*	m_pThis;
 	CGraphics();
 	~CGraphics();
 
 public:
+	static CGraphics& GetInstance()
+	{
+		static CGraphics cInstance;
+		return cInstance;
+	}
+
 	void Create( SFrameBuffer& sFrameBuffer );
 	void Clear();
 

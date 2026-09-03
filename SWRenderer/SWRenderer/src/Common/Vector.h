@@ -3,6 +3,47 @@
 #include <cmath>
 #include <algorithm>
 
+struct SVector4;
+struct BGRA8
+{
+	union
+	{
+		struct
+		{
+			uint8_t r;
+			uint8_t g;
+			uint8_t b;
+			uint8_t a;
+		};
+		uint32_t rgba;
+	};
+
+	BGRA8()	{}
+
+	BGRA8( int _r, int _g, int _b, int _a )
+		: r(static_cast<uint8_t>(_r))
+		, g(static_cast<uint8_t>(_g))
+		, b(static_cast<uint8_t>(_b))
+		, a(static_cast<uint8_t>(_a))
+	{
+	}
+
+	BGRA8( uint32_t _rgba )
+		: rgba(_rgba)
+	{
+	}
+
+	BGRA8( const SVector4& vColor );
+
+	BGRA8( float fR, float fG, float fB, float fA )
+	{
+		r = (uint8_t)(std::max( 0.0f, std::min( fR, 1.0f ) ) * 255.0f);
+		g = (uint8_t)(std::max( 0.0f, std::min( fG, 1.0f ) ) * 255.0f);
+		b = (uint8_t)(std::max( 0.0f, std::min( fB, 1.0f ) ) * 255.0f);
+		a = (uint8_t)(std::max( 0.0f, std::min( fA, 1.0f ) ) * 255.0f);
+	}
+};
+
 struct SVector2
 {
 	union
@@ -241,6 +282,10 @@ struct SVector4
 
 	constexpr SVector4( const SVector3& v, float _w) noexcept
 		: x(v.x), y(v.y), z(v.z), w(_w)
+	{}
+
+	constexpr SVector4( const BGRA8& v) noexcept
+		: x(v.r/255.0f), y(v.g/255.0f), z(v.b/255.0f), w(v.a/255.0f)
 	{}
 
 	inline SVector4& operator+=(const SVector4& rhs) noexcept { x += rhs.x; y += rhs.y; z += rhs.z; w += rhs.w; return *this; }

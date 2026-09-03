@@ -3,20 +3,16 @@
 #include "Common/PCXLoader.h"
 #include "Common/PLYLoader.h"
 
-CEngine* CEngine::m_pThis = nullptr;
-
 CEngine::CEngine()
 {
-	CAudio::CreateInstance();
-	CGraphics::CreateInstance();
+	CGraphics::GetInstance();
+	CAudio::GetInstance();
 	Clear();
 }
 
 CEngine::~CEngine()
 {
 	Clear();
-	CGraphics::Destroy();
-	CAudio::Destroy();
 }
 
 void CEngine::Clear()

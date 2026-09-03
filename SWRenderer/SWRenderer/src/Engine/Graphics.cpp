@@ -1,7 +1,5 @@
 #include "Graphics.h"
 
-CGraphics* CGraphics::m_pThis = nullptr;
-
 CGraphics::CGraphics()
 {
 }

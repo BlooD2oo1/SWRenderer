@@ -106,16 +106,16 @@ struct SAudioEvent
 
 class CAudio
 {
-public:
-	__forceinline static void		CreateInstance() { SAFE_DELETE( m_pThis ); m_pThis = new CAudio(); }
-	__forceinline static CAudio&	GetInstance() { return *m_pThis; }
-	__forceinline static bool		HasInstance() { return m_pThis == nullptr ? false : true; }
-	__forceinline static void		Destroy() { SAFE_DELETE( m_pThis ); }
 private:
-	static CAudio*	m_pThis;
 	CAudio();
 	~CAudio();
 
+public:
+	static CAudio& GetInstance()
+	{
+		static CAudio cInstance;
+		return cInstance;
+	}
 public:
 	void				MainThread_PushAudioFrameData( const SAudioFrameData& sAudioFrameData );
 	void				MainThread_PushAudioEvent( const SAudioEvent& sAudioEvent );

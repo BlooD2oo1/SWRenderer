@@ -26,15 +26,14 @@ struct SMouseState
 
 class CEngine
 {
-public:
-	__forceinline static void		CreateInstance() { SAFE_DELETE( m_pThis ); m_pThis = new CEngine(); }
-	__forceinline static CEngine&	GetInstance() { return *m_pThis; }
-	__forceinline static bool		HasInstance() { return m_pThis == nullptr ? false : true; }
-	__forceinline static void		Destroy() { SAFE_DELETE( m_pThis ); }
-private:
-	static CEngine*	m_pThis;
 	CEngine();
 	~CEngine();
+public:
+	static CEngine& GetInstance()
+	{
+		static CEngine cInstance;
+		return cInstance;
+	}
 
 public:
 	void Create( SFrameBuffer& sFrameBuffer );
@@ -66,6 +65,8 @@ public:
 	const SMesh&		GetMeshAsteroid02() const { return m_sMeshAsteroid02; }
 	const SMesh&		GetMeshAsteroidBig() const { return m_sMeshAsteroidBig; }
 	const SMesh&		GetMeshConstellations() const { return m_sMeshConstellations; }
+
+	CSceneGame&			GetSceneGame() { return m_cSceneGame; }
 
 	const STextureIndexed& GetFontTex_KarenFat_13x16() const { return m_sTexFont_KarenFat_13x16; }
 	const STextureIndexed& GetFontTex_TinyPixie2_6x6() const { return m_sTexFont_TinyPixie2_6x6; }

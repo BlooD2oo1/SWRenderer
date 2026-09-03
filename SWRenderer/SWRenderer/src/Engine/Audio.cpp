@@ -337,8 +337,6 @@ void CAudio::Music( SAudioBuffer& sAudioBuffer, float fAction, float fClimax )
 // AUDIO SYSTEM CLASS IMPLEMENTATION
 // ============================================================================
 
-CAudio* CAudio::m_pThis = nullptr;
-
 CAudio::CAudio()
 {
 	m_iFrameInd = 0;

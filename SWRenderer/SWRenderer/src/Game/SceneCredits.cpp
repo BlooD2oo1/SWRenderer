@@ -34,7 +34,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 9;
 		int iFontHeight = 13;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, iSpacing );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, iSpacing );
 		iCursorY += iFontHeight + 4 + 2;
 	}
 
@@ -43,7 +43,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4 + 12;
 	}
 
@@ -52,7 +52,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 9;
 		int iFontHeight = 13;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4 + 2;
 	}
 
@@ -61,7 +61,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4 + 12;
 	}
 
@@ -70,7 +70,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 9;
 		int iFontHeight = 13;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_Habbo_9x13(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4 + 2;
 	}
 
@@ -79,7 +79,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4;
 	}
 
@@ -88,7 +88,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 80, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 80, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4;
 	}
 
@@ -97,7 +97,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4;
 	}
 
@@ -106,7 +106,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4;
 	}
 
@@ -115,7 +115,7 @@ void CSceneCredits::Render()
 		size_t iLen = strlen( pText );
 		int iFontWidth = 6;
 		int iFontHeight = 6;
-		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( (uint8_t)255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
+		CGraphics::GetInstance().DrawText( (iFrameBufferWidth - (int)iLen * (iFontWidth+iSpacing)) / 2, iCursorY, pText, BGRA8( 255, 255, 255, 255 ), SBlendFuncCopy(), CEngine::GetInstance().GetFontTex_TinyPixie2_6x6(), iFontWidth, iFontHeight, -1 );
 		iCursorY += iFontHeight + 4;
 	}
 }

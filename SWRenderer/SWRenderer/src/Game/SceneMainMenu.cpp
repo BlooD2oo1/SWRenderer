@@ -171,6 +171,7 @@ bool CSceneMainMenu::On_KeyDown( uint32_t key )
 				}
 				break;
 			case Menu_Level:
+				CEngine::GetInstance().GetSceneGame().Create();
 				CEngine::GetInstance().SetScene( EScene_Game );
 				PlayMenuSound( 1 );
 				break;

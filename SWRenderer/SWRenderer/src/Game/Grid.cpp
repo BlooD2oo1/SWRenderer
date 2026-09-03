@@ -174,6 +174,7 @@ void CGrid::RenderToScene( float fSpacing, int iHalfGridSize, const SMatrix& mat
 void CGrid::RenderToMiniMap( float fSpacing, int iHalfGridSize, const SMatrix& matViewProj, const SViewPort& sViewport, const SVector3& vPos )
 {
 	SVector4 vColor = SVector4( 0.3f, 0.2f, 0.1f, 0.5f );
+
 	struct SVertexShaderGrid
 	{
 		using AttribsType = SVertexP::SAttribs;
@@ -192,87 +193,38 @@ void CGrid::RenderToMiniMap( float fSpacing, int iHalfGridSize, const SMatrix& m
 		{
 			return sColor;
 		}
-	}sPixelShaderGrid;
+	} sPixelShaderGrid;
 	sPixelShaderGrid.sColor = BGRA8( vColor.x, vColor.y, vColor.z, vColor.w );
+
+	SVector3 vCenterGrid( floorf(vPos.x / fSpacing), floorf(vPos.y / fSpacing), floorf(vPos.z / fSpacing) );
 
 	SMatrix matScale;
 	SMatrix::Identity(matScale);
 	SMatrix::Scale( matScale, fSpacing );
 
+	SMatrix matWorld( matScale );
+	matWorld.m30 = vCenterGrid.x * fSpacing;
+	matWorld.m31 = vCenterGrid.y * fSpacing;
+	matWorld.m32 = vCenterGrid.z * fSpacing;
+
+	SMatrix::Mul( sVertexShaderGrid.matWorldViewProj, matWorld, matViewProj );
+
+	for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
 	{
-		SVector3 vCenter = vPos / fSpacing;
-		SVector3 vCenterQ;
-		vCenterQ.x = vCenter.x;
-		vCenterQ.y = floorf( vCenter.y );
-		vCenterQ.z = floorf( vCenter.z );
+		SVertexP sVertex0, sVertex2;
+		sVertex0.vPos = SVector3( -(float)iHalfGridSize, (float)i, 0.0f );
+		sVertex2.vPos = SVector3(  (float)iHalfGridSize, (float)i, 0.0f );
 
-		SMatrix matWorld( matScale );
-		matWorld.m30 = vCenterQ.x*fSpacing;
-		matWorld.m31 = vCenterQ.y*fSpacing;
-		matWorld.m32 = vCenterQ.z*fSpacing;
-		SMatrix::Mul( matWorld, matWorld, matViewProj );
-		sVertexShaderGrid.matWorldViewProj = matWorld;
-
-		float fi = vCenter.y - floorf(vCenter.y);
-		float fj = vCenter.z - floorf(vCenter.z);
-		float fk = vCenter.x - floorf(vCenter.x);
-
-		for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
-		{
-			//for ( int j = -iHalfGridSize; j <= iHalfGridSize; j++ )
-			int j = 0;
-			{
-				SVector3 vOffset( 0.0f, (float)i, (float)j );
-
-				SVertexP sVertex0;
-				SVertexP sVertex2;
-
-				sVertex0.vPos = SVector3( vOffset );
-				sVertex2.vPos = sVertex0.vPos;
-				sVertex0.vPos.x -= (float)iHalfGridSize;
-				sVertex2.vPos.x += (float)iHalfGridSize;
-
-				CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex2, sViewport, sVertexShaderGrid, sPixelShaderGrid, SBlendFuncAdditive() );
-			}
-		}
+		CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex2, sViewport, sVertexShaderGrid, sPixelShaderGrid, SBlendFuncAdditive() );
 	}
 
+	for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
 	{
-		SVector3 vCenter = vPos / fSpacing;
-		SVector3 vCenterQ;
-		vCenterQ.x = floorf( vCenter.x );
-		vCenterQ.y = vCenter.y;
-		vCenterQ.z = floorf( vCenter.z );
+		SVertexP sVertex0, sVertex2;
+		sVertex0.vPos = SVector3( (float)i, -(float)iHalfGridSize, 0.0f );
+		sVertex2.vPos = SVector3( (float)i,  (float)iHalfGridSize, 0.0f );
 
-		SMatrix matWorld( matScale );
-		matWorld.m30 = vCenterQ.x*fSpacing;
-		matWorld.m31 = vCenterQ.y*fSpacing;
-		matWorld.m32 = vCenterQ.z*fSpacing;
-		SMatrix::Mul( matWorld, matWorld, matViewProj );
-		sVertexShaderGrid.matWorldViewProj = matWorld;
-
-		float fi = vCenter.x - floorf(vCenter.x);
-		float fj = vCenter.z - floorf(vCenter.z);
-		float fk = vCenter.y - floorf(vCenter.y);
-
-		for ( int i = -iHalfGridSize; i <= iHalfGridSize; i++ )
-		{
-			//for ( int j = -iHalfGridSize; j <= iHalfGridSize; j++ )
-			int j = 0;
-			{
-				SVector3 vOffset( (float)i, 0.0f, (float)j );
-
-				SVertexP sVertex0;
-				SVertexP sVertex2;
-
-				sVertex0.vPos = SVector3( vOffset );
-				sVertex2.vPos = sVertex0.vPos;
-				sVertex0.vPos.y -= (float)iHalfGridSize;
-				sVertex2.vPos.y += (float)iHalfGridSize;
-
-				CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex2, sViewport, sVertexShaderGrid, sPixelShaderGrid, SBlendFuncAdditive() );
-			}
-		}
+		CGraphics::GetInstance().DrawLine3D( sVertex0, sVertex2, sViewport, sVertexShaderGrid, sPixelShaderGrid, SBlendFuncAdditive() );
 	}
 }
 
