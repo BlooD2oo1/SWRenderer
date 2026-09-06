@@ -65,13 +65,7 @@ void CActors::Create()
 
 		sShip.m_vPos.x += -150.0f;
 
-
 		sShip.m_fYaw = ((float)rand() / (float)RAND_MAX) * PI2;
-
-		/*sShip.f0 = ((float)rand() / (float)RAND_MAX);
-		sShip.f1 = ((float)rand() / (float)RAND_MAX);
-		sShip.f2 = ((float)rand() / (float)RAND_MAX);
-		sShip.f3 = ((float)rand() / (float)RAND_MAX);*/
 
 		sShip.m_fPhase_01 = ((float)rand() / (float)RAND_MAX) * PI2;
 	}

@@ -105,11 +105,17 @@ void CSettings::Clear()
 
 #ifdef EDITOR
 
+
 #include "ImGui/imgui.h"
+#include "Engine/Engine.h"
 
 void CSettings::ImGui()
 {
-	ImGui::SeparatorText( "ShipDescs");
+	if ( ImGui::Button( "Restart" ) )
+	{
+		CEngine::GetInstance().GetSceneGame().Create();
+		ImGui::SetWindowFocus(nullptr);
+	}
 
 	SVector4 v4;
 
@@ -123,18 +129,17 @@ void CSettings::ImGui()
 	{
 		CSettings::GetInstance().m_sConstellationColorPoints = v4;
 	}
-
 	ImGui::ColorEdit4( "AsteroidColor0", &CSettings::GetInstance().m_vAsteroidColor0.x );
 	ImGui::ColorEdit4( "AsteroidColor1", &CSettings::GetInstance().m_vAsteroidColor1.x );
-
 	ImGui::SliderFloat( "MiniMapScale", &CSettings::GetInstance().m_fMiniMapScale, 100.0f, 10000.0f, "%.5f", ImGuiSliderFlags_Logarithmic );
-
 	ImGui::SliderFloat( "GridSpacing", &CSettings::GetInstance().m_fGridSpacing, 1.0f, 1000.0f, "%.5f", ImGuiSliderFlags_Logarithmic );
 	ImGui::SliderInt( "GridHalfSize", &CSettings::GetInstance().m_iGridHalfSize, 1, 100 );
 
+	ImGui::SeparatorText( "ShipDescs");
 	static EShipType eShipType = EShipType::Interceptor;
 	ImGui::Combo( "ShipType", (int*)&eShipType, "Interceptor\0Scout\0InterceptorEnemy\0\0" );
 	{
+		ImGui::Separator();
 		SShipDesc& sShipDesc = CSettings::GetInstance().m_pShipDescs[eShipType];
 		ImGui::SliderFloat( "fDragExponent", &sShipDesc.fDragExponent, 0.0f, 10.0f, "%.5f", ImGuiSliderFlags_Logarithmic );
 		ImGui::SliderFloat( "fDragCoeff", &sShipDesc.fDragCoeff, 0.0f, 1.0f, "%.5f", ImGuiSliderFlags_Logarithmic );
